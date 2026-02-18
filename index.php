@@ -4262,9 +4262,9 @@ if (isset($_POST['apply'])) {
       <div class="footer-container bottom-flex">
         <p>© 2026 Karunesh Kumar & Associates. All Rights Reserved.</p>
         <div class="footer-legal">
-          <a href="#">Privacy Policy</a>
+          <a href="privacy-policy.php">Privacy Policy</a>
           <span class="sep">|</span>
-          <a href="#">Terms of Service</a>
+          <a href="terms-of-service.php">Terms of Service</a>
         </div>
       </div>
     </div>

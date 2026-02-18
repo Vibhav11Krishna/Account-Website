@@ -19,7 +19,7 @@
     <div class="header-container">
 
       <a href="#home" class="logo-group">
-        <img src="../assets/logo.jpg" alt="Logo" class="main-logo">
+        <img src="../assets/CMA.jpg" alt="Logo" class="main-logo">
         <div class="logo-text">
           <span class="firm-name">KARUNESH KUMAR</span>
           <span class="firm-sub">& ASSOCIATES</span>

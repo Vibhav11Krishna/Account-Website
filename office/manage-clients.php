@@ -193,10 +193,10 @@ if(isset($_GET['delete'])){
 
     <div class="sidebar">
         <h2>KKA ADMIN</h2>
-        <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i> Summary</a>
+          <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i> Summary</a>
         <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
         <a href="admin-review.php"><i class="fas fa-file-signature"></i> Quality Control</a>
-        <a href="manage-clients.php" class="active"><i class="fas fa-users"></i> Manage Clients</a>
+       <a href="manage-clients.php" class="active"><i class="fas fa-users"></i> Manage Clients</a>
         <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
         <a href="attendance.php"><i class="fas fa-calendar-check"></i> Attendance</a>
         <a href="../logout.php" style="margin-top:auto; color:#fda4af;"><i class="fas fa-sign-out-alt"></i> Logout</a>

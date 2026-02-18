@@ -37,7 +37,7 @@
           <li><a href="index.php">Careers</a></li>
           <li><a href="index.php">Contact</a></li>
         </ul>
-       <button class="btn-login" onclick="window.location.href='./Register.php'">
+        <button class="btn-login" onclick="window.location.href='./Register.php'">
     Portal Login
 </button>
       </nav>
@@ -58,7 +58,7 @@
       <button class="drawer-close" id="closeDrawer">&times;</button>
     </div>
     <div class="drawer-content">
-       <button class="drawer-login-btn" onclick="window.location.href='./Register.php'">
+     <button class="drawer-login-btn" onclick="window.location.href='./Register.php'">
     Portal Login
 </button>
       <nav class="drawer-nav-list">
@@ -316,662 +316,244 @@
     }
   </script>
 
-  <section class="incorp-final-section" id="incorporation-service">
-    <div class="container-premium">
-
-      <div class="section-intro">
-        <div class="service-box-tag">
-          <span class="s-num">Service 06</span>
-          <span class="s-name">Advisory & Consulting</span>
-        </div>
-        <h2>Advisory, Virtual <br><span class="text-navy">CFO &</span> <span class="text-orange">Business Consulting</span></h2>
-        <div class="dual-accent">
-          <span class="bar-navy"></span>
-          <span class="bar-orange"></span>
-        </div>
-        <p class="desc-text">
-         We deliver strategic, financial, and operational advisory services to support business growth and transformation. Our Virtual CFO and consulting solutions provide expert financial leadership, performance insights, and long-term value creation.
-        </p>
-      </div>
-
-      <div class="premium-grid">
-        <div class="premium-card">
-          <div class="card-image-box">
-            <img src="assets/Consulting1.jpg" alt="Entity Registration">
-            <div class="card-overlay"></div>
-          </div>
-          <div class="card-icon-float"><i class="fa-solid fa-user-tie"></i></div>
-          <div class="card-details">
-            <h4>Virtual CFO Services</h4>
-            <p>Professional financial leadership without full-time costs</p>
-          </div>
-          <div class="hover-border"></div>
+  <main class="pp-wrapper">
+    <div class="pp-card">
+        <div class="pp-header">
+            <div class="pp-icon-main"><i class="fa-solid fa-user-shield"></i></div>
+            <h1>Privacy Policy</h1>
+            <p class="pp-firm">Karunesh Kumar and Associates</p>
+            <span class="pp-date">Last Updated: February 18, 2026</span>
         </div>
 
-        <div class="premium-card">
-          <div class="card-image-box">
-            <img src="assets/Consulting2.jpg" alt="Startup India">
-            <div class="card-overlay"></div>
-          </div>
-          <div class="card-icon-float"><i class="fa-solid fa-coins"></i></div>
-          <div class="card-details">
-            <h4>Financial Planning & Cash Flow </h4>
-            <p>Budgeting and liquidity management support</p>
-          </div>
-          <div class="hover-border"></div>
+        <div class="pp-intro">
+            <p>Karunesh Kumar and Associates (“Firm”, “we”, “our”, or “us”) is committed to safeguarding the confidentiality and privacy of our clients and website users. This Privacy Policy describes how we collect, use, disclose, and protect your information when you access our website and client dashboard.</p>
         </div>
 
-        <div class="premium-card">
-          <div class="card-image-box">
-            <img src="assets/Consulting3.jpg" alt="Equity Design">
-            <div class="card-overlay"></div>
-          </div>
-          <div class="card-icon-float"><i class="fa-solid fa-chart-line"></i></div>
-          <div class="card-details">
-            <h4>Performance Dashboards & MIS</h4>
-            <p>KPI-driven dashboards and reporting</p>
-          </div>
-          <div class="hover-border"></div>
+        <div class="pp-body">
+            
+            <section class="pp-section">
+                <h3><i class="fa-solid fa-database"></i> 1. Information We Collect</h3>
+                <p>We may collect the following categories of information:</p>
+                
+                <div class="pp-sub-grid">
+                    <div class="pp-sub-item">
+                        <strong><i class="fa-solid fa-user"></i> Personal Information:</strong>
+                        <p>Full Name, Email Address, Phone Number, and Business Address.</p>
+                    </div>
+                    <div class="pp-sub-item">
+                        <strong><i class="fa-solid fa-file-invoice-dollar"></i> Business & Financial:</strong>
+                        <p>Company Details, PAN, GSTIN, Financial Statements, and Tax Documents uploaded via dashboard.</p>
+                    </div>
+                    <div class="pp-sub-item">
+                        <strong><i class="fa-solid fa-microchip"></i> Technical Information:</strong>
+                        <p>IP address, Browser/Device info, and Login credentials.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pp-section">
+                <h3><i class="fa-solid fa-bullseye"></i> 2. Purpose of Data Collection</h3>
+                <p>We use your information solely for legitimate professional purposes, including:</p>
+                <ul class="pp-list">
+                    <li>Providing accounting, taxation, and compliance services.</li>
+                    <li>Filing GST, Income Tax, and statutory returns.</li>
+                    <li>Managing secure client dashboard access.</li>
+                    <li>Maintaining records as required under Indian laws.</li>
+                </ul>
+                <p class="pp-highlight"><strong>Note:</strong> We do not sell, trade, or rent your personal information to third parties.</p>
+            </section>
+
+            <section class="pp-section">
+                <h3><i class="fa-solid fa-vault"></i> 3. Confidentiality of Financial Information</h3>
+                <p>All financial and statutory information shared with the Firm is treated as strictly confidential and used exclusively for providing professional services. Access is restricted to authorized personnel only.</p>
+            </section>
+
+            <section class="pp-section">
+                <h3><i class="fa-solid fa-shield-halved"></i> 4. Data Security</h3>
+                <p>We implement administrative and technical safeguards including secure authentication, role-based access control, and restricted internal access. Users acknowledge that while we strive for maximum security, no electronic storage is 100% immune to risks.</p>
+            </section>
+
+            <section class="pp-section">
+                <h3><i class="fa-solid fa-share-nodes"></i> 5. Information Sharing</h3>
+                <p>Disclosure occurs only to authorized employees, government/regulatory bodies when required by law, or trusted third-party service providers (like hosting) who assist in operations.</p>
+            </section>
+
+            <section class="pp-section">
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> 6. Data Retention</h3>
+                <p>We retain client records and financial information for the period required under applicable Indian laws and professional standards.</p>
+            </section>
+
+            <section class="pp-section">
+                <h3><i class="fa-solid fa-hand-pointer"></i> 7. User Rights</h3>
+                <p>You may request correction of inaccurate data. Deletion requests are subject to statutory retention requirements mandated by regulatory authorities.</p>
+            </section>
+
+            <section class="pp-section">
+                <h3><i class="fa-solid fa-address-book"></i> 8. Contact Information</h3>
+                <p>For any privacy-related concerns, please contact:</p>
+                <div class="pp-contact-box">
+                    <strong>Karunesh Kumar and Associates</strong><br>
+                    <i class="fa-solid fa-location-dot"></i> 2nd Floor, Shyam Market, Pillar No: 75, Bailey Road, Patna - 800014<br>
+                    <i class="fa-solid fa-envelope"></i> karunesh.cma@gmail.com<br>
+                    <i class="fa-solid fa-phone"></i> +91 90970 47484
+                </div>
+            </section>
+
         </div>
 
-        <div class="premium-card">
-          <div class="card-image-box">
-            <img src="assets/Consulting4.jpg" alt="Equity Design">
-            <div class="card-overlay"></div>
-          </div>
-          <div class="card-icon-float"><i class="fa-solid fa-diagram-project"></i></div>
-          <div class="card-details">
-            <h4>Business Planning & Feasibility Studies</h4>
-            <p>Strategic planning and project evaluation.</p>
-          </div>
-          <div class="hover-border"></div>
-        </div>
-
-        <div class="premium-card">
-          <div class="card-image-box">
-            <img src="assets/Consulting5.jpg" alt="Equity Design">
-            <div class="card-overlay"></div>
-          </div>
-          <div class="card-icon-float"><i class="fa-solid fa-scale-balanced"></i></div>
-          <div class="card-details">
-            <h4>Valuation & M&A Advisory</h4>
-            <p>Support for valuation and transaction advisory</p>
-          </div>
-          <div class="hover-border"></div>
-        </div>
-
-        <div class="premium-card">
-          <div class="card-image-box">
-            <img src="assets/Consulting6.jpg" alt="Equity Design">
-            <div class="card-overlay"></div>
-          </div>
-          <div class="card-icon-float"><i class="fa-solid fa-shield-halved"></i></div>
-          <div class="card-details">
-            <h4> Risk Management & Internal Controls</h4>
-            <p>Assessment and strengthening of risk and control frameworks</p>
-          </div>
-          <div class="hover-border"></div>
-        </div>
-      </div>
-
-
-<section class="process-section">
-    <div class="container-premium">
-        <div class="section-intro">
-            <h2>Our <span class="text-orange">Engagement Process</span></h2>
-        </div>
-
-        <div class="process-wrapper">
-            <div class="process-step">
-                <div class="step-number">01</div>
-                <div class="step-icon"><i class="fas fa-comments"></i></div>
-                <h4>Business Diagnosis </h4>
-                <p>Assess financial health, processes, and objectives</p>
-                <div class="step-arrow"><i class="fas fa-chevron-right"></i></div>
-            </div>
-
-            <div class="process-step">
-                <div class="step-number">02</div>
-                <div class="step-icon"><i class="fas fa-microscope"></i></div>
-                <h4>Define Strategy </h4>
-                <p>Set financial plans, KPIs, and advisory scope</p>
-                <div class="step-arrow"><i class="fas fa-chevron-right"></i></div>
-            </div>
-
-            <div class="process-step">
-                <div class="step-number">03</div>
-                <div class="step-icon"><i class="fas fa-cogs"></i></div>
-                <h4>Execute & Monitor  </h4>
-                <p>Implement controls, dashboards, and reporting</p>
-                <div class="step-arrow"><i class="fas fa-chevron-right"></i></div>
-            </div>
-
-            <div class="process-step">
-                <div class="step-number">04</div>
-                <div class="step-icon"><i class="fas fa-chart-line"></i></div>
-                <h4>Advise & Optimize </h4>
-                <p>Provide strategic insights and performance improvement</p>
-            </div>
+        <div class="pp-legal-footer">
+            <i class="fa-solid fa-lock"></i>
+            <p><strong>Professional Legal Line:</strong> This document is an electronic record in accordance with the Information Technology Act, 2000 and applicable rules thereunder.</p>
         </div>
     </div>
-</section>
+</main>
 
-      <div class="checklist-section">
-        <div class="checklist-inner">
-          <div class="checklist-header">
-            <h3>Pre-Consulting <span class="text-orange">Checklist</span></h3>
-            <p>Essential documents required to initiate the Bussiness Consulting process.</p>
-          </div>
-          <div class="checklist-grid">
-            <div class="check-item"><i class="fas fa-check-circle"></i> <span>MIS and management reports</span></div>
-            <div class="check-item"><i class="fas fa-check-circle"></i> <span>Cash flow statements</span></div>
-            <div class="check-item"><i class="fas fa-check-circle"></i> <span>Business plans and strategy documents</span></div>
-            <div class="check-item"><i class="fas fa-check-circle"></i> <span>Loan agreements and bank statements</span></div>
-            <div class="check-item"><i class="fas fa-check-circle"></i> <span>Investor presentations (if any)</span></div>
-            <div class="check-item"><i class="fas fa-check-circle"></i> <span>Risk, policy, and internal control documents</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="faq-wrap">
-        <h3 class="faq-head">General <span class="text-orange">Inquiries</span></h3>
-        <div class="faq-box">
-          <div class="faq-top">
-            <span>Who should opt for Virtual CFO services?</span>
-            <i class="fas fa-plus"></i>
-          </div>
-          <div class="faq-btm">
-            <p>Growing businesses that need expert financial leadership without full-time costs can benefit</p>
-          </div>
-        </div>
-        <div class="faq-box">
-          <div class="faq-top">
-            <span>How frequently will performance reviews be conducted?</span>
-            <i class="fas fa-plus"></i>
-          </div>
-          <div class="faq-btm">
-            <p>Reviews can be monthly, quarterly, or as agreed.</p>
-          </div>
-        </div>
-
-         <div class="faq-box">
-          <div class="faq-top">
-            <span>Do you provide investor and management reporting?</span>
-            <i class="fas fa-plus"></i>
-          </div>
-          <div class="faq-btm">
-            <p>Yes, we provide customized dashboards and investor-ready reports</p>
-          </div>
-        </div>
-
-         <div class="faq-box">
-          <div class="faq-top">
-            <span>Can you support strategic and expansion decisions?</span>
-            <i class="fas fa-plus"></i>
-          </div>
-          <div class="faq-btm">
-            <p>Yes, we assist with business planning, feasibility studies, and growth strategies</p>
-          </div>
-        </div>
-
-         <div class="faq-box">
-          <div class="faq-top">
-            <span>How do you ensure confidentiality of business data?</span>
-            <i class="fas fa-plus"></i>
-          </div>
-          <div class="faq-btm">
-            <p>We follow strict confidentiality protocols and professional standards.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="navy-orange-banner">
-        <div class="banner-content">
-          <div class="banner-left">
-            <h3>Ready to Consult Your Business?</h3>
-            <p>Consult with CMA Karunesh Kumar.</p>
-          </div>
-          <a href="tel:+919097047484" class="orange-btn">
-            <i class="fas fa-phone-alt"></i> Book Discovery Call
-          </a>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <style>
-
-     .process-section {
-    padding: 80px 0;
-    background: #f7f9fc;
-}
-
-.process-wrapper {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 30px;
-    margin-top: 50px;
-    position: relative;
-}
-
-.process-step {
-    text-align: center;
-    position: relative;
-    padding: 20px;
-    transition: transform 0.3s ease;
-}
-
-.process-step:hover {
-    transform: translateY(-10px);
-}
-
-.step-number {
-    font-size: 60px;
-    font-weight: 900;
-    color: rgba(11, 60, 116, 0.05); /* Large faint number behind icon */
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1;
-}
-
-.step-icon {
-    width: 80px;
-    height: 80px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    color: #0b3c74;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 30px;
-    margin: 0 auto 20px;
-    position: relative;
-    z-index: 2;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-}
-
-.process-step:hover .step-icon {
-    background: #0b3c74;
-    color: #fff;
-    border-color: #0b3c74;
-}
-
-.process-step h4 {
-    color: #0b3c74;
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 12px;
-}
-
-.process-step p {
-    font-size: 14px;
-    color: #64748b;
-    line-height: 1.6;
-}
-
-.step-arrow {
-    position: absolute;
-    top: 40px;
-    right: -20px;
-    color: #ff8c00;
-    font-size: 18px;
-}
-
-/* Mobile Responsive */
-@media (max-width: 991px) {
-    .process-wrapper { grid-template-columns: repeat(2, 1fr); }
-    .step-arrow { display: none; }
-}
-
-@media (max-width: 576px) {
-    .process-wrapper { grid-template-columns: 1fr; }
-}
- 
-    /* --- FINAL REFINED CSS --- */
-    .incorp-final-section {
-      padding: 120px 0 80px;
-      background: #f7f9fc;
-      font-family: 'Inter', sans-serif;
+<style>
+    .pp-wrapper {
+        padding: 60px 20px;
+        background-color: #f8fafc;
+        min-height: 100vh;
     }
 
-    .container-premium {
-      max-width: 1300px;
-      margin: 0 auto;
-      padding: 0 20px;
+    .pp-card {
+        max-width: 900px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(11, 60, 116, 0.05);
+        padding: 50px;
+        border: 1px solid #e2e8f0;
     }
 
-    /* Boxed Service Tag */
-    .service-box-tag {
-      display: inline-flex;
-      align-items: center;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 25px;
-      background: #fff;
-    }
-
-    .s-num {
-      background: #0b3c74;
-      color: #fff;
-      padding: 6px 14px;
-      font-weight: 700;
-      font-size: 12px;
-    }
-
-    .s-name {
-      color: #ff8c00;
-      padding: 6px 14px;
-      font-weight: 700;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* Header Alignment */
-    .section-intro {
-      text-align: center;
-      margin-bottom: 90px;
-    }
-
-    .section-intro h2 {
-      font-size: clamp(32px, 5vw, 44px);
-      color: #0b3c74;
-      margin: 15px 0;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-
-    .text-navy {
-      color: #3b82f6;
-    }
-
-    .text-orange {
-      color: #ff8c00;
-    }
-
-    .dual-accent {
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      margin: 25px 0;
-    }
-
-    .bar-navy {
-      width: 45px;
-      height: 6px;
-      background: #0b3c74;
-      border-radius: 10px;
-    }
-
-    .bar-orange {
-      width: 22px;
-      height: 6px;
-      background: #ff8c00;
-      border-radius: 10px;
-    }
-
-    .desc-text {
-      font-size: 18px;
-      color: #64748b;
-      max-width: 750px;
-      margin: 0 auto;
-      line-height: 1.7;
-    }
-
-    /* Grid & Full Visible Icons */
-    .premium-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 40px;
-      margin-bottom: 100px;
-    }
-
-    .premium-card {
-      background: #fff;
-      border-radius: 20px;
-      border: 1px solid #e2e8f0;
-      position: relative;
-      transition: 0.4s;
-      overflow: visible;
-    }
-
-    .premium-card:hover {
-      transform: translateY(-12px);
-      box-shadow: 0 30px 60px rgba(11, 60, 116, 0.12);
-      border-color: #3b82f6;
-    }
-
-    .card-image-box {
-      position: relative;
-      height: 200px;
-      border-radius: 20px 20px 0 0;
-      overflow: hidden;
-    }
-
-    .card-image-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .card-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to top, rgba(11, 60, 116, 0.4), transparent);
-    }
-
-    /* ICON FIX: Ensures full visibility */
-    .card-icon-float {
-      position: absolute;
-      top: 170px;
-      right: 25px;
-      width: 65px;
-      height: 65px;
-      background: #ff8c00;
-      color: #fff;
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      box-shadow: 0 12px 20px rgba(255, 140, 0, 0.3);
-      z-index: 20;
-    }
-
-    .card-details {
-      padding: 55px 30px 35px;
-    }
-
-    .card-details h4 {
-      color: #0b3c74;
-      font-size: 22px;
-      margin-bottom: 12px;
-      font-weight: 700;
-    }
-
-    .card-details p {
-      color: #64748b;
-      font-size: 15px;
-      line-height: 1.6;
-      margin: 0;
-    }
-
-    .hover-border {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 0;
-      height: 5px;
-      background: #ff8c00;
-      transition: 0.4s;
-    }
-
-    .premium-card:hover .hover-border {
-      width: 100%;
-    }
-
-    /* Checklist & FAQ */
-    .checklist-section {
-      background: #f8fafc;
-      padding: 60px;
-      border-radius: 35px;
-      margin-bottom: 80px;
-      border-left: 10px solid #ff8c00;
-    }
-
-    .checklist-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-      margin-top: 30px;
-    }
-
-    .check-item {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      color: #1e293b;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .check-item i {
-      color: #ff8c00;
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-
-    .faq-wrap {
-      max-width: 850px;
-      margin: 0 auto 100px;
-    }
-
-    .faq-head {
-      text-align: center;
-      margin-bottom: 50px;
-      color: #0b3c74;
-      font-size: 32px;
-      font-weight: 700;
-    }
-
-    .faq-box {
-      border-bottom: 1px solid #e2e8f0;
-      padding: 25px 5px;
-      cursor: pointer;
-    }
-
-    .faq-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 700;
-      color: #1e293b;
-      font-size: 18px;
-    }
-
-    .faq-top i {
-      color: #ff8c00;
-      transition: 0.3s;
-    }
-
-    .faq-btm {
-      max-height: 0;
-      overflow: hidden;
-      transition: 0.4s ease;
-      color: #64748b;
-    }
-
-    .faq-box.active .faq-btm {
-      max-height: 150px;
-      padding-top: 15px;
-    }
-
-    .faq-box.active .faq-top i {
-      transform: rotate(45deg);
-    }
-
-    /* Banner */
-    .navy-orange-banner {
-      background: #0b3c74;
-      padding: 60px 50px;
-      border-radius: 30px;
-      border-left: 12px solid #ff8c00;
-      box-shadow: 0 20px 40px rgba(11, 60, 116, 0.2);
-    }
-
-    .banner-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 30px;
-    }
-
-    .banner-left h3 {
-      color: #fff;
-      font-size: 30px;
-      margin-bottom: 10px;
-      font-weight: 800;
-    }
-
-    .banner-left p {
-      color: #e2e8f0;
-      font-size: 17px;
-    }
-
-    .orange-btn {
-      background: #ff8c00;
-      color: #fff;
-      padding: 18px 40px;
-      border-radius: 60px;
-      text-decoration: none;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: 0.3s;
-      white-space: nowrap;
-      font-size: 16px;
-    }
-
-    /* RESPONSIVE */
-    @media (max-width: 992px) {
-      .premium-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 30px;
-      }
-
-      .checklist-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .banner-content {
-        flex-direction: column;
+    .pp-header {
         text-align: center;
-      }
+        margin-bottom: 40px;
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 30px;
     }
+
+    .pp-icon-main {
+        font-size: 40px;
+        color: var(--orange);
+        margin-bottom: 15px;
+    }
+
+    .pp-header h1 {
+        color: var(--navy);
+        font-size: 32px;
+        margin: 0;
+        font-weight: 800;
+    }
+
+    .pp-firm {
+        color: #64748b;
+        font-weight: 600;
+        margin: 5px 0;
+    }
+
+    .pp-date {
+        display: inline-block;
+        background: #fff7ed;
+        color: var(--orange);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-top: 10px;
+    }
+
+    .pp-intro {
+        font-size: 16px;
+        line-height: 1.7;
+        color: #475569;
+        margin-bottom: 40px;
+    }
+
+    .pp-section {
+        margin-bottom: 35px;
+    }
+
+    .pp-section h3 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--navy);
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+
+    .pp-section h3 i {
+        color: var(--orange);
+        font-size: 18px;
+    }
+
+    .pp-section p {
+        font-size: 15px;
+        color: #475569;
+        line-height: 1.8;
+    }
+
+    /* Sub-grid for Info Collection */
+    .pp-sub-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 15px;
+    }
+
+    .pp-sub-item {
+        background: #f8fafc;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .pp-sub-item i { color: var(--navy); margin-right: 5px; }
+
+    .pp-list {
+        padding-left: 20px;
+        margin-top: 10px;
+    }
+
+    .pp-list li {
+        font-size: 15px;
+        color: #475569;
+        margin-bottom: 8px;
+    }
+
+    .pp-highlight {
+        background: #ecfdf5;
+        color: #065f46 !important;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+    }
+
+    .pp-contact-box {
+        background: #f1f5f9;
+        padding: 20px;
+        border-radius: 12px;
+        line-height: 2;
+        color: var(--navy);
+    }
+
+    .pp-legal-footer {
+        margin-top: 50px;
+        padding: 25px;
+        background: #0b3c74;
+        border-radius: 12px;
+        font-size: 13px;
+        color: #ffffff;
+        text-align: center;
+    }
+
+    .pp-legal-footer i { font-size: 20px; margin-bottom: 10px; display: block; }
 
     @media (max-width: 768px) {
-      .premium-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .section-intro h2 {
-        font-size: 32px;
-      }
-
-      .checklist-section {
-        padding: 40px 20px;
-      }
+        .pp-card { padding: 30px 20px; }
+        .pp-header h1 { font-size: 26px; }
     }
-  </style>
+</style>
 
   <script>
     // FAQ TOGGLE SCRIPT
@@ -1397,7 +979,7 @@
                 <li><a href="index.php">Home</a></li>
                 <li><a href="index.php">Our Firm</a></li>
                 <li><a href="index.php">Services</a></li>
-                <li><a href="index.php">Latest Insights</a></li>
+                <li><a href="blogs.php">Latest Insights</a></li>
                 <li><a href="index.php">Testimonials</a></li>
                 <li><a href="index.php">Join the Team</a></li>
                 <li><a href="index.php">Contact Us</a></li>
@@ -1451,7 +1033,7 @@
             <div class="footer-legal">
                 <a href="#">Privacy Policy</a>
                 <span class="sep">|</span>
-                <a href="#">Terms of Service</a>
+                <a href="terms-of-service.php">Terms of Service</a>
             </div>
         </div>
     </div>
@@ -1607,7 +1189,6 @@
   <a href="https://wa.me/919097047484" target="_blank" class="side-whatsapp">
     <i class="fab fa-whatsapp"></i>
   </a>
-
 </body>
 
 </html>
