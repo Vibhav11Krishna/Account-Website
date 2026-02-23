@@ -1210,9 +1210,9 @@
         <div class="footer-container bottom-flex">
           <p>© 2026 Karunesh Kumar & Associates. All Rights Reserved.</p>
           <div class="footer-legal">
-            <a href="#">Privacy Policy</a>
+            <a href="../../Account-Website/privacy-policy.php">Privacy Policy</a>
             <span class="sep">|</span>
-            <a href="#">Terms of Service</a>
+            <a href="../../Account-Website/terms-of-service.php">Terms of Service</a>
           </div>
         </div>
       </div>
