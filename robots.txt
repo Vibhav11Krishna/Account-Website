@@ -1,0 +1,11 @@
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+
+# Keep search engines away from your login/registration area
+Disallow: /Register.php
+Disallow: /admin/
+Disallow: /assets/script.js
+
+# Link to your sitemap (Crucial!)
+Sitemap: https://cmakkassociates.com/sitemap.xml          

@@ -101,12 +101,27 @@ if (isset($_POST['apply'])) {
 
 <head>
   <meta charset="UTF-8">
-  <title>Accounting Firm</title>
-  <link rel="stylesheet" href="assets/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="assets/script.js" defer></script>
+  
+  <title>Karunesh Kumar & Associates | Chartered Accountants</title>
+  <meta name="google-site-verification" content="27f750709da80fe3" />
+  <meta name="google-site-verification" content="3cc-WvejGzciic5apD6kHdV-vdnSh3YaPzeUZU6Epbw" />
+  <meta name="description" content="Karunesh Kumar & Associates provides expert accounting, taxation, and business incorporation services. Professional financial solutions for startups and firms.">
 
+  <meta property="og:title" content="Karunesh Kumar & Associates | Chartered Accountants">
+  <meta property="og:description" content="Professional Taxation, Accounting, and Business Incorporation services.">
+  <meta property="og:image" content="https://cmakkassociates.com/assets/CMA.jpg">
+  <meta property="og:url" content="https://cmakkassociates.com/">
+  <meta property="og:type" content="website">
+
+  <link rel="icon" href="assets/CMA.jpg" type="image/jpeg">
+  <link rel="apple-touch-icon" href="assets/CMA.jpg">
+
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <script src="assets/script.js" defer></script>
 </head>
 
 <body>
