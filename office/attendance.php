@@ -16,6 +16,41 @@ $today = date('Y-m-d');
     <title>Live Attendance | KKA Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+         /* Billing Dropdown Styling */
+        .dropdown-content {
+            display: none;
+            background: rgba(0, 0, 0, 0.2);
+            margin: 0 5px;
+            border-radius: 8px;
+            padding-left: 15px;
+            /* Indent sub-items */
+        }
+
+        .dropdown-content a {
+            font-size: 14px;
+            padding: 10px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .dropdown-content a:hover {
+            color: var(--orange);
+            border-left: none;
+            /* No border for sub-items */
+            background: transparent;
+        }
+
+        .dropdown-btn {
+            cursor: pointer;
+        }
+
+        /* When the dropdown is open */
+        .show-menu {
+            display: block;
+        }
+
+        .rotate-chevron {
+            transform: rotate(90deg);
+        }
         :root { --navy: #0b3c74; --orange: #ff8c00; --sidebar: #082d56; --bg: #f8fafc; }
         body { display:flex; margin:0; background:var(--bg); font-family: 'Inter', sans-serif; color: #334155; }
         
@@ -46,14 +81,28 @@ $today = date('Y-m-d');
 </head>
 <body>
 
-    <div class="sidebar">
+     <div class="sidebar">
         <h2>KKA ADMIN</h2>
         <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i> Summary</a>
-        <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
-        <a href="admin-review.php" ><i class="fas fa-file-signature"></i> Quality Control</a>
+
+        <div class="dropdown-container">
+            <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleBilling()">
+                <i class="fas fa-file-invoice-dollar"></i> Billing
+                <i class="fas fa-chevron-right" id="chevron" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+            </a>
+            <div class="dropdown-content" id="billingMenu">
+                <a href="quotations.php"><i class="fas fa-file-signature"></i> Quotations</a>
+                <a href="invoices.php"><i class="fas fa-receipt"></i> Invoices</a>
+                <a href="receipts.php"><i class="fas fa-check-double"></i> Receipts</a>
+                <a href="outstanding.php"><i class="fas fa-exclamation-circle"></i> Outstanding</a>
+            </div>
+        </div>
+
+        <a href="assign-work.php" ><i class="fas fa-tasks"></i> Assign Work</a>
+        <a href="admin-review.php"><i class="fas fa-file-signature"></i> Quality Control</a>
         <a href="manage-clients.php"><i class="fas fa-users"></i> Manage Clients</a>
         <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
-        <a href="attendance.php" class="active"><i class="fas fa-calendar-check"></i> Attendance</a>
+        <a href="attendance.php"class="active"><i class="fas fa-calendar-check"></i> Attendance</a>
         <a href="../logout.php" style="margin-top:auto; color:#fda4af;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 
@@ -113,5 +162,14 @@ $today = date('Y-m-d');
             ?>
         </div>
     </div>
+    <script>
+        function toggleBilling() {
+            const menu = document.getElementById('billingMenu');
+            const chevron = document.getElementById('chevron');
+
+            menu.classList.toggle('show-menu');
+            chevron.classList.toggle('rotate-chevron');
+        }
+    </script>
 </body>
 </html>

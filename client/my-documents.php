@@ -14,9 +14,21 @@ $client_identifier = $_SESSION['user']['identifier'];
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Document Vault | KKA</title>
+    <title>Document Vault | KKA Client</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+          /* Styling to match your Admin Sidebar */
+    .dropdown-content a {
+        color: rgba(255,255,255,0.7) !important;
+        text-decoration: none;
+        display: block;
+        transition: 0.3s;
+    }
+    .dropdown-content a:hover {
+        color: white !important;
+        background: rgba(255,255,255,0.1);
+    }
+    .rotate-chevron { transform: rotate(180deg); }
         :root { --navy: #0b3c74; --orange: #ff8c00; --sidebar: #082d56; --bg: #f8fafc; }
         body { display:flex; margin:0; background:var(--bg); font-family: 'Inter', sans-serif; }
         .sidebar { width:280px; background:var(--sidebar); color:white; height:100vh; position:fixed; padding:30px 20px; box-sizing: border-box; display: flex; flex-direction: column; }
@@ -39,11 +51,30 @@ $client_identifier = $_SESSION['user']['identifier'];
 
 <div class="sidebar">
     <h2>KKA CLIENT</h2>
-    <a href="client-dashboard.php"><i class="fas fa-home"></i> Overview</a>
+    
+    <a href="client-dashboard.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'client-dashboard.php' ? 'active' : ''; ?>">
+        <i class="fas fa-chart-line"></i> Overview
+    </a>
+
+    <div class="dropdown-container">
+        <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleFinances()">
+            <i class="fas fa-wallet"></i> My Finances 
+            <i class="fas fa-chevron-down" id="financeChevron" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+        </a>
+        <div class="dropdown-content" id="financeMenu" style="display:none; background:rgba(0,0,0,0.2); border-radius:10px; margin:0 10px;">
+            <a href="my-quotations.php" style="padding:10px 15px; font-size:14px;"><i class="fas fa-file-alt"></i> Quotations</a>
+            <a href="my-invoices.php" style="padding:10px 15px; font-size:14px;"><i class="fas fa-file-invoice-dollar"></i> Invoices (Pay)</a>
+            <a href="my-receipts.php" style="padding:10px 15px; font-size:14px;"><i class="fas fa-receipt"></i> Receipts</a>
+        </div>
+    </div>
+
+    <a href="my-documents.php" class="active"><i class="fas fa-folder-open"></i> Document Vault</a>
+    <a href="upload-docs.php"><i class="fas fa-cloud-upload-alt"></i> Upload Center</a>
     <a href="request-service.php"><i class="fas fa-plus-circle"></i> New Request</a>
-    <a href="my-documents.php" class="active"><i class="fas fa-shield-alt"></i> Document Vault</a>
-    <a href="upload-docs.php"><i class="fas fa-cloud-upload-alt"></i> Document Center</a>
-    <a href="../logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    
+    <a href="../logout.php" class="logout-link" style="margin-top:auto; color:#fda4af !important;">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </a>
 </div>
 
 <div class="main">
@@ -110,6 +141,18 @@ $client_identifier = $_SESSION['user']['identifier'];
         ?>
     </div>
 </div>
-
+<script>
+function toggleFinances() {
+    var menu = document.getElementById("financeMenu");
+    var chevron = document.getElementById("financeChevron");
+    if (menu.style.display === "none" || menu.style.display === "") {
+        menu.style.display = "block";
+        chevron.classList.add("rotate-chevron");
+    } else {
+        menu.style.display = "none";
+        chevron.classList.remove("rotate-chevron");
+    }
+}
+</script>
 </body>
 </html>

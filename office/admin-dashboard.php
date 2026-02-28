@@ -35,6 +35,34 @@ if(isset($_POST['create'])){
     <title>KKA Admin | Executive Suite</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* Billing Dropdown specific styles */
+.dropdown-content {
+    display: none; /* Hidden by default */
+    background: rgba(0, 0, 0, 0.15);
+    margin: 0 10px;
+    border-radius: 10px;
+    padding-left: 10px;
+}
+
+.dropdown-content a {
+    font-size: 14px;
+    padding: 10px 14px;
+    margin-bottom: 2px;
+    border-left: none !important; /* Remove the orange border from sub-items */
+}
+
+.dropdown-content a:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--orange);
+}
+
+.show-menu {
+    display: block !important;
+}
+
+.rotate-chevron {
+    transform: rotate(180deg);
+}
         :root { --navy: #0b3c74; --orange: #ff8c00; --sidebar: #082d56; --bg: #f8fafc; --danger: #ef4444; }
         body { display:flex; margin:0; background:var(--bg); font-family: 'Inter', sans-serif; color: #334155; }
         
@@ -67,17 +95,30 @@ if(isset($_POST['create'])){
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>KKA ADMIN</h2>
-        <a href="admin-dashboard.php" class="active"><i class="fas fa-chart-pie"></i> Summary</a>
-        <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
-        <a href="admin-review.php"><i class="fas fa-file-signature"></i> Quality Control</a>
-        <a href="manage-clients.php"><i class="fas fa-users"></i> Manage Clients</a>
-        <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
-        <a href="attendance.php"><i class="fas fa-calendar-check"></i> Attendance</a>
-        <a href="../logout.php" style="margin-top:auto; color:#fda4af;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+ <div class="sidebar">
+    <h2>KKA ADMIN</h2>
+    <a href="admin-dashboard.php" class="active"><i class="fas fa-chart-pie"></i> Summary</a>
+
+    <div class="dropdown-container">
+        <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleBilling()">
+            <i class="fas fa-file-invoice-dollar"></i> Billing 
+            <i class="fas fa-chevron-down" id="chevron" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+        </a>
+        <div class="dropdown-content" id="billingMenu">
+            <a href="quotations.php"><i class="fas fa-file-signature"></i> Quotations</a>
+            <a href="invoices.php"><i class="fas fa-receipt"></i> Invoices</a>
+            <a href="receipts.php"><i class="fas fa-check-double"></i> Receipts</a>
+            <a href="outstanding.php"><i class="fas fa-exclamation-circle"></i> Outstanding</a>
+        </div>
     </div>
 
+    <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
+    <a href="admin-review.php"><i class="fas fa-file-signature"></i> Quality Control</a>
+    <a href="manage-clients.php"><i class="fas fa-users"></i> Manage Clients</a>
+    <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
+    <a href="attendance.php"><i class="fas fa-calendar-check"></i> Attendance</a>
+    <a href="../logout.php" style="margin-top:auto; color:#fda4af;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</div>
     <div class="main">
         <header>
             <h1>Firm Overview</h1>
@@ -101,10 +142,30 @@ if(isset($_POST['create'])){
         <?php endif; ?>
 
         <div class="stat-grid">
-            <div class="stat"><i class="fas fa-user-friends"></i><h3>Total Clients</h3><h2><?php echo $conn->query("SELECT id FROM users WHERE role='client'")->num_rows; ?></h2></div>
-            <div class="stat"><i class="fas fa-briefcase"></i><h3>Total Staff</h3><h2><?php echo $conn->query("SELECT id FROM users WHERE role='office'")->num_rows; ?></h2></div>
-            <div class="stat"><i class="fas fa-clock"></i><h3>Open Requests</h3><h2><?php echo $conn->query("SELECT id FROM service_requests WHERE status='Pending'")->num_rows; ?></h2></div>
+    <a href="manage-clients.php" style="text-decoration: none; color: inherit;">
+        <div class="stat" style="cursor: pointer; transition: 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-user-friends"></i>
+            <h3>Total Clients</h3>
+            <h2><?php echo $conn->query("SELECT id FROM users WHERE role='client'")->num_rows; ?></h2>
         </div>
+    </a>
+
+    <a href="manage-employees.php" style="text-decoration: none; color: inherit;">
+        <div class="stat" style="cursor: pointer; transition: 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-briefcase"></i>
+            <h3>Total Staff</h3>
+            <h2><?php echo $conn->query("SELECT id FROM users WHERE role='office'")->num_rows; ?></h2>
+        </div>
+    </a>
+
+    <a href="assign-work.php" style="text-decoration: none; color: inherit;">
+        <div class="stat" style="cursor: pointer; transition: 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <i class="fas fa-clock"></i>
+            <h3>Open Requests</h3>
+            <h2><?php echo $conn->query("SELECT id FROM service_requests WHERE status='Pending'")->num_rows; ?></h2>
+        </div>
+    </a>
+</div>
 
         <div class="card">
             <h3 style="margin-top:0;"><i class="fas fa-user-plus"></i> Onboard New User</h3>
@@ -140,6 +201,16 @@ if(isset($_POST['create'])){
                 input.removeAttribute('required');
             }
         }
+        function toggleBilling() {
+    const menu = document.getElementById('billingMenu');
+    const chevron = document.getElementById('chevron');
+    
+    // Toggle the visibility of the menu
+    menu.classList.toggle('show-menu');
+    
+    // Rotate the arrow icon
+    chevron.classList.toggle('rotate-chevron');
+}
     </script>
 </body>
 </html>
