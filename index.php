@@ -690,6 +690,101 @@ if (isset($_POST['apply'])) {
       slides[currentIdx].classList.add('active');
     }, 5000);
   </script>
+  <div class="update-strip-v2">
+  <div class="strip-label">
+    <span class="live-pulse"></span>
+    UPDATES
+  </div>
+  <div class="strip-content">
+    <div class="strip-track">
+      <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
+      <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
+      <span class="update-item"><i class="fas fa-circle"></i> GST: New advisory issued on GSTR-1 matching protocols.</span>
+      <span class="update-item"><i class="fas fa-circle"></i> MSME: Udyam registration now mandatory for tenders.</span>
+      <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
+      <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
+    </div>
+  </div>
+</div>
+<style>
+    .update-strip-v2 {
+  background: #0b3c74; /* Deep Steel Blue / Navy */
+  height: 50px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-bottom: 2px solid #ff8c00; /* Subtle orange bottom accent */
+}
+
+/* Fixed "Updates" Box */
+.strip-label {
+  background: #ff8c00; /* Orange label to catch the eye */
+  color: #fff;
+  padding: 0 25px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 1px;
+  z-index: 10;
+  box-shadow: 10px 0 15px rgba(0,0,0,0.2);
+}
+
+.live-pulse {
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border-radius: 50%;
+  margin-right: 10px;
+  animation: strip-pulse 1.9s infinite;
+}
+
+/* Scrolling Track */
+.strip-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.strip-track {
+  display: flex;
+  white-space: nowrap;
+  animation: scroll-left 30s linear infinite;
+}
+
+.update-item {
+  color: #ffffff; /* White text */
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Orange Points (Icons) */
+.update-item i {
+  color: #ff8c00; /* Orange icons/points */
+  font-size: 8px;
+}
+
+/* Animation Logic */
+@keyframes scroll-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); } /* Scrolls half the track for seamless loop */
+}
+
+@keyframes strip-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+/* Pause on Hover */
+.update-strip-v2:hover .strip-track {
+  animation-play-state: paused;
+}
+</style>
   <section class="about-firm-section" id="about">
     <div class="about-firm-container">
 
@@ -1115,7 +1210,7 @@ if (isset($_POST['apply'])) {
     <div class="container founder-grid">
       <div class="founder-img">
         <div class="img-frame">
-          <img src="assets/person1.jpg" alt="CMA Karunesh Kumar">
+          <img src="assets/karunesh.jpeg" alt="CMA Karunesh Kumar">
         </div>
       </div>
 
@@ -4202,6 +4297,199 @@ if (isset($_POST['apply'])) {
       logs.scrollTop = logs.scrollHeight;
     }
   </script>
+
+  <section class="f-resource-section">
+  <div class="f-container">
+
+    <div class="f-header">
+      <span class="f-sub-tag">PORTALS</span>
+      <h2 class="f-main-title">Important <span class="f-orange-text">Official</span> Links</h2>
+      <div class="f-accent-bars">
+        <span class="f-bar-navy"></span>
+        <span class="f-bar-orange"></span>
+      </div>
+    </div>
+
+    <div class="f-flex-grid">
+      
+      <a href="https://icmai.in/" target="_blank" class="f-card">
+        <div class="f-icon-box"><i class="fas fa-university"></i></div>
+        <h3 class="f-card-title">ICMAI</h3>
+        <p>Institute of Cost Accountants of India portal for professionals.</p>
+        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+      </a>
+
+      <a href="https://www.mca.gov.in/" target="_blank" class="f-card">
+        <div class="f-icon-box"><i class="fas fa-gavel"></i></div>
+        <h3 class="f-card-title">MCA Portal</h3>
+        <p>Ministry of Corporate Affairs for Company/LLP filings.</p>
+        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+      </a>
+
+      <a href="https://www.incometax.gov.in/" target="_blank" class="f-card">
+        <div class="f-icon-box"><i class="fas fa-file-invoice-dollar"></i></div>
+        <h3 class="f-card-title">Income Tax</h3>
+        <p>Official E-filing portal for Tax Returns and PAN services.</p>
+        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+      </a>
+
+      <a href="https://www.gst.gov.in/" target="_blank" class="f-card">
+        <div class="f-icon-box"><i class="fas fa-percentage"></i></div>
+        <h3 class="f-card-title">GST Council</h3>
+        <p>Goods and Services Tax network for returns and payments.</p>
+        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+      </a>
+
+      <a href="https://www.dgft.gov.in/" target="_blank" class="f-card">
+        <div class="f-icon-box"><i class="fas fa-ship"></i></div>
+        <h3 class="f-card-title">DGFT</h3>
+        <p>Director General of Foreign Trade for IEC & Export services.</p>
+        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+      </a>
+
+      <a href="https://www.sebi.gov.in/" target="_blank" class="f-card">
+        <div class="f-icon-box"><i class="fas fa-chart-line"></i></div>
+        <h3 class="f-card-title">SEBI</h3>
+        <p>Securities and Exchange Board of India Regulations.</p>
+        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+      </a>
+
+      <a href="https://www.rbi.org.in/" target="_blank" class="f-card">
+        <div class="f-icon-box"><i class="fas fa-landmark"></i></div>
+        <h3 class="f-card-title">RBI</h3>
+        <p>Reserve Bank of India official portal for banking news.</p>
+        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+      </a>
+
+      <a href="https://www.msme.gov.in/" target="_blank" class="f-card">
+        <div class="f-icon-box"><i class="fas fa-industry"></i></div>
+        <h3 class="f-card-title">MSME</h3>
+        <p>Ministry of Micro, Small & Medium Enterprises Portal.</p>
+        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+      </a>
+
+    </div>
+  </div>
+</section>
+<style>
+    /* --- SECTION CONTAINER --- */
+.f-resource-section {
+  padding: 100px 0;
+  background-color: #f7f9fc; /* Light Gray/Blue background */
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+}
+
+.f-container {
+  max-width: 1400px; /* Increased from 1200px */
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* --- HEADER (Isolated from Hero) --- */
+.f-header { margin-bottom: 50px; }
+.f-sub-tag { color: #0b3c74; font-weight: 700; text-transform: uppercase; font-size: 19px; letter-spacing: 2px; }
+.f-main-title { font-size: 40px; color: #0b3c74; margin: 10px 0; font-weight: 700; }
+.f-orange-text { color: #ff8c00; }
+
+.f-accent-bars { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+.f-bar-navy { width: 45px; height: 4px; background: #0b3c74; border-radius: 2px; }
+.f-bar-orange { width: 22px; height: 4px; background: #ff8c00; border-radius: 2px; }
+
+/* --- GRID SYSTEM (3-3-2) --- */
+.f-flex-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px; /* Slightly larger gap for better spacing with wider cards */
+}
+
+.f-card {
+  /* This calculation allows the cards to be wider while still fitting 3 per row */
+  flex: 0 1 calc(33.333% - 40px); 
+  min-width: 350px; /* Increased min-width from 310px */
+  background: #ffffff;
+  padding: 50px 30px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.4s ease;
+  position: relative;
+  box-sizing: border-box; /* Ensures padding doesn't break the width */
+}
+
+/* --- ICON ROTATION ANIMATION --- */
+.f-icon-box {
+  width: 75px;
+  height: 75px;
+  background: #f1f5f9;
+  color: #0b3c74;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 25px;
+  transition: all 0.5s ease; /* Rotation Speed */
+}
+
+/* Hover State */
+.f-card:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 20px 40px rgba(11, 60, 116, 0.08);
+  border-color: #ff8c00;
+}
+
+/* ROTATION TRIGGER */
+.f-card:hover .f-icon-box {
+  background: #0b3c74;
+  color: #fff;
+  transform: rotateY(360deg); /* The 360 Flip */
+}
+
+/* --- CARD TEXT --- */
+.f-card-title {
+  color: #0b3c74;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+.f-card p {
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+
+.f-btn {
+  color: #ff8c00;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: 0.3s;
+}
+
+.f-card:hover .f-btn {
+  gap: 12px;
+}
+
+/* --- MOBILE RESPONSIVE (1 in 1 Row) --- */
+@media (max-width: 1024px) {
+  .f-card { flex: 0 1 calc(50% - 30px); }
+}
+
+@media (max-width: 768px) {
+  .f-card { flex: 0 1 100%; }
+  .f-resource-section { padding: 80px 15px; }
+}
+</style>
   <footer class="footer-premium">
     <div class="footer-top-accent"></div>
     <div class="footer-container">
