@@ -3,12 +3,20 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Accounting Firm</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Accounting & Financial Management</title>
+ <meta name="description" content="Professional accounting and financial reporting services to strengthen your business control. Accurate books for sustainable growth.">
+
+  <meta property="og:image" content="https://cmakkassociates.com/assets/CMA.jpg">
+  <meta property="og:title" content="Karunesh Kumar & Associates">
+
+  <link rel="icon" href="assets/CMA.jpg" type="image/jpeg">
+  <link rel="apple-touch-icon" href="assets/CMA.jpg">
+
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="assets/script.js" defer></script>
-
 </head>
 
 <body>

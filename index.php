@@ -3063,7 +3063,7 @@ if (isset($_POST['apply'])) {
   </style>
 
 
-  <section class="team-section" id="team">
+<section class="team-section" id="team">
     <div class="container-premium">
 
       <div class="section-intro">
@@ -3085,7 +3085,7 @@ if (isset($_POST['apply'])) {
 
         <div class="team-card-v5">
           <div class="team-img-box">
-            <img src="assets/person1.jpg" alt="Neha Verma">
+            <img src="assets/team1.jpg" alt="Neha Verma">
             <div class="team-info-overlay">
               <div class="social-links-v5">
                 <a href="#"><i class="fab fa-linkedin-in"></i></a>
@@ -3095,14 +3095,14 @@ if (isset($_POST['apply'])) {
             </div>
           </div>
           <div class="team-meta">
-            <h4>Neha Verma</h4>
-            <p>Senior Accountant</p>
+            <h4>Kritika Singh</h4>
+            <p>Trainee</p>
           </div>
         </div>
 
         <div class="team-card-v5">
           <div class="team-img-box">
-            <img src="assets/person2.jpg" alt="Amit Gupta">
+            <img src="assets/team.jpeg" alt="Amit Gupta">
             <div class="team-info-overlay">
               <div class="social-links-v5">
                 <a href="#"><i class="fab fa-linkedin-in"></i></a>
@@ -3112,14 +3112,14 @@ if (isset($_POST['apply'])) {
             </div>
           </div>
           <div class="team-meta">
-            <h4>Amit Gupta</h4>
-            <p>Tax Consultant</p>
+            <h4>Avinish Kumar</h4>
+            <p>Audit Executive</p>
           </div>
         </div>
 
         <div class="team-card-v5">
           <div class="team-img-box">
-            <img src="assets/person3.jpg" alt="Pooja Sharma">
+            <img src="assets/men.jpg" alt="Pooja Sharma">
             <div class="team-info-overlay">
               <div class="social-links-v5">
                 <a href="#"><i class="fab fa-linkedin-in"></i></a>
@@ -3129,146 +3129,177 @@ if (isset($_POST['apply'])) {
             </div>
           </div>
           <div class="team-meta">
-            <h4>Pooja Sharma</h4>
-            <p>Audit Manager</p>
+            <h4>Vicky Mishra</h4>
+            <p>Trainee</p>
           </div>
         </div>
 
+<div class="team-card-v5 centered-card">
+  <div class="team-img-box">
+    <img src="assets/team3.jpeg" alt="New Member">
+    <div class="team-info-overlay">
+      <div class="social-links-v5">
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+      </div>
+    </div>
+  </div>
+  <div class="team-meta">
+    <h4>Chandan Kumar Jha</h4>
+    <p>CMA</p>
+  </div>
+</div>
       </div>
     </div>
   </section>
 
   <style>
-    /* --- TEAM SECTION STYLES --- */
-    .team-section {
-      padding: 100px 0;
-      background: #f7f9fc;
-    }
+  
+  /* --- TEAM SECTION STYLES --- */
+  .team-section {
+    padding: 100px 0;
+    background: #f7f9fc;
+  }
 
+  /* 1. INCREASED CONTAINER WIDTH */
+  .container-premium {
+    max-width: 1320px; /* Made wider to let cards expand */
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* 2. ADJUSTED GRID GAP */
+  .team-grid-v5 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px; /* Slightly smaller gap gives more width to the cards */
+    margin-top: 50px;
+  }
+
+  .team-card-v5 {
+    background: #fff;
+    border-radius: 25px;
+    overflow: hidden;
+    text-align: center;
+    transition: 0.4s ease;
+    border: 1px solid #f1f5f9;
+    width: 100%; /* Ensures card fills the grid fractional unit */
+  }
+
+  /* 3. INCREASED IMAGE HEIGHT */
+  .team-img-box {
+    position: relative;
+    height: 480px; /* Increased from 380px to match the new width */
+    overflow: hidden;
+    background: #e2e8f0;
+  }
+
+  .team-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: 0.5s ease;
+  }
+
+  /* Center the 4th card on the second row */
+  .centered-card {
+    grid-column: 2; 
+  }
+
+  /* Hover Overlay */
+  .team-info-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(11, 60, 116, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: 0.4s ease;
+  }
+
+  .team-card-v5:hover .team-info-overlay {
+    opacity: 1;
+  }
+
+  .team-card-v5:hover .team-img-box img {
+    transform: scale(1.1);
+  }
+
+  .social-links-v5 {
+    display: flex;
+    gap: 15px;
+    transform: translateY(20px);
+    transition: 0.4s ease;
+  }
+
+  .team-card-v5:hover .social-links-v5 {
+    transform: translateY(0);
+  }
+
+  .social-links-v5 a {
+    width: 45px;
+    height: 45px;
+    background: #ff8c00;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 18px;
+    transition: 0.3s;
+  }
+
+  .social-links-v5 a:hover {
+    background: #fff;
+    color: #0b3c74;
+    transform: rotate(360deg);
+  }
+
+  .team-meta {
+    padding: 30px 25px;
+  }
+
+  .team-meta h4 {
+    font-size: 24px; /* Slightly larger text for larger cards */
+    color: #0b3c74;
+    margin-bottom: 5px;
+    font-weight: 700;
+  }
+
+  .team-meta p {
+    color: #ff8c00;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 992px) {
     .team-grid-v5 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 40px;
-      margin-top: 50px;
+      grid-template-columns: repeat(2, 1fr);
     }
-
-    .team-card-v5 {
-      background: #fff;
-      border-radius: 25px;
-      overflow: hidden;
-      text-align: center;
-      transition: 0.4s ease;
-      border: 1px solid #f1f5f9;
+    .centered-card {
+      grid-column: auto; /* Resets to normal flow on 2-column layout */
     }
+  }
 
+  @media (max-width: 600px) {
+    .team-grid-v5 {
+      grid-template-columns: 1fr;
+    }
     .team-img-box {
-      position: relative;
-      height: 380px;
-      overflow: hidden;
-      background: #e2e8f0;
+      height: 400px;
     }
-
-    .team-img-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: 0.5s ease;
-    }
-
-    /* Hover Overlay */
-    .team-info-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(11, 60, 116, 0.85);
-      /* Navy Transparent */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: 0.4s ease;
-    }
-
-    .team-card-v5:hover .team-info-overlay {
-      opacity: 1;
-    }
-
-    .team-card-v5:hover .team-img-box img {
-      transform: scale(1.1);
-    }
-
-    /* Social Icons in Overlay */
-    .social-links-v5 {
-      display: flex;
-      gap: 15px;
-      transform: translateY(20px);
-      transition: 0.4s ease;
-    }
-
-    .team-card-v5:hover .social-links-v5 {
-      transform: translateY(0);
-    }
-
-    .social-links-v5 a {
-      width: 45px;
-      height: 45px;
-      background: #ff8c00;
-      color: #fff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      font-size: 18px;
-      transition: 0.3s;
-    }
-
-    .social-links-v5 a:hover {
-      background: #fff;
-      color: #0b3c74;
-      transform: rotate(360deg);
-    }
-
-    /* Name and Title */
-    .team-meta {
-      padding: 25px;
-    }
-
-    .team-meta h4 {
-      font-size: 22px;
-      color: #0b3c74;
-      margin-bottom: 5px;
-      font-weight: 800;
-    }
-
-    .team-meta p {
-      color: #ff8c00;
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* RESPONSIVE */
-    @media (max-width: 992px) {
-      .team-grid-v5 {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 30px;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .team-grid-v5 {
-        grid-template-columns: 1fr;
-      }
-
-      .team-img-box {
-        height: 320px;
-      }
-    }
-  </style>
+  }
+</style>
+  
 
   <section class="career-section" id="career">
     <div class="container-premium">
