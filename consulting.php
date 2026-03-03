@@ -4,12 +4,20 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Accounting Firm</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Advisory, Virtual CFO & Business Consulting</title>
+<meta name="description" content="Strategic financial advisory and business consulting. Data-driven insights to help you make informed decisions for your firm's future.">
+
+  <meta property="og:image" content="https://cmakkassociates.com/assets/CMA.jpg">
+  <meta property="og:title" content="Karunesh Kumar & Associates">
+
+  <link rel="icon" href="assets/CMA.jpg" type="image/jpeg">
+  <link rel="apple-touch-icon" href="assets/CMA.jpg">
+
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="assets/script.js" defer></script>
-
 </head>
 <body>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
