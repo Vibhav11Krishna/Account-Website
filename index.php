@@ -794,7 +794,7 @@ if (isset($_POST['apply'])) {
         </div>
 
         <div class="about-firm-text-area">
-          <h2 class="about-firm-title">About Our <span class="text-orange">Firm</span></h2>
+          <h2 class="about-firm-title">Cost Accountant  <span class="text-orange">(CMA) Firm</span></h2>
           <div class="about-firm-accent-line"></div>
 
           <p class="about-firm-para">
