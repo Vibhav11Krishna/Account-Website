@@ -227,7 +227,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 10px;">
         <a href="privacy-policy.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Privacy Policy</a>
         <span style="color: #cbd5e1;">&bull;</span>
-        <a href="terms-of-service.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Terms of Use</a>
+        <a href="terms-of-service.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Terms of Service</a>
         <span style="color: #cbd5e1;">&bull;</span>
         <a href="cookies.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Cookies</a>
     </div>
