@@ -2,7 +2,7 @@
 session_start();
 include('../db.php');
 
-if(!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'client') {
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'client') {
     header("Location: ../Login.php");
     exit();
 }
@@ -10,13 +10,15 @@ if(!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'client') {
 $cid = $_SESSION['user']['identifier'];
 $status_msg = "";
 
-if(isset($_POST['upload'])){
+if (isset($_POST['upload'])) {
     $category = $_POST['category'];
     $target_dir = "../documents/";
-    if (!file_exists($target_dir)) { mkdir($target_dir, 0777, true); }
+    if (!file_exists($target_dir)) {
+        mkdir($target_dir, 0777, true);
+    }
 
     $file_name = basename($_FILES["doc_file"]["name"]);
-    $safe_cid = str_replace('/', '-', $cid); 
+    $safe_cid = str_replace('/', '-', $cid);
     $new_filename = $safe_cid . "_" . time() . "_" . str_replace(' ', '_', $file_name);
     $target_file = $target_dir . $new_filename;
 
@@ -30,40 +32,170 @@ if(isset($_POST['upload'])){
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Document Center | KKA Client</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --navy: #0b3c74; --orange: #ff8c00; --sidebar: #082d56; --bg: #f8fafc; }
-        body { display:flex; margin:0; background:var(--bg); font-family: 'Inter', sans-serif; color: #334155; }
-        
+        :root {
+            --navy: #0b3c74;
+            --orange: #ff8c00;
+            --sidebar: #082d56;
+            --bg: #f8fafc;
+        }
+
+        body {
+            display: flex;
+            margin: 0;
+            background: var(--bg);
+            font-family: 'Inter', sans-serif;
+            color: #334155;
+        }
+
         /* Shared Sidebar Styles */
-        .sidebar { width:280px; background:var(--sidebar); color:white; height:100vh; position:fixed; padding:30px 20px; box-sizing: border-box; display: flex; flex-direction: column; }
-        .sidebar h2 { font-size: 22px; color: var(--orange); margin-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; }
-        .sidebar a { color:rgba(255,255,255,0.7); text-decoration:none; display:flex; align-items:center; gap:12px; padding:14px; margin-bottom:8px; border-radius:12px; transition: 0.3s; cursor: pointer; }
-        .sidebar a:hover, .sidebar a.active { background:rgba(255,255,255,0.1); color:white; border-left: 4px solid var(--orange); }
+         .sidebar {
+    width: 280px;
+    background: var(--sidebar);
+    color: white;
+    height: 100vh;
+    position: fixed;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    
+    /* ADD THIS LINE */
+    border-right: 4px solid var(--orange); 
+}
+
+        .sidebar h2 {
+            font-size: 22px;
+            color: var(--orange);
+            margin-bottom: 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+
+        .sidebar a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left: 4px solid var(--orange);
+        }
 
         /* Dropdown specific styles */
-        .dropdown-content a { color: rgba(255,255,255,0.7) !important; text-decoration: none; display: block; transition: 0.3s; }
-        .dropdown-content a:hover { color: white !important; background: rgba(255,255,255,0.1); }
-        .rotate-chevron { transform: rotate(180deg); }
+        .dropdown-content a {
+            color: rgba(255, 255, 255, 0.7) !important;
+            text-decoration: none;
+            display: block;
+            transition: 0.3s;
+        }
 
-        .logout-link { margin-top: auto; color: #fda4af !important; background: rgba(244, 63, 94, 0.1); }
+        .dropdown-content a:hover {
+            color: white !important;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .rotate-chevron {
+            transform: rotate(180deg);
+        }
+
+        .logout-link {
+            margin-top: auto;
+            color: #fda4af !important;
+            background: rgba(244, 63, 94, 0.1);
+        }
 
         /* Main Content */
-        .main { margin-left:280px; padding:50px; width:calc(100% - 280px); }
-        .upload-container { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; }
-        .card { background:white; padding:30px; border-radius:24px; box-shadow:0 10px 25px rgba(0,0,0,0.03); }
-        input, select { width:100%; padding:12px; margin:10px 0 20px; border:1.5px solid #e2e8f0; border-radius:10px; box-sizing: border-box; }
-        .btn-primary { background:var(--navy); color:white; border:none; padding:15px; width:100%; border-radius:10px; font-weight:700; cursor:pointer; transition: 0.3s; }
-        .btn-primary:hover { background: var(--orange); transform: translateY(-2px); }
-        
-        table { width:100%; border-collapse:collapse; margin-top:10px; }
-        th { text-align:left; padding:12px; background:#f1f5f9; color:var(--navy); font-size:12px; }
-        td { padding:12px; border-bottom:1px solid #f1f5f9; font-size:14px; }
-        .badge { padding:4px 8px; border-radius:6px; font-size:11px; background:#e0f2fe; color:#0369a1; }
+        .main {
+            margin-left: 280px;
+            padding: 50px;
+            width: calc(100% - 280px);
+        }
+
+        .upload-container {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0 20px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+
+        .btn-primary {
+            background: var(--navy);
+            color: white;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: var(--orange);
+            transform: translateY(-2px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            background: #f1f5f9;
+            color: var(--navy);
+            font-size: 12px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            background: #e0f2fe;
+            color: #0369a1;
+        }
     </style>
 </head>
+
 <body>
     <div class="sidebar">
         <h2>KKA CLIENT</h2>
@@ -71,7 +203,7 @@ if(isset($_POST['upload'])){
 
         <div class="dropdown-container">
             <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleFinances()">
-                <i class="fas fa-wallet"></i> My Finances 
+                <i class="fas fa-wallet"></i> My Finances
                 <i class="fas fa-chevron-down" id="financeChevron" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
             </a>
             <div class="dropdown-content" id="financeMenu" style="display:none; background:rgba(0,0,0,0.2); border-radius:10px; margin:0 10px;">
@@ -84,7 +216,7 @@ if(isset($_POST['upload'])){
         <a href="my-documents.php"><i class="fas fa-folder-open"></i> Document Vault</a>
         <a href="upload-docs.php" class="active"><i class="fas fa-cloud-upload-alt"></i> Upload Center</a>
         <a href="request-service.php"><i class="fas fa-plus-circle"></i> New Request</a>
-        
+
         <a href="../logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 
@@ -96,7 +228,7 @@ if(isset($_POST['upload'])){
             <div class="card">
                 <h3>Upload New File</h3>
                 <form method="POST" enctype="multipart/form-data">
-                   <label style="font-size:14px; font-weight:600;">Document Category</label>
+                    <label style="font-size:14px; font-weight:600;">Document Category</label>
                     <select name="category" required>
                         <optgroup label="Identity & Registration">
                             <option value="KYC Docs">PAN / Aadhar / Passport</option>
@@ -128,17 +260,21 @@ if(isset($_POST['upload'])){
                 <h3>Recently Uploaded</h3>
                 <table>
                     <thead>
-                        <tr><th>File Name</th><th>Category</th><th>Date</th></tr>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                        </tr>
                     </thead>
                     <tbody>
                         <?php
                         $docs = $conn->query("SELECT * FROM client_documents WHERE client_id='$cid' ORDER BY id DESC LIMIT 5");
-                        if($docs->num_rows > 0) {
-                            while($d = $docs->fetch_assoc()){
+                        if ($docs->num_rows > 0) {
+                            while ($d = $docs->fetch_assoc()) {
                                 echo "<tr>
                                     <td><strong>{$d['file_name']}</strong></td>
                                     <td><span class='badge'>{$d['category']}</span></td>
-                                    <td style='color:#64748b;'>".date('d M Y', strtotime($d['upload_date']))."</td>
+                                    <td style='color:#64748b;'>" . date('d M Y', strtotime($d['upload_date'])) . "</td>
                                 </tr>";
                             }
                         } else {
@@ -152,17 +288,18 @@ if(isset($_POST['upload'])){
     </div>
 
     <script>
-    function toggleFinances() {
-        var menu = document.getElementById("financeMenu");
-        var chevron = document.getElementById("financeChevron");
-        if (menu.style.display === "none" || menu.style.display === "") {
-            menu.style.display = "block";
-            chevron.classList.add("rotate-chevron");
-        } else {
-            menu.style.display = "none";
-            chevron.classList.remove("rotate-chevron");
+        function toggleFinances() {
+            var menu = document.getElementById("financeMenu");
+            var chevron = document.getElementById("financeChevron");
+            if (menu.style.display === "none" || menu.style.display === "") {
+                menu.style.display = "block";
+                chevron.classList.add("rotate-chevron");
+            } else {
+                menu.style.display = "none";
+                chevron.classList.remove("rotate-chevron");
+            }
         }
-    }
     </script>
 </body>
+
 </html>

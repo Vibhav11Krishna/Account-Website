@@ -148,7 +148,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin-top: 10px;
             box-shadow: 0 10px 20px rgba(11, 60, 116, 0.15);
         }
+.password-container {
+    position: relative;
+    width: 100%;
+}
 
+.password-container input {
+    padding-right: 45px; /* Leave space for the icon */
+}
+
+#togglePassword:hover {
+    color: var(--navy) !important;
+}
+.legal-footer a:hover {
+    color: var(--orange) !important;
+}
         .btn-login:hover { background: var(--orange); transform: translateY(-3px); box-shadow: 0 15px 30px rgba(255, 140, 0, 0.2); }
 
         .error { color: #e11d48; background: #fff1f2; padding: 14px; border-radius: 12px; margin-bottom: 25px; font-size: 14px; font-weight: 600; border: 1px solid #ffe4e6; text-align: center; }
@@ -188,17 +202,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <input type="text" name="uid" id="uid-field" placeholder="enter your ID" required>
                     </div>
                     
-                    <div class="input-group">
-                        <label>Secure Password</label>
-                        <input type="password" name="pass" placeholder="enter your password" required>
-                    </div>
+                 <div class="input-group">
+    <label>Secure Password</label>
+    <div class="password-container" style="position: relative;">
+        <input type="password" name="pass" id="password-field" placeholder="enter your password" required>
+        <i class="far fa-eye" id="togglePassword" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b;"></i>
+    </div>
+</div>
 
                     <div id="forgot-pass-container" class="forgot-link">
                         <a href="forgot-password.php">Forgot office password?</a>
                     </div>
 
                     <button type="submit" class="btn-login">Secure Sign In</button>
+                    <div style="display: flex; align-items: flex-start; gap: 10px; margin: 20px 0;">
+    <input type="checkbox" id="agree" required style="width: 16px; height: 16px; cursor: pointer; margin-top: 3px;">
+    <label for="agree" style="font-size: 12px; color: var(--slate); font-weight: 500; text-transform: none;">
+        I agree to the <a href="privacy-policy.php" style="color: var(--navy); text-decoration: none; font-weight: 700;">Privacy Policy</a> and 
+        <a href="terms-of-service.php" style="color: var(--navy); text-decoration: none; font-weight: 700;">Terms of Service</a>.
+    </label>
+</div>
                 </form>
+                <div class="legal-footer" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9; text-align: center;">
+    <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 10px;">
+        <a href="privacy-policy.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Privacy Policy</a>
+        <span style="color: #cbd5e1;">&bull;</span>
+        <a href="terms-of-service.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Terms of Use</a>
+        <span style="color: #cbd5e1;">&bull;</span>
+        <a href="cookies.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Cookies</a>
+    </div>
+    <p style="font-size: 11px; color: #94a3b8;">&copy; 2026 Karunesh Kumar & Associates</p>
+</div>
             </div>
         </div>
     </div>
@@ -224,6 +258,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 forgot.style.display = 'none';
             }
         }
+        const togglePassword = document.querySelector('#togglePassword');
+const password = document.querySelector('#password-field');
+
+togglePassword.addEventListener('click', function (e) {
+    // toggle the type attribute
+    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+    password.setAttribute('type', type);
+    
+    // toggle the eye / eye slash icon
+    this.classList.toggle('fa-eye-slash');
+});
     </script>
 </body>
 </html>

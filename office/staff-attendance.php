@@ -58,17 +58,20 @@ $login_data = $att_check->fetch_assoc();
             color: #334155;
         }
 
-        .sidebar {
-            width: 280px;
-            background: var(--sidebar);
-            color: white;
-            height: 100vh;
-            position: fixed;
-            padding: 30px 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }
+         .sidebar {
+    width: 280px;
+    background: var(--sidebar);
+    color: white;
+    height: 100vh;
+    position: fixed;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    
+    /* ADD THIS LINE */
+    border-right: 4px solid var(--orange); 
+}
 
         .sidebar h2 {
             font-size: 22px;
