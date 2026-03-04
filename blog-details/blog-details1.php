@@ -1,13 +1,25 @@
 <html lang="en">
 
+
 <head>
   <meta charset="UTF-8">
-  <title>Blogs</title>
-  <link rel="stylesheet" href="../assets/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <title>GST Compliance Checklist | Karunesh Kumar & Associates</title>
 
+  <meta name="description" content="Key GST obligations every business must follow to avoid penalties and ensure smooth operations.">
+
+  <link rel="icon" href="../assets/CMA.jpg" type="image/jpeg">
+  <link rel="apple-touch-icon" href="../assets/CMA.jpg">
+
+  <meta property="og:title" content="GST Compliance Checklist | Karunesh Kumar & Associates">
+  <meta property="og:description" content="Key GST obligations every business must follow to avoid penalties and ensure smooth operations.">
+  <meta property="og:image" content="https://cmakkassociates.com/assets/CMA.jpg">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://cmakkassociates.com/blog-details/blog-details1.php">
+
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>

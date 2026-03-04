@@ -2,14 +2,24 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Blogs</title>
-  <link rel="stylesheet" href="../assets/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <title>Common Tax Filing Mistakes | Karunesh Kumar & Associates</title>
 
+  <meta name="description" content="An analysis of frequent errors in income tax returns and preventive measures to avoid scrutiny">
+
+  <link rel="icon" href="../assets/CMA.jpg" type="image/jpeg">
+  <link rel="apple-touch-icon" href="../assets/CMA.jpg">
+
+  <meta property="og:title" content="Common Tax Filing Mistakes | Karunesh Kumar & Associates">
+  <meta property="og:description" content="An analysis of frequent errors in income tax returns and preventive measures to avoid scrutiny">
+  <meta property="og:image" content="https://cmakkassociates.com/assets/CMA.jpg">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://cmakkassociates.com/blog-details/blog-details6.php">
+
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-
 <body>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
