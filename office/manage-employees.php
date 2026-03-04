@@ -83,17 +83,21 @@ if (isset($_POST['update_pass'])) {
             font-family: 'Inter', sans-serif;
         }
 
-        .sidebar {
-            width: 280px;
-            background: var(--sidebar);
-            color: white;
-            height: 100vh;
-            position: fixed;
-            padding: 30px 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }
+          /* Sidebar */
+       .sidebar {
+    width: 280px;
+    background: var(--sidebar);
+    color: white;
+    height: 100vh;
+    position: fixed;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    
+    /* ADD THIS LINE */
+    border-right: 4px solid var(--orange); 
+}
 
         .sidebar h2 {
             color: var(--orange);

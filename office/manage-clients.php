@@ -78,18 +78,22 @@ if (isset($_GET['delete'])) {
         }
 
         /* Sidebar Navigation */
-        .sidebar {
-            width: 280px;
-            background: var(--sidebar);
-            color: white;
-            height: 100vh;
-            position: fixed;
-            padding: 30px 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            z-index: 1000;
-        }
+           /* Sidebar */
+       .sidebar {
+    width: 280px;
+    background: var(--sidebar);
+    color: white;
+    height: 100vh;
+    position: fixed;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    
+    /* ADD THIS LINE */
+    border-right: 4px solid var(--orange); 
+}
+
 
         .sidebar h2 {
             color: var(--orange);
