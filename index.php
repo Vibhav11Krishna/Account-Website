@@ -102,7 +102,7 @@ if (isset($_POST['apply'])) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+
   <title>Karunesh Kumar & Associates | Chartered Accountants</title>
   <meta name="google-site-verification" content="27f750709da80fe3" />
   <meta name="google-site-verification" content="3cc-WvejGzciic5apD6kHdV-vdnSh3YaPzeUZU6Epbw" />
@@ -691,100 +691,120 @@ if (isset($_POST['apply'])) {
     }, 5000);
   </script>
   <div class="update-strip-v2">
-  <div class="strip-label">
-    <span class="live-pulse"></span>
-    UPDATES
-  </div>
-  <div class="strip-content">
-    <div class="strip-track">
-      <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
-      <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
-      <span class="update-item"><i class="fas fa-circle"></i> GST: New advisory issued on GSTR-1 matching protocols.</span>
-      <span class="update-item"><i class="fas fa-circle"></i> MSME: Udyam registration now mandatory for tenders.</span>
-      <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
-      <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
+    <div class="strip-label">
+      <span class="live-pulse"></span>
+      UPDATES
+    </div>
+    <div class="strip-content">
+      <div class="strip-track">
+        <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
+        <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
+        <span class="update-item"><i class="fas fa-circle"></i> GST: New advisory issued on GSTR-1 matching protocols.</span>
+        <span class="update-item"><i class="fas fa-circle"></i> MSME: Udyam registration now mandatory for tenders.</span>
+        <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
+        <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
+      </div>
     </div>
   </div>
-</div>
-<style>
+  <style>
     .update-strip-v2 {
-  background: #0b3c74; /* Deep Steel Blue / Navy */
-  height: 50px;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  border-bottom: 2px solid #ff8c00; /* Subtle orange bottom accent */
-}
+      background: #0b3c74;
+      /* Deep Steel Blue / Navy */
+      height: 50px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      border-bottom: 2px solid #ff8c00;
+      /* Subtle orange bottom accent */
+    }
 
-/* Fixed "Updates" Box */
-.strip-label {
-  background: #ff8c00; /* Orange label to catch the eye */
-  color: #fff;
-  padding: 0 25px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  font-weight: 800;
-  font-size: 13px;
-  letter-spacing: 1px;
-  z-index: 10;
-  box-shadow: 10px 0 15px rgba(0,0,0,0.2);
-}
+    /* Fixed "Updates" Box */
+    .strip-label {
+      background: #ff8c00;
+      /* Orange label to catch the eye */
+      color: #fff;
+      padding: 0 25px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 1px;
+      z-index: 10;
+      box-shadow: 10px 0 15px rgba(0, 0, 0, 0.2);
+    }
 
-.live-pulse {
-  width: 8px;
-  height: 8px;
-  background: #fff;
-  border-radius: 50%;
-  margin-right: 10px;
-  animation: strip-pulse 1.9s infinite;
-}
+    .live-pulse {
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      border-radius: 50%;
+      margin-right: 10px;
+      animation: strip-pulse 1.9s infinite;
+    }
 
-/* Scrolling Track */
-.strip-content {
-  flex: 1;
-  overflow: hidden;
-}
+    /* Scrolling Track */
+    .strip-content {
+      flex: 1;
+      overflow: hidden;
+    }
 
-.strip-track {
-  display: flex;
-  white-space: nowrap;
-  animation: scroll-left 30s linear infinite;
-}
+    .strip-track {
+      display: flex;
+      white-space: nowrap;
+      animation: scroll-left 30s linear infinite;
+    }
 
-.update-item {
-  color: #ffffff; /* White text */
-  font-size: 14px;
-  font-weight: 500;
-  padding: 0 40px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+    .update-item {
+      color: #ffffff;
+      /* White text */
+      font-size: 14px;
+      font-weight: 500;
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-/* Orange Points (Icons) */
-.update-item i {
-  color: #ff8c00; /* Orange icons/points */
-  font-size: 8px;
-}
+    /* Orange Points (Icons) */
+    .update-item i {
+      color: #ff8c00;
+      /* Orange icons/points */
+      font-size: 8px;
+    }
 
-/* Animation Logic */
-@keyframes scroll-left {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); } /* Scrolls half the track for seamless loop */
-}
+    /* Animation Logic */
+    @keyframes scroll-left {
+      0% {
+        transform: translateX(0);
+      }
 
-@keyframes strip-pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
+      100% {
+        transform: translateX(-50%);
+      }
 
-/* Pause on Hover */
-.update-strip-v2:hover .strip-track {
-  animation-play-state: paused;
-}
-</style>
+      /* Scrolls half the track for seamless loop */
+    }
+
+    @keyframes strip-pulse {
+      0% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+
+    /* Pause on Hover */
+    .update-strip-v2:hover .strip-track {
+      animation-play-state: paused;
+    }
+  </style>
   <section class="about-firm-section" id="about">
     <div class="about-firm-container">
 
@@ -794,7 +814,7 @@ if (isset($_POST['apply'])) {
         </div>
 
         <div class="about-firm-text-area">
-          <h2 class="about-firm-title">Cost Accountant  <span class="text-orange">(CMA) Firm</span></h2>
+          <h2 class="about-firm-title">Cost Accountant <span class="text-orange">(CMA) Firm</span></h2>
           <div class="about-firm-accent-line"></div>
 
           <p class="about-firm-para">
@@ -972,40 +992,41 @@ if (isset($_POST['apply'])) {
       line-height: 1.6;
     }
 
-   @media (max-width: 992px) {
-  .about-firm-intro {
-    flex-direction: column-reverse; /* 👈 This will push logo below */
-    text-align: center;
-  }
+    @media (max-width: 992px) {
+      .about-firm-intro {
+        flex-direction: column-reverse;
+        /* 👈 This will push logo below */
+        text-align: center;
+      }
 
-  .about-firm-logo-wrapper {
-    max-width: 320px;
-    margin: 30px auto 0; /* add space above logo */
-  }
+      .about-firm-logo-wrapper {
+        max-width: 320px;
+        margin: 30px auto 0;
+        /* add space above logo */
+      }
 
-  .about-firm-accent-line {
-    margin: 0 auto 30px;
-  }
+      .about-firm-accent-line {
+        margin: 0 auto 30px;
+      }
 
-  .about-firm-boxes-row {
-    grid-template-columns: 1fr;
-  }
+      .about-firm-boxes-row {
+        grid-template-columns: 1fr;
+      }
 
-  .about-firm-para {
-    text-align: center;
-  }
+      .about-firm-para {
+        text-align: center;
+      }
 
-  .about-firm-section {
-    padding: 80px 0;
-  }
+      .about-firm-section {
+        padding: 80px 0;
+      }
 
-  .logo-experience-badge {
-    left: 50%;
-    transform: translateX(-50%);
-    top: -30px;
-  }
-}
-
+      .logo-experience-badge {
+        left: 50%;
+        transform: translateX(-50%);
+        top: -30px;
+      }
+    }
   </style>
 
   <section class="stats-section">
@@ -3063,7 +3084,7 @@ if (isset($_POST['apply'])) {
   </style>
 
 
-<section class="team-section" id="team">
+  <section class="team-section" id="team">
     <div class="container-premium">
 
       <div class="section-intro">
@@ -3134,172 +3155,179 @@ if (isset($_POST['apply'])) {
           </div>
         </div>
 
-<div class="team-card-v5 centered-card">
-  <div class="team-img-box">
-    <img src="assets/team3.jpeg" alt="New Member">
-    <div class="team-info-overlay">
-      <div class="social-links-v5">
-        <a href="#"><i class="fab fa-linkedin-in"></i></a>
-        <a href="#"><i class="fab fa-facebook-f"></i></a>
-        <a href="#"><i class="fab fa-twitter"></i></a>
-      </div>
-    </div>
-  </div>
-  <div class="team-meta">
-    <h4>Chandan Kumar Jha</h4>
-    <p>CMA</p>
-  </div>
-</div>
+        <div class="team-card-v5 centered-card">
+          <div class="team-img-box">
+            <img src="assets/team3.jpeg" alt="New Member">
+            <div class="team-info-overlay">
+              <div class="social-links-v5">
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+              </div>
+            </div>
+          </div>
+          <div class="team-meta">
+            <h4>Chandan Kumar Jha</h4>
+            <p>CMA</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
   <style>
-  
-  /* --- TEAM SECTION STYLES --- */
-  .team-section {
-    padding: 100px 0;
-    background: #f7f9fc;
-  }
+    /* --- TEAM SECTION STYLES --- */
+    .team-section {
+      padding: 100px 0;
+      background: #f7f9fc;
+    }
 
-  /* 1. INCREASED CONTAINER WIDTH */
-  .container-premium {
-    max-width: 1320px; /* Made wider to let cards expand */
-    margin: 0 auto;
-    padding: 0 20px;
-  }
+    /* 1. INCREASED CONTAINER WIDTH */
+    .container-premium {
+      max-width: 1320px;
+      /* Made wider to let cards expand */
+      margin: 0 auto;
+      padding: 0 20px;
+    }
 
-  /* 2. ADJUSTED GRID GAP */
-  .team-grid-v5 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px; /* Slightly smaller gap gives more width to the cards */
-    margin-top: 50px;
-  }
-
-  .team-card-v5 {
-    background: #fff;
-    border-radius: 25px;
-    overflow: hidden;
-    text-align: center;
-    transition: 0.4s ease;
-    border: 1px solid #f1f5f9;
-    width: 100%; /* Ensures card fills the grid fractional unit */
-  }
-
-  /* 3. INCREASED IMAGE HEIGHT */
-  .team-img-box {
-    position: relative;
-    height: 480px; /* Increased from 380px to match the new width */
-    overflow: hidden;
-    background: #e2e8f0;
-  }
-
-  .team-img-box img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: 0.5s ease;
-  }
-
-  /* Center the 4th card on the second row */
-  .centered-card {
-    grid-column: 2; 
-  }
-
-  /* Hover Overlay */
-  .team-info-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(11, 60, 116, 0.85);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: 0.4s ease;
-  }
-
-  .team-card-v5:hover .team-info-overlay {
-    opacity: 1;
-  }
-
-  .team-card-v5:hover .team-img-box img {
-    transform: scale(1.1);
-  }
-
-  .social-links-v5 {
-    display: flex;
-    gap: 15px;
-    transform: translateY(20px);
-    transition: 0.4s ease;
-  }
-
-  .team-card-v5:hover .social-links-v5 {
-    transform: translateY(0);
-  }
-
-  .social-links-v5 a {
-    width: 45px;
-    height: 45px;
-    background: #ff8c00;
-    color: #fff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    font-size: 18px;
-    transition: 0.3s;
-  }
-
-  .social-links-v5 a:hover {
-    background: #fff;
-    color: #0b3c74;
-    transform: rotate(360deg);
-  }
-
-  .team-meta {
-    padding: 30px 25px;
-  }
-
-  .team-meta h4 {
-    font-size: 24px; /* Slightly larger text for larger cards */
-    color: #0b3c74;
-    margin-bottom: 5px;
-    font-weight: 700;
-  }
-
-  .team-meta p {
-    color: #ff8c00;
-    font-size: 14px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-  }
-
-  /* RESPONSIVE */
-  @media (max-width: 992px) {
+    /* 2. ADJUSTED GRID GAP */
     .team-grid-v5 {
-      grid-template-columns: repeat(2, 1fr);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+      /* Slightly smaller gap gives more width to the cards */
+      margin-top: 50px;
     }
-    .centered-card {
-      grid-column: auto; /* Resets to normal flow on 2-column layout */
-    }
-  }
 
-  @media (max-width: 600px) {
-    .team-grid-v5 {
-      grid-template-columns: 1fr;
+    .team-card-v5 {
+      background: #fff;
+      border-radius: 25px;
+      overflow: hidden;
+      text-align: center;
+      transition: 0.4s ease;
+      border: 1px solid #f1f5f9;
+      width: 100%;
+      /* Ensures card fills the grid fractional unit */
     }
+
+    /* 3. INCREASED IMAGE HEIGHT */
     .team-img-box {
-      height: 400px;
+      position: relative;
+      height: 480px;
+      /* Increased from 380px to match the new width */
+      overflow: hidden;
+      background: #e2e8f0;
     }
-  }
-</style>
-  
+
+    .team-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: 0.5s ease;
+    }
+
+    /* Center the 4th card on the second row */
+    .centered-card {
+      grid-column: 2;
+    }
+
+    /* Hover Overlay */
+    .team-info-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(11, 60, 116, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: 0.4s ease;
+    }
+
+    .team-card-v5:hover .team-info-overlay {
+      opacity: 1;
+    }
+
+    .team-card-v5:hover .team-img-box img {
+      transform: scale(1.1);
+    }
+
+    .social-links-v5 {
+      display: flex;
+      gap: 15px;
+      transform: translateY(20px);
+      transition: 0.4s ease;
+    }
+
+    .team-card-v5:hover .social-links-v5 {
+      transform: translateY(0);
+    }
+
+    .social-links-v5 a {
+      width: 45px;
+      height: 45px;
+      background: #ff8c00;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 18px;
+      transition: 0.3s;
+    }
+
+    .social-links-v5 a:hover {
+      background: #fff;
+      color: #0b3c74;
+      transform: rotate(360deg);
+    }
+
+    .team-meta {
+      padding: 30px 25px;
+    }
+
+    .team-meta h4 {
+      font-size: 24px;
+      /* Slightly larger text for larger cards */
+      color: #0b3c74;
+      margin-bottom: 5px;
+      font-weight: 700;
+    }
+
+    .team-meta p {
+      color: #ff8c00;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 992px) {
+      .team-grid-v5 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .centered-card {
+        grid-column: auto;
+        /* Resets to normal flow on 2-column layout */
+      }
+    }
+
+    @media (max-width: 600px) {
+      .team-grid-v5 {
+        grid-template-columns: 1fr;
+      }
+
+      .team-img-box {
+        height: 400px;
+      }
+    }
+  </style>
+
 
   <section class="career-section" id="career">
     <div class="container-premium">
@@ -4330,197 +4358,246 @@ if (isset($_POST['apply'])) {
   </script>
 
   <section class="f-resource-section">
-  <div class="f-container">
+    <div class="f-container">
 
-    <div class="f-header">
-      <span class="f-sub-tag">PORTALS</span>
-      <h2 class="f-main-title">Important <span class="f-orange-text">Official</span> Links</h2>
-      <div class="f-accent-bars">
-        <span class="f-bar-navy"></span>
-        <span class="f-bar-orange"></span>
+      <div class="f-header">
+        <span class="f-sub-tag">PORTALS</span>
+        <h2 class="f-main-title">Important <span class="f-orange-text">Official</span> Links</h2>
+        <div class="f-accent-bars">
+          <span class="f-bar-navy"></span>
+          <span class="f-bar-orange"></span>
+        </div>
+      </div>
+
+      <div class="f-flex-grid">
+
+        <a href="https://icmai.in/" target="_blank" class="f-card">
+          <div class="f-icon-box"><i class="fas fa-university"></i></div>
+          <h3 class="f-card-title">ICMAI</h3>
+          <p>Institute of Cost Accountants of India portal for professionals.</p>
+          <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+        </a>
+
+        <a href="https://www.mca.gov.in/" target="_blank" class="f-card">
+          <div class="f-icon-box"><i class="fas fa-gavel"></i></div>
+          <h3 class="f-card-title">MCA Portal</h3>
+          <p>Ministry of Corporate Affairs for Company/LLP filings.</p>
+          <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+        </a>
+
+        <a href="https://www.incometax.gov.in/" target="_blank" class="f-card">
+          <div class="f-icon-box"><i class="fas fa-file-invoice-dollar"></i></div>
+          <h3 class="f-card-title">Income Tax</h3>
+          <p>Official E-filing portal for Tax Returns and PAN services.</p>
+          <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+        </a>
+
+        <a href="https://www.gst.gov.in/" target="_blank" class="f-card">
+          <div class="f-icon-box"><i class="fas fa-percentage"></i></div>
+          <h3 class="f-card-title">GST Council</h3>
+          <p>Goods and Services Tax network for returns and payments.</p>
+          <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+        </a>
+
+        <a href="https://www.dgft.gov.in/" target="_blank" class="f-card">
+          <div class="f-icon-box"><i class="fas fa-ship"></i></div>
+          <h3 class="f-card-title">DGFT</h3>
+          <p>Director General of Foreign Trade for IEC & Export services.</p>
+          <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+        </a>
+
+        <a href="https://www.sebi.gov.in/" target="_blank" class="f-card">
+          <div class="f-icon-box"><i class="fas fa-chart-line"></i></div>
+          <h3 class="f-card-title">SEBI</h3>
+          <p>Securities and Exchange Board of India Regulations.</p>
+          <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+        </a>
+
+        <a href="https://www.rbi.org.in/" target="_blank" class="f-card">
+          <div class="f-icon-box"><i class="fas fa-landmark"></i></div>
+          <h3 class="f-card-title">RBI</h3>
+          <p>Reserve Bank of India official portal for banking news.</p>
+          <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+        </a>
+
+        <a href="https://www.msme.gov.in/" target="_blank" class="f-card">
+          <div class="f-icon-box"><i class="fas fa-industry"></i></div>
+          <h3 class="f-card-title">MSME</h3>
+          <p>Ministry of Micro, Small & Medium Enterprises Portal.</p>
+          <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
+        </a>
+
       </div>
     </div>
-
-    <div class="f-flex-grid">
-      
-      <a href="https://icmai.in/" target="_blank" class="f-card">
-        <div class="f-icon-box"><i class="fas fa-university"></i></div>
-        <h3 class="f-card-title">ICMAI</h3>
-        <p>Institute of Cost Accountants of India portal for professionals.</p>
-        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
-      </a>
-
-      <a href="https://www.mca.gov.in/" target="_blank" class="f-card">
-        <div class="f-icon-box"><i class="fas fa-gavel"></i></div>
-        <h3 class="f-card-title">MCA Portal</h3>
-        <p>Ministry of Corporate Affairs for Company/LLP filings.</p>
-        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
-      </a>
-
-      <a href="https://www.incometax.gov.in/" target="_blank" class="f-card">
-        <div class="f-icon-box"><i class="fas fa-file-invoice-dollar"></i></div>
-        <h3 class="f-card-title">Income Tax</h3>
-        <p>Official E-filing portal for Tax Returns and PAN services.</p>
-        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
-      </a>
-
-      <a href="https://www.gst.gov.in/" target="_blank" class="f-card">
-        <div class="f-icon-box"><i class="fas fa-percentage"></i></div>
-        <h3 class="f-card-title">GST Council</h3>
-        <p>Goods and Services Tax network for returns and payments.</p>
-        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
-      </a>
-
-      <a href="https://www.dgft.gov.in/" target="_blank" class="f-card">
-        <div class="f-icon-box"><i class="fas fa-ship"></i></div>
-        <h3 class="f-card-title">DGFT</h3>
-        <p>Director General of Foreign Trade for IEC & Export services.</p>
-        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
-      </a>
-
-      <a href="https://www.sebi.gov.in/" target="_blank" class="f-card">
-        <div class="f-icon-box"><i class="fas fa-chart-line"></i></div>
-        <h3 class="f-card-title">SEBI</h3>
-        <p>Securities and Exchange Board of India Regulations.</p>
-        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
-      </a>
-
-      <a href="https://www.rbi.org.in/" target="_blank" class="f-card">
-        <div class="f-icon-box"><i class="fas fa-landmark"></i></div>
-        <h3 class="f-card-title">RBI</h3>
-        <p>Reserve Bank of India official portal for banking news.</p>
-        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
-      </a>
-
-      <a href="https://www.msme.gov.in/" target="_blank" class="f-card">
-        <div class="f-icon-box"><i class="fas fa-industry"></i></div>
-        <h3 class="f-card-title">MSME</h3>
-        <p>Ministry of Micro, Small & Medium Enterprises Portal.</p>
-        <span class="f-btn">Visit Portal <i class="fas fa-arrow-right"></i></span>
-      </a>
-
-    </div>
-  </div>
-</section>
-<style>
+  </section>
+  <style>
     /* --- SECTION CONTAINER --- */
-.f-resource-section {
-  padding: 100px 0;
-  background-color: #f7f9fc; /* Light Gray/Blue background */
-  text-align: center;
-  font-family: 'Poppins', sans-serif;
-}
+    .f-resource-section {
+      padding: 100px 0;
+      background-color: #f7f9fc;
+      /* Light Gray/Blue background */
+      text-align: center;
+      font-family: 'Poppins', sans-serif;
+    }
 
-.f-container {
-  max-width: 1400px; /* Increased from 1200px */
-  margin: 0 auto;
-  padding: 0 20px;
-}
+    .f-container {
+      max-width: 1400px;
+      /* Increased from 1200px */
+      margin: 0 auto;
+      padding: 0 20px;
+    }
 
-/* --- HEADER (Isolated from Hero) --- */
-.f-header { margin-bottom: 50px; }
-.f-sub-tag { color: #0b3c74; font-weight: 700; text-transform: uppercase; font-size: 19px; letter-spacing: 2px; }
-.f-main-title { font-size: 40px; color: #0b3c74; margin: 10px 0; font-weight: 700; }
-.f-orange-text { color: #ff8c00; }
+    /* --- HEADER (Isolated from Hero) --- */
+    .f-header {
+      margin-bottom: 50px;
+    }
 
-.f-accent-bars { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
-.f-bar-navy { width: 45px; height: 4px; background: #0b3c74; border-radius: 2px; }
-.f-bar-orange { width: 22px; height: 4px; background: #ff8c00; border-radius: 2px; }
+    .f-sub-tag {
+      color: #0b3c74;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 19px;
+      letter-spacing: 2px;
+    }
 
-/* --- GRID SYSTEM (3-3-2) --- */
-.f-flex-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 40px; /* Slightly larger gap for better spacing with wider cards */
-}
+    .f-main-title {
+      font-size: 40px;
+      color: #0b3c74;
+      margin: 10px 0;
+      font-weight: 700;
+    }
 
-.f-card {
-  /* This calculation allows the cards to be wider while still fitting 3 per row */
-  flex: 0 1 calc(33.333% - 40px); 
-  min-width: 350px; /* Increased min-width from 310px */
-  background: #ffffff;
-  padding: 50px 30px;
-  border-radius: 20px;
-  border: 1px solid #e2e8f0;
-  text-decoration: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: all 0.4s ease;
-  position: relative;
-  box-sizing: border-box; /* Ensures padding doesn't break the width */
-}
+    .f-orange-text {
+      color: #ff8c00;
+    }
 
-/* --- ICON ROTATION ANIMATION --- */
-.f-icon-box {
-  width: 75px;
-  height: 75px;
-  background: #f1f5f9;
-  color: #0b3c74;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  margin-bottom: 25px;
-  transition: all 0.5s ease; /* Rotation Speed */
-}
+    .f-accent-bars {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
 
-/* Hover State */
-.f-card:hover {
-  transform: translateY(-12px);
-  box-shadow: 0 20px 40px rgba(11, 60, 116, 0.08);
-  border-color: #ff8c00;
-}
+    .f-bar-navy {
+      width: 45px;
+      height: 4px;
+      background: #0b3c74;
+      border-radius: 2px;
+    }
 
-/* ROTATION TRIGGER */
-.f-card:hover .f-icon-box {
-  background: #0b3c74;
-  color: #fff;
-  transform: rotateY(360deg); /* The 360 Flip */
-}
+    .f-bar-orange {
+      width: 22px;
+      height: 4px;
+      background: #ff8c00;
+      border-radius: 2px;
+    }
 
-/* --- CARD TEXT --- */
-.f-card-title {
-  color: #0b3c74;
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 15px;
-}
+    /* --- GRID SYSTEM (3-3-2) --- */
+    .f-flex-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 40px;
+      /* Slightly larger gap for better spacing with wider cards */
+    }
 
-.f-card p {
-  color: #64748b;
-  font-size: 15px;
-  line-height: 1.6;
-  margin-bottom: 25px;
-}
+    .f-card {
+      /* This calculation allows the cards to be wider while still fitting 3 per row */
+      flex: 0 1 calc(33.333% - 40px);
+      min-width: 350px;
+      /* Increased min-width from 310px */
+      background: #ffffff;
+      padding: 50px 30px;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: all 0.4s ease;
+      position: relative;
+      box-sizing: border-box;
+      /* Ensures padding doesn't break the width */
+    }
 
-.f-btn {
-  color: #ff8c00;
-  font-weight: 700;
-  font-size: 14px;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: 0.3s;
-}
+    /* --- ICON ROTATION ANIMATION --- */
+    .f-icon-box {
+      width: 75px;
+      height: 75px;
+      background: #f1f5f9;
+      color: #0b3c74;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 25px;
+      transition: all 0.5s ease;
+      /* Rotation Speed */
+    }
 
-.f-card:hover .f-btn {
-  gap: 12px;
-}
+    /* Hover State */
+    .f-card:hover {
+      transform: translateY(-12px);
+      box-shadow: 0 20px 40px rgba(11, 60, 116, 0.08);
+      border-color: #ff8c00;
+    }
 
-/* --- MOBILE RESPONSIVE (1 in 1 Row) --- */
-@media (max-width: 1024px) {
-  .f-card { flex: 0 1 calc(50% - 30px); }
-}
+    /* ROTATION TRIGGER */
+    .f-card:hover .f-icon-box {
+      background: #0b3c74;
+      color: #fff;
+      transform: rotateY(360deg);
+      /* The 360 Flip */
+    }
 
-@media (max-width: 768px) {
-  .f-card { flex: 0 1 100%; }
-  .f-resource-section { padding: 80px 15px; }
-}
-</style>
+    /* --- CARD TEXT --- */
+    .f-card-title {
+      color: #0b3c74;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    .f-card p {
+      color: #64748b;
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+
+    .f-btn {
+      color: #ff8c00;
+      font-weight: 700;
+      font-size: 14px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.3s;
+    }
+
+    .f-card:hover .f-btn {
+      gap: 12px;
+    }
+
+    /* --- MOBILE RESPONSIVE (1 in 1 Row) --- */
+    @media (max-width: 1024px) {
+      .f-card {
+        flex: 0 1 calc(50% - 30px);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .f-card {
+        flex: 0 1 100%;
+      }
+
+      .f-resource-section {
+        padding: 80px 15px;
+      }
+    }
+  </style>
   <footer class="footer-premium">
     <div class="footer-top-accent"></div>
     <div class="footer-container">
@@ -4599,6 +4676,8 @@ if (isset($_POST['apply'])) {
           <a href="privacy-policy.php">Privacy Policy</a>
           <span class="sep">|</span>
           <a href="terms-of-service.php">Terms of Service</a>
+          <span class="sep">|</span>
+          <a href="cookies.php">Cookies Policy</a>
         </div>
       </div>
     </div>

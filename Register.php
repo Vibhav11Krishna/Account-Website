@@ -229,7 +229,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <span style="color: #cbd5e1;">&bull;</span>
         <a href="terms-of-service.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Terms of Service</a>
         <span style="color: #cbd5e1;">&bull;</span>
-        <a href="cookies.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Cookies</a>
+        <a href="cookies.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Cookies Policy</a>
     </div>
     <p style="font-size: 11px; color: #94a3b8;">&copy; 2026 Karunesh Kumar & Associates</p>
 </div>

@@ -54,6 +54,8 @@
             font-weight: 700;
             font-size: 14px;
             text-transform: uppercase;
+            display: block;
+            margin-bottom: 8px;
         }
 
         /* Content Section */
@@ -122,7 +124,7 @@
             margin: 30px 0;
         }
 
-        /* Back Link */
+        /* Links */
         .nav-back {
             margin-bottom: 20px;
             display: inline-block;
@@ -132,6 +134,15 @@
             transition: 0.3s;
         }
         .nav-back:hover { color: var(--accent); }
+
+        .browser-links a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .browser-links a:hover {
+            text-decoration: underline;
+        }
 
         @media (max-width: 768px) {
             .policy-header, .policy-content { padding: 30px; }
@@ -145,7 +156,7 @@
     <a href="Register.php" class="nav-back"><i class="fas fa-arrow-left"></i> Return to Portal</a>
     
     <header class="policy-header">
-        <span class="last-updated">Legal Requirement Notice</span>
+        <span class="last-updated">Last Updated: March 04, 2026</span>
         <h1>Cookies Policy</h1>
         <p>How Karunesh Kumar & Associates manages digital identifiers.</p>
     </header>
@@ -212,11 +223,11 @@
             <h2>5. How Can I Control Cookies?</h2>
             <p>You have the right to decide whether to accept or reject cookies. You can set or amend your web browser controls to accept or refuse cookies. If you choose to reject cookies, you may still use our website though your access to some functionality and areas of our website may be restricted.</p>
             <p>To learn more about how to manage cookies on your browser, please visit the official help pages for:</p>
-            <ul style="color: var(--text-light); font-size: 14px;">
-                <li>Google Chrome</li>
-                <li>Mozilla Firefox</li>
-                <li>Apple Safari</li>
-                <li>Microsoft Edge</li>
+            <ul class="browser-links" style="color: var(--text-light); font-size: 14px;">
+                <li><a href="https://support.google.com/chrome/answer/95647" target="_blank">Google Chrome</a></li>
+                <li><a href="https://support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-desktop" target="_blank">Mozilla Firefox</a></li>
+                <li><a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac" target="_blank">Apple Safari</a></li>
+                <li><a href="https://support.microsoft.com/en-us/windows/microsoft-edge-browsing-data-and-privacy-bb8174ba-9d73-dcf2-9b4a-c582b4e640dd" target="_blank">Microsoft Edge</a></li>
             </ul>
         </section>
 
