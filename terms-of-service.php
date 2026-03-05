@@ -1011,7 +1011,9 @@
             <div class="footer-legal">
                 <a href="privacy-policy.php">Privacy Policy</a>
                 <span class="sep">|</span>
-                <a href="#">Terms of Service</a>
+                <a href="terms-of-service.php">Terms of Service</a>
+                <span class="sep">|</span>
+                <a href="cookies.php">Cookies Policy</a>
             </div>
         </div>
     </div>

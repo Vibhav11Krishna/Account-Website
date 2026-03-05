@@ -1034,6 +1034,8 @@
                 <a href="#">Privacy Policy</a>
                 <span class="sep">|</span>
                 <a href="terms-of-service.php">Terms of Service</a>
+                <span class="sep">|</span>
+                <a href="cookies.php">Cookies Policy</a>
             </div>
         </div>
     </div>

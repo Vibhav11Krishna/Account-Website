@@ -1,248 +1,1244 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookies Policy | Karunesh Kumar & Associates</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --primary: #0b3c74;
-            --accent: #ff8c00;
-            --text-main: #1e293b;
-            --text-light: #64748b;
-            --bg-soft: #f8fafc;
-            --border: #e2e8f0;
-        }
+  <meta charset="UTF-8">
+  <title>Accounting Firm</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="assets/script.js" defer></script>
 
-        body {
-            margin: 0;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-soft);
-            color: var(--text-main);
-            line-height: 1.7;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 60px auto;
-            padding: 0 20px;
-        }
-
-        /* Hero Section */
-        .policy-header {
-            background: white;
-            padding: 60px;
-            border-radius: 24px 24px 0 0;
-            border: 1px solid var(--border);
-            border-bottom: none;
-            text-align: left;
-        }
-
-        .policy-header h1 {
-            font-size: 42px;
-            font-weight: 800;
-            color: var(--primary);
-            margin: 0 0 10px 0;
-            letter-spacing: -1px;
-        }
-
-        .last-updated {
-            color: var(--accent);
-            font-weight: 700;
-            font-size: 14px;
-            text-transform: uppercase;
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        /* Content Section */
-        .policy-content {
-            background: white;
-            padding: 0 60px 60px 60px;
-            border-radius: 0 0 24px 24px;
-            border: 1px solid var(--border);
-            border-top: none;
-        }
-
-        .policy-content h2 {
-            font-size: 24px;
-            color: var(--primary);
-            margin-top: 40px;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 10px;
-        }
-
-        .policy-content p {
-            margin-bottom: 20px;
-            color: var(--text-light);
-        }
-
-        /* Professional Table */
-        .cookie-table-wrapper {
-            overflow-x: auto;
-            margin: 30px 0;
-        }
-
-        .cookie-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 14px;
-        }
-
-        .cookie-table th {
-            background: #f8fafc;
-            padding: 15px;
-            border-bottom: 2px solid var(--border);
-            color: var(--primary);
-            font-weight: 700;
-        }
-
-        .cookie-table td {
-            padding: 15px;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: top;
-        }
-
-        .cookie-name {
-            font-family: monospace;
-            color: var(--accent);
-            background: #fff7ed;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        /* Custom Box */
-        .notice-box {
-            background: #f0f7ff;
-            border-left: 4px solid var(--primary);
-            padding: 25px;
-            border-radius: 0 12px 12px 0;
-            margin: 30px 0;
-        }
-
-        /* Links */
-        .nav-back {
-            margin-bottom: 20px;
-            display: inline-block;
-            text-decoration: none;
-            color: var(--primary);
-            font-weight: 700;
-            transition: 0.3s;
-        }
-        .nav-back:hover { color: var(--accent); }
-
-        .browser-links a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .browser-links a:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 768px) {
-            .policy-header, .policy-content { padding: 30px; }
-            .policy-header h1 { font-size: 30px; }
-        }
-    </style>
 </head>
 <body>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-<div class="container">
-    <a href="Register.php" class="nav-back"><i class="fas fa-arrow-left"></i> Return to Portal</a>
-    
-    <header class="policy-header">
-        <span class="last-updated">Last Updated: March 04, 2026</span>
-        <h1>Cookies Policy</h1>
-        <p>How Karunesh Kumar & Associates manages digital identifiers.</p>
-    </header>
+  <header class="site-header">
+    <div class="header-container">
 
-    <main class="policy-content">
-        <section>
-            <h2>1. Introduction</h2>
-            <p>This Cookies Policy explains how Karunesh Kumar & Associates ("Firm", "we", "us", and "our") uses cookies and similar technologies to recognize you when you visit our portal. It explains what these technologies are and why we use them, as well as your rights to control our use of them.</p>
-        </section>
+      <a href="#home" class="logo-group">
+        <img src="assets/CMA.jpg" alt="Logo" class="main-logo">
+        <div class="logo-text">
+          <span class="firm-name">KARUNESH KUMAR</span>
+          <span class="firm-sub">& ASSOCIATES</span>
+        </div>
+      </a>
 
-        <section>
-            <h2>2. What are Cookies?</h2>
-            <p>Cookies are small data files that are placed on your computer or mobile device when you visit a website. Cookies are widely used by website owners in order to make their websites work, or to work more efficiently, as well as to provide reporting information.</p>
-        </section>
+      <nav class="nav-desktop">
+        <ul class="nav-list">
+          <li><a href="index.php">Home</a></li>
+          <li><a href="index.php">About</a></li>
+          <li><a href="index.php">Services</a></li>
+          <li><a href="blogs.php">Insights</a></li>
+          <li><a href="index.php">Testimonials</a></li>
+          <li><a href="index.php">Team</a></li>
+          <li><a href="index.php">Careers</a></li>
+          <li><a href="index.php">Contact</a></li>
+        </ul>
+        <button class="btn-login" onclick="window.location.href='./Register.php'">
+    Portal Login
+</button>
+      </nav>
 
-        <section>
-            <h2>3. Cookies We Use</h2>
-            <p>We use first-party cookies for several reasons. Some cookies are required for technical reasons in order for our Portal to operate, and we refer to these as "essential" or "strictly necessary" cookies.</p>
-            
-            <div class="cookie-table-wrapper">
-                <table class="cookie-table">
-                    <thead>
-                        <tr>
-                            <th>Classification</th>
-                            <th>ID/Name</th>
-                            <th>Purpose</th>
-                            <th>Duration</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Strictly Necessary</strong></td>
-                            <td><span class="cookie-name">PHPSESSID</span></td>
-                            <td>Maintains your encrypted login session to prevent unauthorized access to financial data.</td>
-                            <td>Session</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Security</strong></td>
-                            <td><span class="cookie-name">XSRF-TOKEN</span></td>
-                            <td>Used to prevent Cross-Site Request Forgery (CSRF) attacks on your account.</td>
-                            <td>2 Hours</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Functionality</strong></td>
-                            <td><span class="cookie-name">kka_portal_mode</span></td>
-                            <td>Remembers your preference between "Client Portal" and "Office Portal" views.</td>
-                            <td>30 Days</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+      <button class="ham-trigger" id="openDrawer" aria-label="Toggle Menu">
+        <span class="ham-bar"></span>
+        <span class="ham-bar"></span>
+        <span class="ham-bar"></span>
+      </button>
 
-        <section>
-            <h2>4. Third-Party Analytics</h2>
-            <p>Unlike public websites, this Secure Portal <strong>does not</strong> use third-party behavioral tracking or advertising cookies. We do not share your browsing patterns with companies like Google, Meta, or any advertising networks.</p>
-        </section>
+    </div>
+  </header>
 
-        <div class="notice-box">
-            <strong>Note on Performance:</strong> Because our cookies are primarily "Strictly Necessary," disabling them via your browser will result in the inability to log in to your secure account or access financial reports.
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <div class="right-drawer" id="rightDrawer">
+    <div class="drawer-header">
+      <span class="drawer-label">Menu</span>
+      <button class="drawer-close" id="closeDrawer">&times;</button>
+    </div>
+    <div class="drawer-content">
+     <button class="drawer-login-btn" onclick="window.location.href='./Register.php'">
+    Portal Login
+</button>
+      <nav class="drawer-nav-list">
+        <a href="index.php" class="d-link"><i class="fa-solid fa-house"></i> Home</a>
+        <a href="index.php" class="d-link"><i class="fa-solid fa-building"></i> About</a>
+        <a href="index.php" class="d-link"><i class="fa-solid fa-gears"></i> Services</a>
+        <a href="blogs.php" class="d-link"><i class="fa-solid fa-chart-line"></i> Insights</a>
+        <a href="index.php" class="d-link"><i class="fa-solid fa-user-circle"></i>Testimonials</a>
+        <a href="index.php" class="d-link"><i class="fa-solid fa-users"></i> Team</a>
+        <a href="index.php" class="d-link"><i class="fa-solid fa-user-tie"></i> Careers</a>
+        <a href="index.php" class="d-link"><i class="fa-solid fa-envelope"></i> Contact</a>
+      </nav>
+    </div>
+  </div>
+
+  <style>
+    :root {
+      --navy: #0b3c74;
+      --orange: #ff8c00;
+      --white: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      padding-top: 80px;
+    }
+
+    /* HEADER ALIGNMENT CORE */
+    .site-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      background: var(--white);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      /* Vertical alignment */
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .header-container {
+      width: 100%;
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      /* This aligns Logo and Hamburger */
+    }
+
+    /* LOGO BOX */
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      line-height: 0;
+    }
+
+    .main-logo {
+      height: 46px;
+      width: auto;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .firm-name {
+      color: var(--navy);
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .firm-sub {
+      color: var(--orange);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* HAMBURGER ALIGNMENT FIX */
+    .ham-trigger {
+      display: none;
+      background: #f1f5f9;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      cursor: pointer;
+      flex-direction: column;
+      justify-content: center;
+      /* Centers bars vertically */
+      align-items: center;
+      /* Centers bars horizontally */
+      gap: 5px;
+      /* Space between bars */
+      padding: 0;
+    }
+
+    .ham-bar {
+      width: 22px;
+      height: 2px;
+      background-color: var(--navy);
+      border-radius: 2px;
+    }
+
+    /* DESKTOP NAV */
+    .nav-desktop {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .nav-list {
+      display: flex;
+      list-style: none;
+      gap: 20px;
+      margin: 0;
+      padding: 0;
+    }
+
+    .nav-list a {
+      text-decoration: none;
+      color: #444;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .btn-login {
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    /* DRAWER */
+    .right-drawer {
+      position: fixed;
+      top: 0;
+      right: -320px;
+      width: 300px;
+      height: 100%;
+      background: #fff;
+      z-index: 2000;
+      transition: 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .right-drawer.active {
+      right: 0;
+    }
+
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1999;
+      display: none;
+    }
+
+    .drawer-overlay.active {
+      display: block;
+    }
+
+    .drawer-header {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-close {
+      background: none;
+      border: none;
+      font-size: 35px;
+      cursor: pointer;
+      color: #999;
+    }
+
+    .drawer-content {
+      padding: 30px 20px;
+    }
+
+    .drawer-login-btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      margin-bottom: 25px;
+      cursor: pointer;
+    }
+
+    .d-link {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 0;
+      text-decoration: none;
+      color: var(--navy);
+      font-weight: 700;
+      border-bottom: 1px solid #f9f9f9;
+    }
+
+    @media (max-width: 1100px) {
+      .nav-desktop {
+        display: none;
+      }
+
+      .ham-trigger {
+        display: flex;
+      }
+    }
+  </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const openBtn = document.getElementById('openDrawer');
+      const closeBtn = document.getElementById('closeDrawer');
+      const drawer = document.getElementById('rightDrawer');
+      const overlay = document.getElementById('drawerOverlay');
+
+      const toggle = () => {
+        drawer.classList.toggle('active');
+        overlay.classList.toggle('active');
+        document.body.style.overflow = drawer.classList.contains('active') ? 'hidden' : '';
+      };
+
+      if (openBtn) openBtn.addEventListener('click', toggle);
+      if (closeBtn) closeBtn.addEventListener('click', toggle);
+      if (overlay) overlay.addEventListener('click', toggle);
+      document.querySelectorAll('.d-link').forEach(l => l.addEventListener('click', toggle));
+    });
+
+    function openLogin() {
+      alert("Opening Client Portal...");
+    }
+  </script>
+<style>
+    :root {
+        --navy: #0b3c74;
+        --deep-navy: #051937;
+        --orange: #ff8c00;
+        --soft-orange: #fff7ed;
+        --bg-gray: #f8fafc;
+        --text-main: #334155;
+        --white: #ffffff;
+        --border: #e2e8f0;
+    }
+
+    .pp-wrapper {
+        padding: 60px 20px;
+        background-color: var(--bg-gray);
+        min-height: 100vh;
+        font-family: 'Inter', sans-serif;
+        display: flex;
+        justify-content: center;
+    }
+
+    .pp-card {
+        max-width: 900px;
+        width: 100%;
+        background: var(--white);
+        border-radius: 24px;
+        box-shadow: 0 20px 50px rgba(11, 60, 116, 0.05);
+        padding: 60px;
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Professional Accent Top Bar */
+    .pp-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 6px;
+        background: linear-gradient(90deg, var(--navy), var(--orange), var(--navy));
+    }
+
+    .pp-header {
+        text-align: center;
+        margin-bottom: 50px;
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 30px;
+    }
+
+    .pp-icon-main {
+        font-size: 50px;
+        color: var(--orange);
+        margin-bottom: 15px;
+        filter: drop-shadow(0 4px 8px rgba(255, 140, 0, 0.2));
+    }
+
+    .pp-header h1 {
+        color: var(--navy);
+        font-size: 36px;
+        margin: 0;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+
+    .pp-firm {
+        color: var(--text-main);
+        font-weight: 600;
+        margin: 8px 0;
+        text-transform: uppercase;
+        font-size: 14px;
+        letter-spacing: 1px;
+    }
+
+    .pp-date {
+        display: inline-block;
+        background: var(--soft-orange);
+        color: var(--orange);
+        padding: 6px 18px;
+        border-radius: 30px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-top: 15px;
+    }
+
+    .pp-intro {
+        font-size: 17px;
+        line-height: 1.8;
+        color: var(--text-main);
+        margin-bottom: 40px;
+        text-align: center;
+    }
+
+    .pp-section {
+        margin-bottom: 45px;
+    }
+
+    .pp-section h3 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--navy);
+        font-size: 22px;
+        margin-bottom: 20px;
+    }
+
+    .pp-section h3 i {
+        color: var(--orange);
+    }
+
+    .pp-section p {
+        font-size: 16px;
+        color: #475569;
+        line-height: 1.8;
+    }
+
+    /* Sub-grid for Cookie Categories */
+    .pp-sub-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 25px;
+    }
+
+    .pp-sub-item {
+        background: #fdfdfd;
+        padding: 25px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+
+    .pp-sub-item:hover {
+        transform: translateY(-5px);
+        border-color: var(--orange);
+        box-shadow: 0 10px 20px rgba(11, 60, 116, 0.04);
+    }
+
+    .pp-sub-item strong {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--navy);
+        font-size: 16px;
+        margin-bottom: 12px;
+    }
+
+    .pp-sub-item p {
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .pp-list {
+        padding-left: 20px;
+        list-style: none;
+    }
+
+    .pp-list li {
+        font-size: 15px;
+        color: #475569;
+        margin-bottom: 15px;
+        position: relative;
+    }
+
+    .pp-list li::before {
+        content: "\f058";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        position: absolute;
+        left: -30px;
+        color: var(--orange);
+    }
+
+    .pp-contact-box {
+        background: linear-gradient(135deg, var(--deep-navy), var(--navy));
+        padding: 30px;
+        border-radius: 18px;
+        color: white;
+        line-height: 2;
+        margin-top: 20px;
+    }
+
+    .pp-contact-box i {
+        color: var(--orange);
+        width: 25px;
+    }
+
+    .pp-legal-footer {
+        margin-top: 50px;
+        padding: 30px;
+        background: var(--bg-gray);
+        border-radius: 16px;
+        text-align: center;
+        border: 1px dashed var(--border);
+    }
+
+    .pp-legal-footer i {
+        font-size: 28px;
+        color: var(--navy);
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .pp-legal-footer p {
+        font-size: 14px;
+        color: #64748b;
+        margin: 0;
+    }
+
+    @media (max-width: 768px) {
+        .pp-card { padding: 40px 20px; }
+        .pp-header h1 { font-size: 28px; }
+    }
+</style>
+
+<main class="pp-wrapper">
+    <div class="pp-card">
+        <div class="pp-header">
+            <div class="pp-icon-main"><i class="fa-solid fa-cookie-bite"></i></div>
+            <p class="pp-firm">Karunesh Kumar & Associates</p>
+            <h1>Cookies Policy</h1>
+            <span class="pp-date">Last Updated: March 05, 2026</span>
         </div>
 
-        <section>
-            <h2>5. How Can I Control Cookies?</h2>
-            <p>You have the right to decide whether to accept or reject cookies. You can set or amend your web browser controls to accept or refuse cookies. If you choose to reject cookies, you may still use our website though your access to some functionality and areas of our website may be restricted.</p>
-            <p>To learn more about how to manage cookies on your browser, please visit the official help pages for:</p>
-            <ul class="browser-links" style="color: var(--text-light); font-size: 14px;">
-                <li><a href="https://support.google.com/chrome/answer/95647" target="_blank">Google Chrome</a></li>
-                <li><a href="https://support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-desktop" target="_blank">Mozilla Firefox</a></li>
-                <li><a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac" target="_blank">Apple Safari</a></li>
-                <li><a href="https://support.microsoft.com/en-us/windows/microsoft-edge-browsing-data-and-privacy-bb8174ba-9d73-dcf2-9b4a-c582b4e640dd" target="_blank">Microsoft Edge</a></li>
+        <div class="pp-intro">
+            <p>At Karunesh Kumar & Associates, we believe in being transparent about how we collect and use data. This policy provides detailed information about how and when we use cookies on our website and client dashboard.</p>
+        </div>
+
+        <div class="pp-body">
+            
+            <section class="pp-section">
+                <h3><i class="fa-solid fa-circle-info"></i> 1. What are Cookies?</h3>
+                <p>Cookies are small text files placed on your device to store data that can be recalled by a web server in the domain that placed the cookie. We use cookies to provide a seamless experience, especially within our <strong>Secure Client Dashboard</strong>.</p>
+            </section>
+
+            <section class="pp-section">
+                <h3><i class="fa-solid fa-layer-group"></i> 2. Categories of Cookies We Use</h3>
+                <p>We classify our cookies into the following categories to help you understand their purpose:</p>
+                
+                <div class="pp-sub-grid">
+                    <div class="pp-sub-item">
+                        <strong><i class="fa-solid fa-lock"></i> Strictly Necessary:</strong>
+                        <p>Essential for you to browse the site and use features like the secure dashboard. Without these, services like tax document uploads cannot be provided.</p>
+                    </div>
+                    <div class="pp-sub-item">
+                        <strong><i class="fa-solid fa-chart-line"></i> Performance & Analytics:</strong>
+                        <p>These help us understand how visitors interact with our website (e.g., which pages are most popular) so we can improve our professional resources.</p>
+                    </div>
+                    <div class="pp-sub-item">
+                        <strong><i class="fa-solid fa-sliders"></i> Functionality:</strong>
+                        <p>These allow our website to remember choices you make (such as your login "Remember Me" preference) to provide a more personalized experience.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pp-section">
+                <h3><i class="fa-solid fa-gears"></i> 3. How to Control Cookies</h3>
+                <p>Most web browsers allow you to control cookies through their settings. However, please note:</p>
+                <ul class="pp-list">
+                    <li>Blocking <strong>Necessary Cookies</strong> may prevent you from accessing the Client Dashboard.</li>
+                    <li>You can opt-out of <strong>Analytics</strong> at any time via your browser's "Clear History" or "Privacy" settings.</li>
+                    <li>For more information on managing cookies, visit <a href="https://www.allaboutcookies.org" target="_blank" style="color: var(--orange); text-decoration: none; font-weight: 600;">allaboutcookies.org</a>.</li>
+                </ul>
+            </section>
+
+            <section class="pp-section">
+                <h3><i class="fa-solid fa-shield-halved"></i> 4. Data Protection & Security</h3>
+                <p>Cookies used on our platform do not store sensitive personal information like your PAN or Bank Passwords. They are primarily used for <strong>Session Management</strong> and <strong>Security Authentication</strong> to prevent unauthorized access to your account.</p>
+            </section>
+
+            <section class="pp-section">
+                <h3><i class="fa-solid fa-envelope-open-text"></i> 5. Contact Us</h3>
+                <p>If you have any questions about our use of cookies, please reach out to our compliance officer:</p>
+                <div class="pp-contact-box">
+                    <strong>Grievance Officer</strong><br>
+                    Karunesh Kumar & Associates<br>
+                    <i class="fa-solid fa-envelope"></i> karunesh.cma@gmail.com<br>
+                    <i class="fa-solid fa-location-dot"></i> Bailey Road, Patna - 800014
+                </div>
+            </section>
+
+        </div>
+
+        <div class="pp-legal-footer">
+            <i class="fa-solid fa-scale-balanced"></i>
+            <p>By continuing to use our website and dashboard, you agree to our use of cookies as outlined in this policy.</p>
+        </div>
+    </div>
+</main>
+
+  <script>
+    // FAQ TOGGLE SCRIPT
+    document.querySelectorAll('.faq-box').forEach(item => {
+      item.addEventListener('click', () => {
+        item.classList.toggle('active');
+      });
+    });
+  </script>
+ <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <div id="kk-chatbot">
+    <div id="kk-window" class="kk-hidden">
+      <div class="kk-header">
+        <div class="kk-brand">
+          <div class="ai-neural-status">
+            <div class="inner-dot"></div>
+            <div class="outer-pulse"></div>
+          </div>
+          <div>
+            <strong>KK & Associates</strong>
+            <small>Neural AI Active</small>
+          </div>
+        </div>
+        <button onclick="toggleChat()" class="close-btn">✕</button>
+      </div>
+
+      <div id="kk-chat-logs">
+        <div class="msg bot">Welcome. I am the intelligence system for Karunesh Kumar & Associates. How may I assist with your financial queries?</div>
+      </div>
+
+      <div id="typing-indicator" class="kk-hidden">
+        <span></span><span></span><span></span>
+      </div>
+
+      <div class="kk-input-area">
+        <input type="text" id="kk-user-input" placeholder="Ask about GST, Tax, or Filing..." onkeypress="if(event.key==='Enter') sendMessage()">
+        <button onclick="sendMessage()" class="send-trigger">
+          <svg viewBox="0 0 24 24">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <button id="kk-fab" onclick="toggleChat()">
+      <div class="fab-rings"></div>
+      <div class="fab-rings delay"></div>
+      <div class="fab-core">
+        <svg viewBox="0 0 24 24" class="neural-svg">
+          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="currentColor" stroke-width="1.5" fill="none" />
+          <circle cx="12" cy="12" r="3" fill="currentColor" />
+          <path d="M12 2v4m0 12v4M2 12h4m12 0h4m-15.4-6.4l2.8 2.8m9.2 9.2l2.8 2.8m-12-12l2.8-2.8m9.2 9.2l2.8-2.8" stroke="currentColor" stroke-width="1.5" />
+        </svg>
+      </div>
+    </button>
+  </div>
+
+  <style>
+    :root {
+      --deep-navy: #051937;
+      --royal-blue: #0b3c74;
+      --electric-orange: #ff8c00;
+      --soft-white: #ffffff;
+      --bot-bg: #f4f7fa;
+    }
+
+    #kk-chatbot {
+      position: fixed;
+      bottom: 40px;
+      right: 30px;
+      z-index: 9999;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* --- FAB AI ICON --- */
+    #kk-fab {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--deep-navy), var(--royal-blue));
+      border: none;
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(5, 25, 55, 0.4);
+    }
+
+    .fab-core {
+      z-index: 5;
+      color: white;
+      transition: 0.3s;
+    }
+
+    .neural-svg {
+      width: 32px;
+      height: 32px;
+      filter: drop-shadow(0 0 5px rgba(255, 140, 0, 0.5));
+    }
+
+    .fab-rings {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--electric-orange);
+      opacity: 0.4;
+      animation: neural-pulse 2.5s infinite ease-out;
+      z-index: 1;
+    }
+
+    .fab-rings.delay {
+      animation-delay: 1.25s;
+    }
+
+    /* --- CHAT WINDOW --- */
+    #kk-window {
+      width: 380px;
+      height: 500px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+      transform-origin: bottom right;
+      position: absolute;
+      bottom: 85px;
+      right: 0;
+    }
+
+    #kk-window.kk-hidden {
+      transform: scale(0.8) translateY(40px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Header */
+    .kk-header {
+      background: linear-gradient(to right, var(--deep-navy), var(--royal-blue));
+      color: white;
+      padding: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kk-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* 1. The Parent Container (Crucial for alignment) */
+.ai-neural-status {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  display: flex;       /* Use flexbox */
+  align-items: center; /* Center vertically */
+  justify-content: center; /* Center horizontally */
+}
+
+/* 2. The Static Inner Dot */
+.inner-dot {
+  width: 8px;   /* Slightly smaller for better pulse gap */
+  height: 8px;
+  background: #00ff88;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #00ff88;
+  z-index: 2;   /* Keep it on top */
+}
+
+/* 3. The Pulsing Outer Ring */
+.outer-pulse {
+  position: absolute; /* Stay relative to parent center */
+  width: 100%;
+  height: 100%;
+  border: 1.5px solid #00ff88;
+  border-radius: 50%;
+  animation: status-pulse 2s infinite ease-out;
+  pointer-events: none; /* Ignore clicks */
+}
+
+/* 4. The Corrected Animation (Adding scale) */
+@keyframes status-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(3.5); /* Grows from the center */
+    opacity: 0;
+  }
+}
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    /* Messages */
+    #kk-chat-logs {
+      flex: 1;
+      padding: 25px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      background: #fff;
+    }
+
+    .msg {
+      padding: 14px 18px;
+      border-radius: 18px;
+      font-size: 14px;
+      max-width: 82%;
+      line-height: 1.6;
+      animation: slideIn 0.4s ease-out;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: var(--royal-blue);
+      color: white;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 4px 12px rgba(11, 60, 116, 0.2);
+    }
+
+    .bot {
+      align-self: flex-start;
+      background: var(--bot-bg);
+      color: #2c3e50;
+      border-bottom-left-radius: 4px;
+      border: 1px solid #eef2f7;
+    }
+
+    /* Input */
+    .kk-input-area {
+      padding: 18px;
+      background: #fff;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    #kk-user-input {
+      flex: 1;
+      border: none;
+      padding: 10px;
+      outline: none;
+      font-size: 15px;
+      color: var(--deep-navy);
+    }
+
+    .send-trigger {
+      background: var(--electric-orange);
+      color: white;
+      border: none;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.3s;
+      box-shadow: 0 4px 15px rgba(255, 140, 0, 0.3);
+    }
+
+    .send-trigger:hover {
+      transform: scale(1.1) rotate(-10deg);
+      background: #e67e00;
+    }
+
+    .send-trigger svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* Typing */
+    #typing-indicator {
+      padding: 10px 25px;
+      display: flex;
+      gap: 5px;
+    }
+
+    #typing-indicator span {
+      width: 7px;
+      height: 7px;
+      background: var(--electric-orange);
+      border-radius: 50%;
+      animation: bounce 1.4s infinite;
+      opacity: 0.6;
+    }
+
+    /* Animations */
+    @keyframes neural-pulse {
+      0% {
+        transform: scale(1);
+        opacity: 0.4;
+      }
+
+      100% {
+        transform: scale(2.2);
+        opacity: 0;
+      }
+    }
+
+    @keyframes status-pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(3);
+        opacity: 0;
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes bounce {
+
+      0%,
+      80%,
+      100% {
+        transform: translateY(0);
+      }
+
+      40% {
+        transform: translateY(-8px);
+      }
+    }
+
+    .kk-hidden {
+      display: none !important;
+    }
+  </style>
+
+  <script>
+    function toggleChat() {
+      document.getElementById('kk-window').classList.toggle('kk-hidden');
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('kk-user-input');
+      const logs = document.getElementById('kk-chat-logs');
+      const typing = document.getElementById('typing-indicator');
+      const text = input.value.trim();
+      if (!text) return;
+
+      logs.innerHTML += `<div class="msg user">${text}</div>`;
+      input.value = '';
+      typing.classList.remove('kk-hidden');
+      logs.scrollTop = logs.scrollHeight;
+
+      try {
+        const response = await fetch('chat_proxy.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: text
+          })
+        });
+        const data = await response.json();
+        typing.classList.add('kk-hidden');
+
+        const reply = data.choices ? data.choices[0].message.content : "System recalibrating. Please retry.";
+        logs.innerHTML += `<div class="msg bot">${reply.replace(/\n/g, '<br>')}</div>`;
+      } catch (e) {
+        typing.classList.add('kk-hidden');
+        logs.innerHTML += `<div class="msg bot">Connection unstable. Check your network.</div>`;
+      }
+      logs.scrollTop = logs.scrollHeight;
+    }
+  </script>
+  <footer class="footer-premium">
+    <div class="footer-top-accent"></div>
+    <div class="footer-container">
+
+        <div class="footer-column">
+            <div class="footer-brand">
+               <img src="assets/ICMAI.png" class="footer-logo-v8" alt="ICMAI Logo">
+                <p class="brand-desc">Karunesh Kumar & Associates brings professional excellence to cost auditing, taxation, and business advisory, empowering firms across India to scale with integrity.</p>
+            </div>
+            <div class="footer-social-links">
+                <a href="https://www.facebook.com/profile.php?id=61582640901104" class="s-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://www.linkedin.com/in/karunesh-kumar-05a142173?utm_source=share_via&utm_content=profile&utm_medium=member_android" class="s-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="https://x.com/Karunesh_CMA" class="s-icon" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="https://wa.me/919097047484" class="s-icon" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+            </div>
+        </div>
+
+        <div class="footer-column">
+            <h4 class="footer-heading">Quick Links</h4>
+            <ul class="footer-links">
+                <li><a href="index.php">Home</a></li>
+                <li><a href="index.php">Our Firm</a></li>
+                <li><a href="index.php">Services</a></li>
+                <li><a href="blogs.php">Latest Insights</a></li>
+                <li><a href="index.php">Testimonials</a></li>
+                <li><a href="index.php">Join the Team</a></li>
+                <li><a href="index.php">Contact Us</a></li>
             </ul>
-        </section>
+        </div>
 
-        <section>
-            <h2>6. Updates to this Policy</h2>
-            <p>We may update this Cookies Policy from time to time in order to reflect, for example, changes to the cookies we use or for other operational, legal or regulatory reasons. Please therefore re-visit this Cookies Policy regularly to stay informed about our use of cookies and related technologies.</p>
-        </section>
+        <div class="footer-column">
+            <h4 class="footer-heading">Get In Touch</h4>
+            <div class="contact-list">
+                <div class="contact-item">
+                    <i class="fas fa-phone-alt c-icon"></i>
+                    <div class="c-text">
+                        <span>+91 90970 47484</span>
+                        <span>0612-3555957</span>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope-open-text c-icon"></i>
+                    <div class="c-text">
+                        <span>karunesh.cma@gmail.com</span>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-clock c-icon"></i>
+                    <div class="c-text">
+                        <span>Mon - Sat: 10AM - 7PM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <section>
-            <h2>7. Contact Information</h2>
-            <p>If you have any questions about our use of cookies or other technologies, please email us at:</p>
-            <p><strong>karunesh.cma@gmail.com</strong></p>
-        </section>
-    </main>
-</div>
+        <div class="footer-column">
+            <h4 class="footer-heading">Our Locations</h4>
+            <div class="location-group">
+                <div class="loc-item">
+                    <h6><i class="fas fa-map-marker-alt"></i> Patna (HQ)</h6>
+                    <p>2nd Floor, Shyam Market, Pillar No: 75, Bailey Road, Patna - 800014</p>
+                </div>
+                <div class="loc-item">
+                    <h6><i class="fas fa-building"></i> West Bengal</h6>
+                    <p>Regional Branch: Kolkata</p>
+                </div>
+            </div>
+        </div>
 
+    </div>
+
+    <div class="footer-bottom">
+        <div class="footer-container bottom-flex">
+            <p>© 2026 Karunesh Kumar & Associates. All Rights Reserved.</p>
+            <div class="footer-legal">
+                <a href="#">Privacy Policy</a>
+                <span class="sep">|</span>
+                <a href="terms-of-service.php">Terms of Service</a>
+                <span class="sep">|</span>
+                <a href="cookies.php">Cookies Policy</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+    :root {
+        --footer-navy: #081d35;
+        --footer-deep: #051324;
+        --accent-orange: #ff8c00;
+        --text-gray: #cbd5e1;
+    }
+
+    .footer-premium {
+        background: var(--footer-navy);
+        color: var(--text-gray);
+        padding-top: 80px;
+        position: relative;
+        font-family: 'Inter', sans-serif;
+        overflow: hidden;
+    }
+
+    /* Top Gradient Bar */
+    .footer-top-accent {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 4px;
+        background: linear-gradient(90deg, #0b3c74 0%, var(--accent-orange) 50%, #0b3c74 100%);
+    }
+
+    /* Grid Alignment Fix */
+    .footer-container {
+        max-width: 1250px;
+        margin: 0 auto;
+        padding: 0 25px;
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr 1fr 1fr;
+        gap: 50px;
+        padding-bottom: 60px;
+    }
+
+    /* Column 1 - Brand */
+    .footer-logo-v8 {
+        width: 280px;
+        height: 100px;
+        margin-bottom: 20px;
+       
+    }
+
+    .brand-desc {
+        font-size: 14px;
+        line-height: 1.8;
+        color: #94a3b8;
+    }
+
+    /* Headings */
+    .footer-heading {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 35px;
+        position: relative;
+    }
+
+    .footer-heading::after {
+        content: "";
+        position: absolute;
+        bottom: -10px; left: 0;
+        width: 35px; height: 3px;
+        background: var(--accent-orange);
+    }
+
+    /* Column 2 - Links */
+    .footer-links { list-style: none; padding: 0; margin: 0; }
+    .footer-links li { margin-bottom: 15px; }
+    .footer-links a {
+        color: var(--text-gray);
+        text-decoration: none;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        transition: 0.3s ease;
+    }
+
+    .footer-links a::before {
+        content: "\f054"; /* FontAwesome Chevron */
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        font-size: 10px;
+        margin-right: 12px;
+        color: var(--accent-orange);
+    }
+
+    .footer-links a:hover {
+        color: #fff;
+        transform: translateX(5px);
+    }
+
+    /* Column 3 - Contact */
+    .contact-list { display: flex; flex-direction: column; gap: 20px; }
+    .contact-item { display: flex; gap: 15px; align-items: flex-start; }
+    .c-icon { color: var(--accent-orange); font-size: 16px; margin-top: 4px; }
+    .c-text span { display: block; font-size: 14px; margin-bottom: 4px; color: #fff; font-weight: 500; }
+
+    /* Column 4 - Locations */
+    .loc-item { margin-bottom: 25px; }
+    .loc-item h6 { color: #fff; margin: 0 0 8px 0; font-size: 15px; display: flex; align-items: center; gap: 10px; }
+    .loc-item h6 i { color: var(--accent-orange); }
+    .loc-item p { font-size: 13px; line-height: 1.6; margin: 0; color: #94a3b8; }
+
+    /* Social Icons Alignment */
+    .footer-social-links { display: flex; gap: 12px; margin-top: 25px; }
+    .s-icon {
+        width: 38px; height: 38px;
+        background: rgba(255,255,255,0.06);
+        color: #fff; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        text-decoration: none; transition: 0.3s;
+    }
+    .s-icon:hover { background: var(--accent-orange); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(255, 140, 0, 0.3); }
+
+    /* Bottom Bar Fix */
+    .footer-bottom {
+        background: var(--footer-deep);
+        padding: 25px 0;
+        border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .bottom-flex {
+        display: flex; /* Switched to flex for bar alignment */
+        grid-template-columns: none; 
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .bottom-flex p { font-size: 13px; margin: 0; color: #64748b; }
+    .footer-legal { display: flex; align-items: center; gap: 15px; }
+    .footer-legal a { color: #64748b; text-decoration: none; font-size: 13px; transition: 0.3s; }
+    .footer-legal a:hover { color: var(--accent-orange); }
+    .sep { color: #1e293b; }
+
+    /* RESPONSIVE BREAKPOINTS */
+    @media (max-width: 1024px) {
+        .footer-container { grid-template-columns: repeat(2, 1fr); gap: 40px; }
+    }
+
+    @media (max-width: 600px) {
+        .footer-container { grid-template-columns: 1fr; padding-bottom: 40px; }
+        .bottom-flex { flex-direction: column; gap: 15px; text-align: center; }
+        .footer-logo-v8 { width: 200px; }
+    }
+</style>
+  <!-- WHATSAPP STICKY -->
+  <a href="https://wa.me/919097047484" target="_blank" class="side-whatsapp">
+    <i class="fab fa-whatsapp"></i>
+  </a>
 </body>
+
 </html>
