@@ -1016,6 +1016,8 @@
           <a href="../../Account-Website/privacy-policy.php">Privacy Policy</a>
           <span class="sep">|</span>
           <a href="../../Account-Website/terms-of-service.php">Terms of Service</a>
+           <span class="sep">|</span>
+                 <a href=../../Account-Website/cookies.php>Cookies Policy</a>
         </div>
       </div>
     </div>
