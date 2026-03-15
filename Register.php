@@ -163,6 +163,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 .legal-footer a:hover {
     color: var(--orange) !important;
 }
+.brand-img {
+    display: block;
+    height: 80px;
+    width: auto;
+    margin-left: 0;
+    margin-right: auto;
+    margin-bottom: 1px;
+}
         .btn-login:hover { background: var(--orange); transform: translateY(-3px); box-shadow: 0 15px 30px rgba(255, 140, 0, 0.2); }
 
         .error { color: #e11d48; background: #fff1f2; padding: 14px; border-radius: 12px; margin-bottom: 25px; font-size: 14px; font-weight: 600; border: 1px solid #ffe4e6; text-align: center; }
@@ -175,6 +183,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <div class="container">
         <div class="image-side">
+            <img src="assets/CMA.jpg" alt="CMA Logo" class="brand-img">
             <h1>Expert Finance,<br>Excellence Delivered.</h1>
             <p>Welcome to the Karunesh Kumar & Associates Digital Portal. Access your financial reports and consultancy tools in one secure environment.</p>
         </div>

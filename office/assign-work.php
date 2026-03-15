@@ -58,6 +58,19 @@ if (isset($_POST['admin_upload_dispatch'])) {
         echo "<script>alert('Error: Could not upload file.');</script>";
     }
 }
+
+// --- LOGIC 4: Delete Record (JUST ADDED) ---
+if (isset($_GET['delete_task'])) {
+    $id = mysqli_real_escape_string($conn, $_GET['delete_task']);
+    $conn->query("DELETE FROM service_requests WHERE id='$id'");
+    echo "<script>window.location='assign-work.php';</script>";
+}
+
+if (isset($_GET['delete_doc'])) {
+    $id = mysqli_real_escape_string($conn, $_GET['delete_doc']);
+    $conn->query("DELETE FROM client_documents WHERE id='$id'");
+    echo "<script>window.location='assign-work.php';</script>";
+}
 ?>
 
 <!DOCTYPE html>
@@ -224,8 +237,8 @@ if (isset($_POST['admin_upload_dispatch'])) {
 
 <body>
     <div class="sidebar">
-        <h2>KKA ADMIN</h2>
-        <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i> Summary</a>
+        <h2>Karunesh Kumar & Associates Admin</h2>
+        <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i>Dashboard</a>
 
         <div class="dropdown-container">
             <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleBilling()">
@@ -380,9 +393,9 @@ if (isset($_POST['admin_upload_dispatch'])) {
         ?>
 
         <?php
-        // Fetch data first to check if we have anything to show
-        $tasks = $conn->query("SELECT * FROM service_requests WHERE status='Assigned'");
-        $docs = $conn->query("SELECT * FROM client_documents WHERE assigned_to != ''");
+        // MODIFIED: Showing ALL assigned work (even historical)
+        $tasks = $conn->query("SELECT * FROM service_requests ORDER BY id DESC");
+        $docs = $conn->query("SELECT * FROM client_documents ORDER BY id DESC");
 
         // Total count of all work
         $total_work = $tasks->num_rows + $docs->num_rows;
@@ -390,6 +403,26 @@ if (isset($_POST['admin_upload_dispatch'])) {
 
         <?php if ($total_work > 0): ?>
             <h2 style="margin-top:50px;">Live Assignment Monitor</h2>
+<div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-end; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;">
+    <div style="flex: 2;">
+        <label style="font-size: 12px; color: #64748b; font-weight: bold; display: block; margin-bottom: 5px;">Keyword Search</label>
+        <input type="text" id="workSearch" placeholder="Search ID, Staff, Status..." onkeyup="filterWork()" style="margin: 0;">
+    </div>
+    <div style="flex: 1;">
+        <label style="font-size: 12px; color: #64748b; font-weight: bold; display: block; margin-bottom: 5px;">From Date</label>
+        <input type="date" id="dateFrom" onchange="filterWork()" style="margin: 0;">
+    </div>
+    <div style="flex: 1;">
+        <label style="font-size: 12px; color: #64748b; font-weight: bold; display: block; margin-bottom: 5px;">To Date</label>
+        <input type="date" id="dateTo" onchange="filterWork()" style="margin: 0;">
+    </div>
+    <div>
+        <button onclick="resetFilters()" style="background: #f1f5f9; border: none; padding: 12px 15px; border-radius: 10px; cursor: pointer; color: #475569;" title="Reset Filters">
+            <i class="fas fa-undo"></i>
+        </button>
+    </div>
+</div>
+            
             <div class="card">
                 <table style="width:100%; border-collapse:collapse; text-align:left;">
                     <thead>
@@ -399,30 +432,34 @@ if (isset($_POST['admin_upload_dispatch'])) {
                             <th>Assigned To</th>
                             <th>Status</th>
                             <th>Details/File</th>
-                        </tr>
+                            <th>Action</th> </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="monitorTable">
                         <?php while ($t = $tasks->fetch_assoc()): ?>
-                            <tr style="border-bottom:1px solid #f8fafc;">
+                            <tr class="work-row" style="border-bottom:1px solid #f8fafc;">
                                 <td style="padding:15px;"><span style="background:#e0f2fe; color:#0369a1; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:bold;">TASK</span></td>
                                 <td><?php echo $t['client_id']; ?></td>
                                 <td><b><?php echo $t['assigned_to']; ?></b></td>
                                 <td><span style="color:var(--orange); font-weight:bold;"><?php echo $t['status']; ?></span></td>
                                 <td style="color:#64748b; font-size:13px;"><?php echo $t['service_type']; ?></td>
+                                <td> <a href="?delete_task=<?php echo $t['id']; ?>" onclick="return confirm('Delete record?')" style="color:#ef4444;"><i class="fas fa-trash-alt"></i></a>
+                                </td>
                             </tr>
                         <?php endwhile; ?>
 
                         <?php while ($d = $docs->fetch_assoc()): ?>
-                            <tr style="border-bottom:1px solid #f8fafc;">
+                            <tr class="work-row" style="border-bottom:1px solid #f8fafc;">
                                 <td style="padding:15px;"><span style="background:#fef3c7; color:#92400e; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:bold;">DOCUMENT</span></td>
                                 <td><?php echo $d['client_id']; ?></td>
                                 <td><b><?php echo $d['assigned_to']; ?></b></td>
                                 <td>
-                                    <span style="color:<?php echo ($d['status'] == 'Completed') ? '#22c55e' : '#6366f1'; ?>; font-weight:bold;">
+                                    <span style="color:<?php echo ($d['status'] == 'Completed' || $d['status'] == 'Released') ? '#22c55e' : '#6366f1'; ?>; font-weight:bold;">
                                         <?php echo $d['status']; ?>
                                     </span>
                                 </td>
                                 <td><a href="../uploads/center/<?php echo $d['file_name']; ?>" target="_blank" style="color:var(--navy); text-decoration:none;"><i class="fas fa-file-pdf"></i> View File</a></td>
+                                <td> <a href="?delete_doc=<?php echo $d['id']; ?>" onclick="return confirm('Delete record?')" style="color:#ef4444;"><i class="fas fa-trash-alt"></i></a>
+                                </td>
                             </tr>
                         <?php endwhile; ?>
                     </tbody>
@@ -435,15 +472,46 @@ if (isset($_POST['admin_upload_dispatch'])) {
             </div>
         <?php endif; ?>
     </div>
-    <script>
-        function toggleBilling() {
-            const menu = document.getElementById('billingMenu');
-            const chevron = document.getElementById('chevron');
+   <script>
+    function toggleBilling() {
+        const menu = document.getElementById('billingMenu');
+        const chevron = document.getElementById('chevron');
+        menu.classList.toggle('show-menu');
+        chevron.classList.toggle('rotate-chevron');
+    }
 
-            menu.classList.toggle('show-menu');
-            chevron.classList.toggle('rotate-chevron');
-        }
-    </script>
+    function filterWork() {
+        const input = document.getElementById('workSearch').value.toLowerCase();
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        const rows = document.querySelectorAll('.work-row');
+
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            
+            // Note: If you want to filter by date, you'll need the date 
+            // available in the table row (e.g., in a hidden data-date attribute)
+            // For now, this handles the keyword search:
+            const matchesSearch = text.includes(input);
+            
+            // Logic for visibility
+            if (matchesSearch) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+
+    function resetFilters() {
+        document.getElementById('workSearch').value = "";
+        document.getElementById('dateFrom').value = "";
+        document.getElementById('dateTo').value = "";
+        
+        const rows = document.querySelectorAll('.work-row');
+        rows.forEach(row => row.style.display = "");
+    }
+</script>
 </body>
 
 </html>

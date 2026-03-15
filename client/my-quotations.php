@@ -201,7 +201,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'accept' && isset($_GET['id']))
 <body>
 
     <div class="sidebar">
-        <h2>KKA CLIENT</h2>
+        <h2>Karunesh Kumar & Associates Client</h2>
         <a href="client-dashboard.php"><i class="fas fa-chart-line"></i> Overview</a>
 
         <div class="dropdown-container">
@@ -212,7 +212,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'accept' && isset($_GET['id']))
             <div class="dropdown-content" id="financeMenu" style="display:block; background:rgba(0,0,0,0.2); border-radius:10px; margin:0 10px;">
                 <a href="my-quotations.php" style="background:rgba(255,255,255,0.1); color:white !important;"><i class="fas fa-file-alt"></i> Quotations</a>
                 <a href="my-invoices.php"><i class="fas fa-file-invoice-dollar"></i> Invoices (Pay)</a>
-                <a href="my-receipts.php"><i class="fas fa-receipt"></i> Receipts</a>
+                <a href="my-receipts.php"><i class="fas fa-receipt"></i>Acknowledgement</a>
             </div>
         </div>
 
@@ -230,67 +230,71 @@ if (isset($_GET['action']) && $_GET['action'] == 'accept' && isset($_GET['id']))
         <p style="color: #64748b; margin-top:-10px;">Review and accept pricing for your services.</p>
 
         <?php echo $status_msg; ?>
+<div class="card" style="padding:0; overflow:hidden;">
+    <table>
+        <thead>
+            <tr>
+                <th>Date Sent</th>
+                <th>Service Name</th>
+                <th>Base Amount</th>
+                <th>Tax (%)</th>
+                <th>Total (Incl. Tax)</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            $quotes = $conn->query("SELECT * FROM quotations WHERE client_id = '$cid' ORDER BY id DESC");
 
-        <div class="card" style="padding:0; overflow:hidden;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date Sent</th>
-                        <th>Service Name</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $quotes = $conn->query("SELECT * FROM quotations WHERE client_id = '$cid' ORDER BY id DESC");
+            if ($quotes->num_rows > 0) {
+                while ($q = $quotes->fetch_assoc()) {
+                    $raw_status = strtolower(trim($q['status']));
+                    $is_accepted = ($raw_status === 'accepted');
 
-                    if ($quotes->num_rows > 0) {
-                        while ($q = $quotes->fetch_assoc()) {
-
-                            // NEW LOGIC: Only show "Fixed" if status is exactly "Accepted"
-                            // Since your database currently has a date in status, it will now show "Pending"
-                            $raw_status = strtolower(trim($q['status']));
-                            $is_accepted = ($raw_status === 'accepted');
-
-                            $display_status = $is_accepted ? 'Accepted' : 'Pending';
-                            $status_class = $is_accepted ? 'bg-accepted' : 'bg-pending';
-
-                            echo "<tr>
-                            <td>" . date('d-m-Y', strtotime($q['created_at'])) . "</td>
-                            <td><strong>{$q['service_name']}</strong></td>
-                            <td style='color:var(--navy); font-weight:800;'>₹" . number_format($q['amount']) . "</td>
-                            <td><span class='badge $status_class'>$display_status</span></td>
-                            <td>";
-
-                            if (!$is_accepted) {
-                                // SHOW GREEN BUTTON for everything else (dates, empty, or pending)
-                                echo "<a href='my-quotations.php?action=accept&id={$q['id']}' class='btn-accept'>
-                                    <i class='fas fa-check'></i> Accept Quote
-                                  </a>";
-                            } else {
-                                // SHOW LOCKED BUTTON only when status is 'Accepted'
-                                echo "<div>
-                                    <button class='btn-fixed' disabled>
-                                        <i class='fas fa-lock'></i> Price Fixed
-                                    </button>
-                                    <a href='my-invoices.php' style='display:block; font-size:11px; color:var(--orange); margin-top:5px; text-decoration:none; font-weight:600;'>
-                                        Go to Invoice <i class='fas fa-arrow-right'></i>
-                                    </a>
-                                  </div>";
-                            }
-
-                            echo "</td></tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='5' style='text-align:center; padding:50px; color:#64748b;'>No quotations found.</td></tr>";
-                    }
+                    $display_status = $is_accepted ? 'Accepted' : 'Pending';
+                    $status_class = $is_accepted ? 'bg-accepted' : 'bg-pending';
+                    
+                    // Fallback logic if total_amount isn't in your DB yet
+                    $base_amt = $q['amount'];
+                    $tax_rate = isset($q['tax_rate']) ? $q['tax_rate'] : 18; // Default 18% if not set
+                    $total = isset($q['total_amount']) && $q['total_amount'] > 0 ? $q['total_amount'] : ($base_amt * (1 + ($tax_rate / 100)));
                     ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+                    <tr>
+                        <td><?php echo date('d-m-Y', strtotime($q['created_at'])); ?></td>
+                        <td><strong><?php echo $q['service_name']; ?></strong></td>
+                        <td>₹<?php echo number_format($base_amt, 2); ?></td>
+                        <td><small><?php echo $tax_rate; ?>%</small></td>
+                        <td style='color:var(--navy); font-weight:800;'>₹<?php echo number_format($total, 2); ?></td>
+                        <td><span class='badge <?php echo $status_class; ?>'><?php echo $display_status; ?></span></td>
+                        <td style="display: flex; gap: 8px; align-items: center;">
+                          <a href="../office/view-quotation.php?id=<?php echo $q['id']; ?>" class="btn-accept" style="background:#64748b;" title="View Details">
+    <i class="fas fa-eye"></i>
+</a>
+
+                            <?php if (!$is_accepted): ?>
+                                
+                            <?php else: ?>
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <button class='btn-fixed' disabled style="padding: 6px 12px; font-size: 11px;">
+                                        <i class="fas fa-lock"></i> Fixed
+                                    </button>
+                                    <a href='my-invoices.php' style='font-size:10px; color:var(--orange); margin-top:4px; text-decoration:none; font-weight:600;'>
+                                        Pay <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php
+                }
+            } else {
+                echo "<tr><td colspan='7' style='text-align:center; padding:50px; color:#64748b;'>No quotations found.</td></tr>";
+            }
+            ?>
+        </tbody>
+    </table>
+</div>
 
     <script>
         function toggleFinances() {

@@ -178,7 +178,7 @@ $status_msg = "";
 <body>
 
     <div class="sidebar">
-        <h2>KKA STAFF</h2>
+        <h2>Karunesh Kumar & Associates Employee</h2>
         <a href="employee-dashboard.php"><i class="fas fa-tasks"></i> My Tasks</a>
         <a href="work-basket.php"><i class="fas fa-briefcase"></i> Work Basket</a>
         <a href="all-messages.php" class="active"><i class="fas fa-inbox"></i> Web Inbox</a>

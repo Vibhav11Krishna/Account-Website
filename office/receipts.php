@@ -251,8 +251,8 @@ if (!$receipts) {
 
 <body>
  <div class="sidebar">
-        <h2>KKA ADMIN</h2>
-        <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i> Summary</a>
+        <h2>Karunesh Kumar & Associates Admin</h2>
+        <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i>Dashboard</a>
         <div class="dropdown-container">
             <a href="javascript:void(0)" class="dropdown-btn active" onclick="toggleBilling()">
                 <i class="fas fa-file-invoice-dollar"></i> Billing

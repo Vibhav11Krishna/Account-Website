@@ -198,7 +198,7 @@ if (isset($_POST['upload'])) {
 
 <body>
     <div class="sidebar">
-        <h2>KKA CLIENT</h2>
+        <h2>Karunesh Kumar & Associates Client</h2>
         <a href="client-dashboard.php"><i class="fas fa-chart-line"></i> Overview</a>
 
         <div class="dropdown-container">
@@ -209,7 +209,7 @@ if (isset($_POST['upload'])) {
             <div class="dropdown-content" id="financeMenu" style="display:none; background:rgba(0,0,0,0.2); border-radius:10px; margin:0 10px;">
                 <a href="my-quotations.php" style="padding:10px 15px; font-size:14px;"><i class="fas fa-file-alt"></i> Quotations</a>
                 <a href="my-invoices.php" style="padding:10px 15px; font-size:14px;"><i class="fas fa-file-invoice-dollar"></i> Invoices (Pay)</a>
-                <a href="my-receipts.php" style="padding:10px 15px; font-size:14px;"><i class="fas fa-receipt"></i> Receipts</a>
+                <a href="my-receipts.php" style="padding:10px 15px; font-size:14px;"><i class="fas fa-receipt"></i>Acknowledgement</a>
             </div>
         </div>
 
