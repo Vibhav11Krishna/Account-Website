@@ -195,7 +195,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <div class="login-box">
                 <div class="logo-area">
-                    <span>KKA<i>.</i>PORTAL</span>
+                    <span>KKA<i>.</i>Gateway</span>
                 </div>
 
                 <div class="tab-menu">
