@@ -33,7 +33,13 @@ if (isset($_GET['delete'])) {
             --border: #e2e8f0;
         }
 
-        body { display: flex; margin: 0; background: var(--bg); font-family: 'Inter', sans-serif; color: var(--text); }
+        body {
+            display: flex;
+            margin: 0;
+            background: var(--bg);
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+        }
 
         /* Sidebar Styling */
         .sidebar {
@@ -69,17 +75,53 @@ if (isset($_GET['delete'])) {
             transition: 0.3s;
         }
 
-        .sidebar a:hover, .sidebar a.active { background: rgba(255, 255, 255, 0.1); color: white; border-left: 4px solid var(--orange); }
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left: 4px solid var(--orange);
+        }
 
-        .dropdown-content { display: none; background: rgba(0, 0, 0, 0.2); margin: 0 5px; border-radius: 8px; padding-left: 15px; }
-        .dropdown-content a { font-size: 14px; padding: 10px; color: rgba(255, 255, 255, 0.6); }
-        .show-menu { display: block; }
-        .rotate-chevron { transform: rotate(90deg); }
+        .dropdown-content {
+            display: none;
+            background: rgba(0, 0, 0, 0.2);
+            margin: 0 5px;
+            border-radius: 8px;
+            padding-left: 15px;
+        }
 
-        .main { margin-left: 280px; padding: 50px; width: calc(100% - 280px); box-sizing: border-box; }
-        .content-container { max-width: 1300px; margin: 0 auto; }
+        .dropdown-content a {
+            font-size: 14px;
+            padding: 10px;
+            color: rgba(255, 255, 255, 0.6);
+        }
 
-        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .show-menu {
+            display: block;
+        }
+
+        .rotate-chevron {
+            transform: rotate(90deg);
+        }
+
+        .main {
+            margin-left: 280px;
+            padding: 50px;
+            width: calc(100% - 280px);
+            box-sizing: border-box;
+        }
+
+        .content-container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
 
         .search-container {
             margin-bottom: 25px;
@@ -90,9 +132,16 @@ if (isset($_GET['delete'])) {
             padding: 12px 20px;
             border-radius: 15px;
             border: 1px solid var(--border);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
         }
-        .search-container input { width: 100%; border: none; outline: none; font-size: 14px; font-family: inherit; }
+
+        .search-container input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-size: 14px;
+            font-family: inherit;
+        }
 
         .table-card {
             background: white;
@@ -103,17 +152,91 @@ if (isset($_GET['delete'])) {
             overflow-x: auto;
         }
 
-        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
-        th { text-align: left; padding: 15px; background: #fcfcfd; color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
-        td { padding: 18px 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; vertical-align: top; }
-        tr:hover td { background: #fafbfc; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1100px;
+        }
 
-        .id-badge { background: #fff7ed; color: var(--orange); font-weight: 700; padding: 5px 10px; border-radius: 8px; font-family: monospace; }
-        .firm-name { color: var(--navy); font-weight: 700; font-size: 15px; display: block; }
-        .tax-pill { display: inline-block; background: #f1f5f9; padding: 3px 8px; border-radius: 6px; font-size: 10px; margin-top: 4px; border: 1px solid #e2e8f0; font-family: monospace; }
-        .doc-link { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; background: #eff6ff; color: #1e40af; border-radius: 8px; font-size: 11px; text-decoration: none; margin: 2px; }
-        .action-btn { color: #ef4444; background: #fef2f2; width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; transition: 0.3s; text-decoration: none; }
-        .action-btn:hover { background: #ef4444; color: white; }
+        th {
+            text-align: left;
+            padding: 15px;
+            background: #fcfcfd;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        td {
+            padding: 18px 15px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+            vertical-align: top;
+        }
+
+        tr:hover td {
+            background: #fafbfc;
+        }
+
+        .id-badge {
+            background: #fff7ed;
+            color: var(--orange);
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+
+        .firm-name {
+            color: var(--navy);
+            font-weight: 700;
+            font-size: 15px;
+            display: block;
+        }
+
+        .tax-pill {
+            display: inline-block;
+            background: #f1f5f9;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            margin-top: 4px;
+            border: 1px solid #e2e8f0;
+            font-family: monospace;
+        }
+
+        .doc-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            background: #eff6ff;
+            color: #1e40af;
+            border-radius: 8px;
+            font-size: 11px;
+            text-decoration: none;
+            margin: 2px;
+        }
+
+        .action-btn {
+            color: #ef4444;
+            background: #fef2f2;
+            width: 35px;
+            height: 35px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
     </style>
 </head>
 
@@ -121,7 +244,7 @@ if (isset($_GET['delete'])) {
 
     <div class="sidebar">
         <h2>Karunesh Kumar & Associates Admin</h2>
-        <a href="admin-dashboard.php" ><i class="fas fa-chart-pie"></i>Dashboard</a>
+        <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i>Dashboard</a>
 
         <div class="dropdown-container">
             <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleBilling()">
@@ -138,6 +261,7 @@ if (isset($_GET['delete'])) {
 
         <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
         <a href="admin-review.php"><i class="fas fa-file-signature"></i> Quality Control</a>
+        <a href="Master-Vault.php" ><i class="fas fa-file-signature"></i>Master Vault</a>
         <a href="manage-clients.php"class="active"><i class="fas fa-users"></i> Manage Clients</a>
         <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
         <a href="attendance.php"><i class="fas fa-calendar-check"></i> Attendance</a>
@@ -191,7 +315,7 @@ if (isset($_GET['delete'])) {
                         if ($res && $res->num_rows > 0):
                             while ($row = $res->fetch_assoc()):
                                 $client_id = $row['identifier'];
-                                
+
                                 // Simplified variables - strictly using business profile data
                                 $display_email = !empty($row['business_email']) ? $row['business_email'] : 'No Email';
                                 $display_phone = !empty($row['phone']) ? $row['phone'] : 'No Phone';
@@ -225,7 +349,9 @@ if (isset($_GET['delete'])) {
                                             while ($d = $docs->fetch_assoc()) {
                                                 echo "<a href='../documents/{$d['file_path']}' class='doc-link' target='_blank'><i class='fas fa-file-pdf'></i> " . htmlspecialchars($d['category']) . "</a>";
                                             }
-                                        } else { echo "<span style='color:#cbd5e1; font-size:12px;'>No Docs</span>"; }
+                                        } else {
+                                            echo "<span style='color:#cbd5e1; font-size:12px;'>No Docs</span>";
+                                        }
                                         ?>
                                     </td>
                                     <td style="text-align: center;">
@@ -234,8 +360,11 @@ if (isset($_GET['delete'])) {
                                         </a>
                                     </td>
                                 </tr>
-                        <?php endwhile; else: ?>
-                            <tr><td colspan="7" style="text-align:center; padding:50px;">No clients found.</td></tr>
+                            <?php endwhile;
+                        else: ?>
+                            <tr>
+                                <td colspan="7" style="text-align:center; padding:50px;">No clients found.</td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -265,4 +394,5 @@ if (isset($_GET['delete'])) {
         }
     </script>
 </body>
+
 </html>

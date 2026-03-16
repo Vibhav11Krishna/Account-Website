@@ -349,6 +349,7 @@ if (isset($_POST['create'])) {
 
         <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
         <a href="admin-review.php"><i class="fas fa-file-signature"></i> Quality Control</a>
+        <a href="Master-Vault.php"><i class="fas fa-file-signature"></i>Master Vault</a>
         <a href="manage-clients.php"><i class="fas fa-users"></i> Manage Clients</a>
         <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
         <a href="attendance.php"><i class="fas fa-calendar-check"></i> Attendance</a>

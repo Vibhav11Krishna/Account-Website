@@ -235,13 +235,13 @@ function getIndianCurrency(float $number) {
 
     <div class="footer-container">
         <div class="stamp-area">
-            <img src="../assets/Cma.jpg" alt="Stamp" class="stamp-img">
+            <img src="../assets/kkstamp.png" alt="Stamp" class="stamp-img">
             <div style="font-size: 10px; font-weight: bold; margin-top: 5px; color: #777;">OFFICIAL STAMP</div>
         </div>
 
         <div class="signature-area">
-            <span style="font-size: 11px; font-weight: bold;">For KARUNESH KUMAR & ASSOCIATES</span>
-            <img src="../assets/Cma.jpg" alt="Signature" class="footer-img">
+            <span style="font-size: 11px; font-weight: bold;"> KARUNESH KUMAR & ASSOCIATES</span>
+            <img src="../assets/kksign.png" alt="Signature" class="footer-img">
             <strong style="font-size: 12px; border-top: 1px solid #333; display: block; padding-top: 5px;">Authorized Signatory</strong>
         </div>
     </div>
