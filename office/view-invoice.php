@@ -14,6 +14,7 @@ if (!isset($_GET['inv_no'])) {
 $inv_no = mysqli_real_escape_string($conn, $_GET['inv_no']);
 
 // Fetch Detailed Invoice & Client Info
+// Added i.description to the select fields
 $sql = "SELECT i.*, cp.company_name, cp.address, cp.phone, cp.pan_no, cp.gst_no, cp.business_email as email 
         FROM invoices i 
         JOIN client_profiles cp ON i.client_id = cp.client_id 
@@ -26,8 +27,6 @@ if (!$res || $res->num_rows === 0) {
 }
 
 $data = $res->fetch_assoc();
-
-// --- LOGIC UPDATED TO MATCH NEW STORAGE FORMAT ---
 
 // --- LOGIC UPDATED TO MATCH NEW STORAGE FORMAT ---
 
@@ -222,7 +221,14 @@ function getIndianCurrency(float $number) {
         <tbody>
             <tr>
                 <td align="center">1</td>
-                <td><strong><?php echo $data['service_name']; ?></strong></td>
+                <td>
+                    <strong><?php echo strtoupper($data['service_name']); ?></strong>
+                    <?php if (!empty($data['description'])): ?>
+                        <div style="margin-top: 5px; font-size: 11px; color: #475569; line-height: 1.4; font-style: italic;">
+                            <?php echo nl2br(htmlspecialchars($data['description'])); ?>
+                        </div>
+                    <?php endif; ?>
+                </td>
                 <td>9982</td>
                 <td>₹<?php echo number_format($base, 2); ?></td>
                 <td><?php echo $tax_rate; ?>%</td>
@@ -282,17 +288,44 @@ function getIndianCurrency(float $number) {
         <?php endif; ?>
     </div>
 
-     <div class="footer-container">
-        <div class="stamp-area">
-            <img src="../assets/kkstamp.png" alt="Stamp" class="stamp-img">
-            <div style="font-size: 10px; font-weight: bold; margin-top: 5px; color: #777;">OFFICIAL STAMP</div>
+    <div style="display: flex; gap: 20px; margin-top: 30px; border-top: 2px solid #333; padding-top: 15px;">
+        
+        <div style="flex: 1.2; font-size: 11px; line-height: 1.6; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; background: #f8fafc;">
+            <strong style="color: #0b3c74; font-size: 12px; text-transform: uppercase;">Bank Account Details</strong>
+            <div style="margin-top: 8px;">
+                <span class="label" style="width: 110px;">Account Holder:</span> <strong>KARUNESH KUMAR & ASSOCIATES</strong><br>
+                <span class="label" style="width: 110px;">Account Number:</span> <strong>7046022942</strong><br>
+                <span class="label" style="width: 110px;">Account Type:</span> Current Account<br>
+                <span class="label" style="width: 110px;">IFSC Code:</span> <strong>KKBK0005656</strong><br>
+                <span class="label" style="width: 110px;">Bank Name:</span> Kotak Mahindra Bank<br>
+                <span class="label" style="width: 110px;">Branch:</span> PATNA - ASHIYANA<br>
+                <span class="label" style="width: 110px;">UPI ID:</span> <span style="color: #ff8c00; font-weight: bold;">karunesh.kumar45@kotak</span>
+            </div>
         </div>
 
-        <div class="signature-area" style="text-align: center; width: 250px;">
-            <span style="font-size: 11px; font-weight: bold;"> KARUNESH KUMAR & ASSOCIATES</span>
-            <img src="../assets/kksign.png" alt="Signature" class="footer-img">
-            <strong style="font-size: 12px; border-top: 1px solid #333; display: block; padding-top: 5px;">Authorized Signatory</strong>
+        <div style="flex: 0.8; font-size: 10px; color: #475569; line-height: 1.5;">
+            <strong style="color: #1e293b;">TERMS & CONDITIONS:</strong>
+            <ul style="padding-left: 15px; margin-top: 8px; list-style-type: square;">
+                <li>Payment is due within 7 days of the invoice date.</li>
+                <li>Please mention the Invoice Number (<?php echo $data['invoice_no']; ?>) in the payment remarks.</li>
+                <li>Interest @18% p.a. will be charged for delayed payments beyond 15 days.</li>
+                <li>All disputes are subject to Patna Jurisdiction only.</li>
+                <li>This is a system-generated Tax Invoice.</li>
+            </ul>
         </div>
+    </div>
+
+    <div class="footer-container">
+        <div class="stamp-area">
+            <img src="../assets/kkstamp.png" alt="Stamp" class="stamp-img">
+            <div style="font-size: 9px; font-weight: bold; margin-top: 2px; color: #94a3b8; text-align: center;">OFFICIAL SEAL</div>
+        </div>
+
+         <div class="signature-area" style="text-align: center; width: 250px;">
+                <span style="font-size: 11px; font-weight: bold;"> KARUNESH KUMAR & ASSOCIATES</span>
+                <img src="../assets/kksign.png" alt="Signature" class="footer-img">
+                <strong style="font-size: 12px; border-top: 1px solid #333; display: block; padding-top: 5px;">Authorized Signatory</strong>
+            </div>
     </div>
 </div>
 </body>

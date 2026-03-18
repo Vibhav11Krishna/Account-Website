@@ -1,7 +1,18 @@
 <?php
 session_start();
 include('../db.php');
-
+// 2. HANDLE DELETE REQUEST
+if (isset($_GET['delete_receipt'])) {
+    $receipt_no = mysqli_real_escape_string($conn, $_GET['delete_receipt']);
+    $del_sql = "DELETE FROM receipts WHERE receipt_no = '$receipt_no'";
+    
+    if ($conn->query($del_sql)) {
+        header("Location: receipts.php?msg=deleted");
+        exit();
+    } else {
+        die("Error deleting record: " . $conn->error);
+    }
+}
 // 1. SECURITY CHECK
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     header("Location: ../Register.php");
@@ -275,6 +286,11 @@ if (!$receipts) {
     </div>
 
     <div class="main">
+        <?php if (isset($_GET['msg']) && $_GET['msg'] == 'deleted'): ?>
+    <div style="background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: 600; border: 1px solid #fecaca;">
+        <i class="fas fa-check-circle"></i> Receipt has been deleted successfully.
+    </div>
+<?php endif; ?>
         <h1>Payment History</h1>
 
         <div class="search-area">
@@ -308,7 +324,7 @@ if (!$receipts) {
         <th>Status</th> <th>Method</th> <th>Action</th>
     </tr>
 </thead>
-                <tbody>
+               <tbody>
     <?php
     if ($receipts->num_rows > 0) {
         while ($r = $receipts->fetch_assoc()) {
@@ -342,15 +358,21 @@ if (!$receipts) {
                 <td>$c_name</td>
                 <td style='color:var(--text-light);'>#{$r['invoice_no']}</td>
                 <td class='amount'>₹" . number_format($r['amount_paid'], 2) . "</td>
-                
                 <td><small style='font-weight:600; color:var(--text-light);'>{$r['payment_mode']}</small></td>
-                
                 <td style='font-weight:700;'>$method_icon $method</td>
-                
                 <td>
-                    <a href='view_receipt.php?id={$r['receipt_no']}' target='_blank' class='btn-view'>
-                        <i class='fas fa-file-invoice'></i> View Bill
-                    </a>
+                    <div style='display: flex; gap: 8px;'>
+                        <a href='view_receipt.php?id={$r['receipt_no']}' target='_blank' class='btn-view' title='View Bill'>
+                            <i class='fas fa-file-invoice'></i>
+                        </a>
+                        <a href='javascript:void(0)' 
+                           onclick='confirmDelete(\"{$r['receipt_no']}\")' 
+                           class='btn-view' 
+                           style='color:#e11d48; border-color:#fecdd3;' 
+                           title='Delete Receipt'>
+                            <i class='fas fa-trash-alt'></i>
+                        </a>
+                    </div>
                 </td>
             </tr>";
         }
@@ -369,6 +391,11 @@ if (!$receipts) {
         function toggleBilling() {
             document.getElementById('billingMenu').classList.toggle('show-menu');
         }
+        function confirmDelete(receiptNo) {
+    if (confirm("Are you sure you want to delete Receipt #" + receiptNo + "? This action cannot be undone.")) {
+        window.location.href = "receipts.php?delete_receipt=" + receiptNo;
+    }
+}
     </script>
 </body>
 
