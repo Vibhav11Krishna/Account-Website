@@ -2,17 +2,31 @@
 session_start();
 include('../db.php');
 
-// Strict check for admin role
+// --- DELETE QUOTATION ---
+if (isset($_GET['delete_id'])) {
+    $del_id = mysqli_real_escape_string($conn, $_GET['delete_id']);
+    if ($conn->query("DELETE FROM quotations WHERE id = '$del_id'")) {
+        header("Location: quotations.php?msg=deleted");
+        exit();
+    }
+}
+
+$status_msg = "";
+if (isset($_GET['msg'])) {
+    if ($_GET['msg'] == 'deleted') {
+        $status_msg = "<div class='alert-success' style='background:#fee2e2; border-color:#ef4444; color:#991b1b;'><i class='fas fa-trash'></i> Quotation deleted successfully.</div>";
+    }
+    if ($_GET['msg'] == 'converted') {
+        $status_msg = "<div class='alert-success'><i class='fas fa-check-circle'></i> Quotation successfully converted to Invoice!</div>";
+    }
+}
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     header("Location: ../Register.php");
     exit();
 }
 
-// Optional: Debugging line (Remove after testing)
-// echo "Logged in as: " . $_SESSION['user']['identifier']; 
-
 $filter_date = isset($_GET['view_date']) ? mysqli_real_escape_string($conn, $_GET['view_date']) : '';
-$status_msg = "";
 
 // Handle New Quotation Submission
 if (isset($_POST['add_quote'])) {
@@ -20,25 +34,24 @@ if (isset($_POST['add_quote'])) {
     $service = mysqli_real_escape_string($conn, $_POST['service']);
     $amount = (float)mysqli_real_escape_string($conn, $_POST['amount']);
     $validity = mysqli_real_escape_string($conn, $_POST['validity']);
+    $client_state = mysqli_real_escape_string($conn, $_POST['client_state']);
 
-    // Tax Calculation Logic
+    // Tax Type Logic
+    $tax_type = ($client_state == 'Bihar') ? 'CGST+SGST' : 'IGST';
     $tax_rate = isset($_POST['tax_rate']) ? (float)$_POST['tax_rate'] : 0;
     $tax_amount = ($amount * $tax_rate) / 100;
     $total_amount = $amount + $tax_amount;
 
     $today = date('Y-m-d H:i:s');
+    $count_res = $conn->query("SELECT id FROM quotations");
+    $q_no = "QUO/" . str_pad(($count_res->num_rows + 1), 2, "0", STR_PAD_LEFT);
 
-    // Generate Quotation Number (Format: QUO/XX)
-   // Generate Quotation Number (Format: QUO/01, QUO/02, etc.)
-$count_res = $conn->query("SELECT id FROM quotations");
-$q_no = "QUO/" . str_pad(($count_res->num_rows + 1), 2, "0", STR_PAD_LEFT);
-
-    // Ensure your table 'quotations' includes columns: tax_rate, total_amount
-    $sql = "INSERT INTO quotations (quote_no, client_id, service_name, amount, tax_rate, total_amount, validity_date, status, created_at) 
-            VALUES ('$q_no', '$client_id', '$service', '$amount', '$tax_rate', '$total_amount', '$validity', 'Sent', '$today')";
+    // Added client_state and tax_type to INSERT
+    $sql = "INSERT INTO quotations (quote_no, client_id, service_name, amount, tax_rate, tax_type, total_amount, validity_date, status, created_at, client_state) 
+            VALUES ('$q_no', '$client_id', '$service', '$amount', '$tax_rate', '$tax_type', '$total_amount', '$validity', 'Sent', '$today', '$client_state')";
 
     if ($conn->query($sql)) {
-        $status_msg = "<div class='alert-success'><i class='fas fa-check-circle'></i> Quotation $q_no generated successfully! Total: ₹" . number_format($total_amount, 2) . "</div>";
+        $status_msg = "<div class='alert-success'><i class='fas fa-check-circle'></i> Quotation $q_no saved! Logic: $tax_type applied.</div>";
     }
 }
 ?>
@@ -49,7 +62,7 @@ $q_no = "QUO/" . str_pad(($count_res->num_rows + 1), 2, "0", STR_PAD_LEFT);
     <title>Quotations | KKA Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-      :root {
+        :root {
             --navy: #0b3c74;
             --orange: #ff8c00;
             --sidebar: #082d56;
@@ -65,29 +78,21 @@ $q_no = "QUO/" . str_pad(($count_res->num_rows + 1), 2, "0", STR_PAD_LEFT);
             color: #334155;
         }
 
-        /* Sidebar */
-         /* Sidebar */
-       .sidebar {
-    width: 280px;
-    background: var(--sidebar);
-    color: white;
-    height: 100vh;
-    position: fixed;
-    padding: 30px 20px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    
-    /* ADD THIS LINE */
-    border-right: 4px solid var(--orange); 
-}
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding: 30px 20px;
+            box-sizing: border-box;
+            border-right: 4px solid var(--orange);
+        }
 
         .sidebar h2 {
             font-size: 22px;
             color: var(--orange);
             margin-bottom: 40px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 20px;
         }
 
         .sidebar a {
@@ -99,7 +104,6 @@ $q_no = "QUO/" . str_pad(($count_res->num_rows + 1), 2, "0", STR_PAD_LEFT);
             padding: 14px;
             margin-bottom: 8px;
             border-radius: 12px;
-            transition: 0.3s;
         }
 
         .sidebar a:hover,
@@ -114,30 +118,16 @@ $q_no = "QUO/" . str_pad(($count_res->num_rows + 1), 2, "0", STR_PAD_LEFT);
             background: rgba(0, 0, 0, 0.15);
             margin: 0 10px;
             border-radius: 10px;
-            padding-left: 10px;
         }
-/* Animation for the sidebar chevron */
-.rotate-chevron {
-    transform: rotate(180deg);
-}
 
-/* Ensure the menu shows when the class is active */
-.show-menu {
-    display: block !important;
-}
-
-/* Base style for the dropdown */
-.dropdown-content {
-    display: none; /* Keep hidden by default */
-    background: rgba(0, 0, 0, 0.15);
-    margin: 0 10px;
-    border-radius: 10px;
-}
         .show-menu {
             display: block !important;
         }
 
-        /* Main Content */
+        .rotate-chevron {
+            transform: rotate(180deg);
+        }
+
         .main {
             margin-left: 280px;
             padding: 40px;
@@ -193,7 +183,6 @@ $q_no = "QUO/" . str_pad(($count_res->num_rows + 1), 2, "0", STR_PAD_LEFT);
             background: var(--orange);
         }
 
-        /* Table Action Buttons */
         .btn-sm {
             padding: 6px 12px;
             border-radius: 6px;
@@ -250,8 +239,8 @@ $q_no = "QUO/" . str_pad(($count_res->num_rows + 1), 2, "0", STR_PAD_LEFT);
 
 <body>
 
-    <div class="sidebar">
-     <h2>Karunesh Kumar & Associates Admin</h2>
+     <div class="sidebar">
+        <h2>Karunesh Kumar & Associates Admin</h2>
         <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i>Dashboard</a>
         <div class="dropdown-container">
             <a href="javascript:void(0)" class="dropdown-btn active" onclick="toggleBilling()">
@@ -291,16 +280,29 @@ $q_no = "QUO/" . str_pad(($count_res->num_rows + 1), 2, "0", STR_PAD_LEFT);
                         ?>
                     </select>
 
+                    <label style="font-size:11px; font-weight:700;">PLACE OF SUPPLY (STATE)</label>
+                    <select name="client_state" required>
+                        <option value="Bihar" selected>Bihar (Intrastate - CGST+SGST)</option>
+                        <option value="Outside Bihar">Outside Bihar (Interstate - IGST)</option>
+                    </select>
+
                     <input type="text" name="service" placeholder="Service Description" required>
                     <input type="number" name="amount" placeholder="Base Amount (₹)" step="0.01" required>
 
                     <div class="tax-box">
                         <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
                             <input type="checkbox" id="tax_check" onchange="toggleTaxInput()" style="width:auto; margin:0;">
-                            Apply Manual Tax/GST?
+                            Apply GST/Tax Slab?
                         </label>
                         <div id="tax_input_div" style="display:none; margin-top:10px;">
-                            <input type="number" name="tax_rate" placeholder="Tax % (e.g. 18)" value="0">
+                            <label style="font-size:11px; font-weight:700; color:var(--navy);">SELECT RATE</label>
+                            <select name="tax_rate" id="tax_select">
+                                <option value="0">0% (Exempted)</option>
+                                <option value="5">5% GST</option>
+                                <option value="12">12% GST</option>
+                                <option value="18" selected>18% GST</option>
+                                <option value="28">28% GST</option>
+                            </select>
                         </div>
                     </div>
 
@@ -324,9 +326,9 @@ $q_no = "QUO/" . str_pad(($count_res->num_rows + 1), 2, "0", STR_PAD_LEFT);
                     <table>
                         <thead>
                             <tr>
-                                <th>Created</th>
-                                <th>Quote #</th>
-                                <th>Client / Service</th>
+                                <th>Details</th>
+                                <th>State</th>
+                                <th>Tax Logic</th>
                                 <th>Total</th>
                                 <th>Actions</th>
                             </tr>
@@ -338,38 +340,33 @@ $q_no = "QUO/" . str_pad(($count_res->num_rows + 1), 2, "0", STR_PAD_LEFT);
                             $query .= " ORDER BY q.id DESC";
 
                             $res = $conn->query($query);
-                            if ($res->num_rows > 0) {
-                                while ($q = $res->fetch_assoc()) {
+                            while ($q = $res->fetch_assoc()) {
                             ?>
-                                    <tr>
-                                        <td><?php echo date('d-m-Y', strtotime($q['created_at'])); ?></td>
-                                        <td style="font-weight:700; color:var(--navy);"><?php echo $q['quote_no']; ?></td>
-                                        <td>
-                                            <b><?php echo $q['name']; ?></b><br>
-                                            <small style="color:var(--text-light)"><?php echo $q['service_name']; ?></small>
-                                        </td>
-                                        <td style="font-weight:700;">
-                                            ₹<?php echo number_format($q['total_amount'], 2); ?>
-                                            <?php if ($q['tax_rate'] > 0): ?>
-                                                <br><small style="color:green; font-weight:normal;">Incl. <?php echo $q['tax_rate']; ?>% Tax</small>
-                                            <?php endif; ?>
-                                        </td>
-                                       <td>
-    <a href="view-quotation.php?id=<?php echo $q['id']; ?>" class="btn-sm btn-pdf" target="_blank">
-        <i class="fas fa-file-pdf"></i> PDF
-    </a>
-    
-    <a href="invoices.php?quote_ref=<?php echo $q['quote_no']; ?>" class="btn-sm btn-inv">
-        <i class="fas fa-exchange-alt"></i> Invoice
-    </a>
-</td>
-                                    </tr>
-                            <?php
-                                }
-                            } else {
-                                echo "<tr><td colspan='5' style='text-align:center; padding:40px;'>No records found.</td></tr>";
-                            }
-                            ?>
+                                <tr>
+                                    <td>
+                                        <small><?php echo $q['quote_no']; ?></small><br>
+                                        <b><?php echo $q['name']; ?></b><br>
+                                        <span style="font-size:11px; color:var(--text-light)"><?php echo $q['service_name']; ?></span>
+                                    </td>
+                                    <td><span style="font-size:10px; background:#e2e8f0; padding:2px 6px; border-radius:4px;"><?php echo $q['client_state']; ?></span></td>
+                                    <td>
+                                        <small style="color:<?php echo ($q['tax_type'] == 'CGST+SGST' ? '#16a34a' : '#2563eb'); ?>; font-weight:bold;">
+                                            <?php echo $q['tax_type']; ?> (<?php echo $q['tax_rate']; ?>%)
+                                        </small>
+                                    </td>
+                                    <td style="font-weight:700;">₹<?php echo number_format($q['total_amount'], 2); ?></td>
+                                    <td>
+                                        <a href="view-quotation.php?id=<?php echo $q['id']; ?>" class="btn-sm btn-pdf" target="_blank"><i class="fas fa-file-pdf"></i></a>
+                                        <a href="invoices.php?cid=<?php echo $q['client_id']; ?>&amt=<?php echo $q['amount']; ?>&svc=<?php echo urlencode($q['service_name']); ?>&tax=<?php echo $q['tax_rate']; ?>&qid=<?php echo $q['id']; ?>"
+                                            class="btn-convert"
+                                            style="background: #10b981; color: white; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 12px; display: inline-block;">
+                                            <i class="fas fa-file-invoice"></i> Create Invoice
+                                        </a>
+
+                                        <a href="?delete_id=<?php echo $q['id']; ?>" class="btn-sm" style="background:#fee2e2; color:#b91c1c;" onclick="return confirm('Delete?')"><i class="fas fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                            <?php } ?>
                         </tbody>
                     </table>
                 </div>
@@ -377,24 +374,19 @@ $q_no = "QUO/" . str_pad(($count_res->num_rows + 1), 2, "0", STR_PAD_LEFT);
         </div>
     </div>
 
-   <script>
-    function toggleBilling() {
-        const menu = document.getElementById('billingMenu');
-        const chevron = document.getElementById('chevron');
+    <script>
+        function toggleBilling() {
+            document.getElementById('billingMenu').classList.toggle('show-menu');
+            document.getElementById('chevron').classList.toggle('rotate-chevron');
+        }
 
-        // Toggle the visibility of the menu
-        menu.classList.toggle('show-menu');
-
-        // Rotate the arrow icon
-        chevron.classList.toggle('rotate-chevron');
-    }
-
-    function toggleTaxInput() {
-        const check = document.getElementById('tax_check');
-        const inputDiv = document.getElementById('tax_input_div');
-        inputDiv.style.display = check.checked ? 'block' : 'none';
-    }
-</script>
+        function toggleTaxInput() {
+            const check = document.getElementById('tax_check');
+            const inputDiv = document.getElementById('tax_input_div');
+            inputDiv.style.display = check.checked ? 'block' : 'none';
+            if (!check.checked) document.getElementById('tax_select').value = "0";
+        }
+    </script>
 </body>
 
 </html>

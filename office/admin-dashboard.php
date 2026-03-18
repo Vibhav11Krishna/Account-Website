@@ -17,14 +17,8 @@ if (isset($_POST['create'])) {
     $r = $_POST['role'];
     $p = $_POST['pass'];
 
-    if ($r == 'client') {
-        // Auto-generate KK-ID for clients
-        $c = $conn->query("SELECT id FROM users WHERE role='client'")->num_rows + 1;
-        $id = "KK/2026/" . str_pad($c, 3, "0", STR_PAD_LEFT);
-    } else {
-        // Use Email for office staff
-        $id = mysqli_real_escape_string($conn, $_POST['email']);
-    }
+   $id = mysqli_real_escape_string($conn, $_POST['email']);
+$r = 'office'; // Hardcode the role to office/staff
 
     $sql = "INSERT INTO users (name, identifier, password, role) VALUES ('$n', '$id', '$p', '$r')";
     if ($conn->query($sql)) {
@@ -349,7 +343,7 @@ if (isset($_POST['create'])) {
 
         <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
         <a href="admin-review.php"><i class="fas fa-file-signature"></i> Quality Control</a>
-        <a href="Master-Vault.php"><i class="fas fa-file-signature"></i>Master Vault</a>
+        <a href="Master-Vault.php"><i class="fas fa-vault"></i>Master Vault</a>
         <a href="manage-clients.php"><i class="fas fa-users"></i> Manage Clients</a>
         <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
         <a href="attendance.php"><i class="fas fa-calendar-check"></i> Attendance</a>
@@ -427,22 +421,18 @@ if (isset($_POST['create'])) {
             </a>
         </div>
         <div class="card">
-            <h3 style="margin-top:0;"><i class="fas fa-user-plus"></i> Onboard New User</h3>
-            <form method="POST">
-                <input type="text" name="name" placeholder="Full Name" required>
+            <h3 style="margin-top:0;"><i class="fas fa-user-plus"></i> Onboard New Staff</h3>
+<form method="POST">
+    <input type="text" name="name" placeholder="Full Name" required>
 
-                <select name="role" id="roleSelect" onchange="toggleEmailField()">
-                    <option value="client">Client (System assigns KK-ID)</option>
-                    <option value="office">Employee (Needs Office Email)</option>
-                </select>
+    <input type="email" name="email" placeholder="staff.name@kka.com" required>
 
-                <div id="emailWrapper" style="display:none;">
-                    <input type="email" name="email" id="emailInput" placeholder="staff.name@kka.com">
-                </div>
+    <input type="text" name="pass" placeholder="Set Initial Password" required>
 
-                <input type="text" name="pass" placeholder="Set Initial Password" required>
-                <button name="create">Generate Profile & Notify</button>
-            </form>
+    <input type="hidden" name="role" value="office">
+
+    <button name="create">Generate Staff Profile</button>
+</form>
         </div>
     </div>
 

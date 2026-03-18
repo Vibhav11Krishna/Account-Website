@@ -299,45 +299,69 @@ if (!$receipts) {
         <div class="table-card">
             <table>
                 <thead>
-                    <tr>
-                        <th>Date Paid</th>
-                        <th>Receipt Number</th>
-                        <th>Client Name</th>
-                        <th>Invoice #</th>
-                        <th>Amount Paid</th>
-                        <th>Mode</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
+    <tr>
+        <th>Date Paid</th>
+        <th>Receipt Number</th>
+        <th>Client Name</th>
+        <th>Invoice #</th>
+        <th>Amount Paid</th>
+        <th>Status</th> <th>Method</th> <th>Action</th>
+    </tr>
+</thead>
                 <tbody>
-                    <?php
-                    if ($receipts->num_rows > 0) {
-                        while ($r = $receipts->fetch_assoc()) {
-                            $date = date('d M Y', strtotime($r['created_at']));
-                            $c_name = !empty($r['name']) ? $r['name'] : "<span style='color:#94a3b8;'>ID: {$r['client_id']}</span>";
+    <?php
+    if ($receipts->num_rows > 0) {
+        while ($r = $receipts->fetch_assoc()) {
+            $date = date('d M Y', strtotime($r['created_at']));
+            $c_name = !empty($r['name']) ? $r['name'] : "<span style='color:#94a3b8;'>ID: {$r['client_id']}</span>";
 
-                            echo "<tr>
-                            <td>$date</td>
-                            <td><span class='receipt-pill'>{$r['receipt_no']}</span></td>
-                            <td>$c_name</td>
-                            <td style='color:var(--text-light);'>#{$r['invoice_no']}</td>
-                            <td class='amount'>₹" . number_format($r['amount_paid'], 2) . "</td>
-                            <td><small>{$r['payment_mode']}</small></td>
-                            <td>
-                                <a href='view_receipt.php?id={$r['receipt_no']}' target='_blank' class='btn-view'>
-                                    <i class='fas fa-file-invoice'></i> View Bill
-                                </a>
-                            </td>
-                        </tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='7' style='text-align:center; padding:60px; color:var(--text-light);'>
-                            <i class='fas fa-search' style='font-size:30px; margin-bottom:10px; display:block;'></i>
-                            No records found for the selected filters.
-                          </td></tr>";
-                    }
-                    ?>
-                </tbody>
+            // Determine Icon and Color for the Method
+            $method = !empty($r['method']) ? $r['method'] : 'Not Specified';
+            $method_icon = "";
+            
+            switch($method) {
+                case 'UPI':
+                    $method_icon = "<i class='fas fa-mobile-alt' style='color:#6366f1;'></i> ";
+                    break;
+                case 'Cash':
+                    $method_icon = "<i class='fas fa-money-bill-wave' style='color:#22c55e;'></i> ";
+                    break;
+                case 'Bank Transfer':
+                    $method_icon = "<i class='fas fa-university' style='color:#0b3c74;'></i> ";
+                    break;
+                case 'Card':
+                    $method_icon = "<i class='fas fa-credit-card' style='color:#f59e0b;'></i> ";
+                    break;
+                default:
+                    $method_icon = "<i class='fas fa-receipt' style='color:gray;'></i> ";
+            }
+
+            echo "<tr>
+                <td>$date</td>
+                <td><span class='receipt-pill'>{$r['receipt_no']}</span></td>
+                <td>$c_name</td>
+                <td style='color:var(--text-light);'>#{$r['invoice_no']}</td>
+                <td class='amount'>₹" . number_format($r['amount_paid'], 2) . "</td>
+                
+                <td><small style='font-weight:600; color:var(--text-light);'>{$r['payment_mode']}</small></td>
+                
+                <td style='font-weight:700;'>$method_icon $method</td>
+                
+                <td>
+                    <a href='view_receipt.php?id={$r['receipt_no']}' target='_blank' class='btn-view'>
+                        <i class='fas fa-file-invoice'></i> View Bill
+                    </a>
+                </td>
+            </tr>";
+        }
+    } else {
+        echo "<tr><td colspan='8' style='text-align:center; padding:60px; color:var(--text-light);'>
+            <i class='fas fa-search' style='font-size:30px; margin-bottom:10px; display:block;'></i>
+            No records found for the selected filters.
+          </td></tr>";
+    }
+    ?>
+</tbody>
             </table>
         </div>
     </div>

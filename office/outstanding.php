@@ -9,11 +9,11 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
 }
 
 // 2. FETCH TOTALS FOR COUNTER CARDS
-// Unpaid Stats
-$stats_query = $conn->query("SELECT SUM(amount) as total_unpaid, COUNT(id) as count_unpaid FROM invoices WHERE status = 'Unpaid'");
+// Summing only the actual remaining balance (Total - Paid)
+$stats_query = $conn->query("SELECT SUM(amount - paid_amount) as total_unpaid, COUNT(id) as count_unpaid FROM invoices WHERE paid_amount < amount");
 $stats = $stats_query->fetch_assoc();
 
-// Paid Stats (New Addition)
+// Paid Stats
 $paid_stats_query = $conn->query("SELECT SUM(amount_paid) as total_received FROM receipts");
 $paid_stats = $paid_stats_query->fetch_assoc();
 $total_received = $paid_stats['total_received'] ?? 0;
@@ -269,51 +269,65 @@ $total_received = $paid_stats['total_received'] ?? 0;
             </div>
         </div>
 
-        <div class="table-card">
-            <div class="table-header" style="background: #fff1f2;">
-                <h3 style="margin:0; color:#991b1b; font-size:14px;"><i class="fas fa-exclamation-triangle"></i> Pending Payments</h3>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Invoice No</th>
-                        <th>Client Name</th>
-                        <th>Issue Date</th>
-                        <th>Aging</th>
-                        <th>Amount Due</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $query = "SELECT i.*, u.name, DATEDIFF(NOW(), i.created_at) as days_old 
-                          FROM invoices i 
-                          JOIN users u ON i.client_id = u.identifier 
-                          WHERE i.status = 'Unpaid' 
-                          ORDER BY days_old DESC";
+      <div class="table-card">
+    <div class="table-header" style="background: #fff1f2;">
+        <h3 style="margin:0; color:#991b1b; font-size:14px;"><i class="fas fa-exclamation-triangle"></i> Pending Payments</h3>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Invoice No</th>
+                <th>Client Name</th>
+                <th>Issue Date</th>
+                <th>Aging</th>
+                <th>Balance Due</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            // Query fetches invoices where balance > 0
+            $query = "SELECT i.*, u.name, 
+                      (i.amount - i.paid_amount) as balance_due, 
+                      DATEDIFF(NOW(), i.created_at) as days_old 
+                      FROM invoices i 
+                      JOIN users u ON i.client_id = u.identifier 
+                      WHERE i.paid_amount < i.amount 
+                      ORDER BY days_old DESC";
 
-                    $result = $conn->query($query);
-                    if ($result && $result->num_rows > 0) {
-                        while ($row = $result->fetch_assoc()) {
-                            $age = $row['days_old'];
-                            $class = ($age > 15) ? "aging-old" : (($age > 7) ? "aging-mid" : "aging-new");
+            $result = $conn->query($query);
+            if ($result && $result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    $age = $row['days_old'];
+                    $class = ($age > 15) ? "aging-old" : (($age > 7) ? "aging-mid" : "aging-new");
+                    
+                    // Logic to label partial payments
+                    $is_partial = ($row['paid_amount'] > 0);
+                    $status_label = $is_partial ? "Partially Paid" : "Unpaid";
+                    $status_style = $is_partial ? "background:#fef9c3; color:#854d0e; border:1px solid #fde047;" : "background:#fee2e2; color:#991b1b; border:1px solid #fecaca;";
 
-                            echo "<tr>
-                            <td style='font-weight:700;'>#{$row['invoice_no']}</td>
-                            <td>{$row['name']}</td>
-                            <td>" . date('d M Y', strtotime($row['created_at'])) . "</td>
-                            <td><span class='aging-pill $class'>$age Days Old</span></td>
-                            <td style='font-weight:700; color:var(--danger);'>₹" . number_format($row['amount'], 2) . "</td>
-                            <td><a href='receipts.php' class='btn-remind'>Record Payment</a></td>
-                        </tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='6' style='text-align:center; padding:30px;'>No pending payments.</td></tr>";
-                    }
-                    ?>
-                </tbody>
-            </table>
-        </div>
+                    echo "<tr>
+                        <td>
+                            <div style='font-weight:700;'>#{$row['invoice_no']}</div>
+                            <span style='font-size:9px; padding:2px 5px; border-radius:4px; text-transform:uppercase; font-weight:bold; $status_style'>$status_label</span>
+                        </td>
+                        <td>{$row['name']}</td>
+                        <td>" . date('d M Y', strtotime($row['created_at'])) . "</td>
+                        <td><span class='aging-pill $class'>$age Days Old</span></td>
+                        <td>
+                            <div style='font-weight:700; color:var(--danger);'>₹" . number_format($row['balance_due'], 2) . "</div>
+                            <div style='font-size:10px; color:var(--text-light);'>Total Bill: ₹" . number_format($row['amount'], 2) . "</div>
+                        </td>
+                        <td><a href='receipts.php' class='btn-remind'>Record Payment</a></td>
+                    </tr>";
+                }
+            } else {
+                echo "<tr><td colspan='6' style='text-align:center; padding:30px;'>No pending payments.</td></tr>";
+            }
+            ?>
+        </tbody>
+    </table>
+</div>
 
         <div class="table-card">
             <div class="table-header" style="background: #f0fdf4;">

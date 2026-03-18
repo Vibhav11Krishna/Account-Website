@@ -187,6 +187,7 @@ $login_data = $att_check->fetch_assoc();
         <h2>Karunesh Kumar & Associates Employee</h2>
         <a href="employee-dashboard.php"><i class="fas fa-tasks"></i> My Tasks</a>
         <a href="work-basket.php"><i class="fas fa-briefcase"></i> Work Basket</a>
+        <a href="employee-payments.php"><i class="fas fa-wallet"></i> Payments</a>
         <a href="all-messages.php"><i class="fas fa-inbox"></i> Web Inbox</a>
         <a href="staff-attendance.php" class="active"><i class="fas fa-clock"></i> Attendance</a>
         <a href="../logout.php" style="margin-top:auto; color:#fda4af;"><i class="fas fa-sign-out-alt"></i> Logout</a>

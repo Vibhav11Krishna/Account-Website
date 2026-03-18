@@ -2,184 +2,169 @@
 session_start();
 include('../db.php');
 
-// 1. SECURITY & DATA CHECK
-if(!isset($_SESSION['user'])) { die("Please login first."); }
-if(!isset($_GET['id'])) { die("Receipt ID is missing."); }
+if (!isset($_SESSION['user'])) {
+    header("Location: ../Login.php");
+    exit();
+}
 
-$rcp_id = mysqli_real_escape_string($conn, $_GET['id']);
+if (!isset($_GET['id'])) { 
+    die("Error: Receipt Number is missing."); 
+}
 
-// 2. FETCH COMPLETE DATA 
-$sql = "SELECT r.*, i.service_name, 
-               q.amount as base_amount, q.tax_rate,
-               cp.company_name, cp.address, cp.phone, cp.pan_no, cp.gst_no, cp.business_email
+$receipt_no = mysqli_real_escape_string($conn, $_GET['id']);
+
+// Fetch Receipt, Invoice Service Name, and Client details
+$sql = "SELECT r.*, i.service_name, cp.company_name, cp.address, cp.phone 
         FROM receipts r 
-        LEFT JOIN invoices i ON r.invoice_no = i.invoice_no 
-        LEFT JOIN quotations q ON i.service_name = q.service_name
-        LEFT JOIN client_profiles cp ON r.client_id = cp.client_id 
-        WHERE r.receipt_no = '$rcp_id' LIMIT 1";
+        JOIN invoices i ON r.invoice_no = i.invoice_no 
+        JOIN client_profiles cp ON r.client_id = cp.client_id 
+        WHERE r.receipt_no = '$receipt_no'";
 
-$result = $conn->query($sql);
-$data = $result->fetch_assoc();
+$res = $conn->query($sql);
 
-if(!$data) { die("Receipt not found."); }
+if (!$res || $res->num_rows === 0) {
+    die("Receipt not found.");
+}
 
-// 3. CALCULATION LOGIC
-$base = (float)($data['base_amount'] ?? 0);
-$tax_rate = (float)($data['tax_rate'] ?? 18); 
-$tax_amt = ($base * $tax_rate) / 100;
-$half_tax = $tax_amt / 2; 
-$total = $base + $tax_amt;
+$data = $res->fetch_assoc();
+$total_received = (float)$data['amount_paid'];
 
-// Function for Currency to Words
+// --- Currency Function ---
 function getIndianCurrency(float $number) {
     $no = floor($number);
     $point = round($number - $no, 2) * 100;
-    $hundred = null;
-    $digits_1 = strlen($no);
-    $i = 0;
-    $str = array();
-    $words = array('0' => '', '1' => 'One', '2' => 'Two', '3' => 'Three', '4' => 'Four', '5' => 'Five', '6' => 'Six', '7' => 'Seven', '8' => 'Eight', '9' => 'Nine', '10' => 'Ten', '11' => 'Eleven', '12' => 'Twelve', '13' => 'Thirteen', '14' => 'Fourteen', '15' => 'Fifteen', '16' => 'Sixteen', '17' => 'Seventeen', '18' => 'Eighteen', '19' => 'Nineteen', '20' => 'Twenty', '30' => 'Thirty', '40' => 'Forty', '50' => 'Fifty', '60' => 'Sixty', '70' => 'Seventy', '80' => 'Eighty', '90' => 'Ninety');
-    $digits = array('', 'Hundred', 'Thousand', 'Lakh', 'Crore');
+    $hundred = null; $digits_1 = strlen($no); $i = 0; $str = array();
+    $words = array('0' => '', '1' => 'one', '2' => 'two', '3' => 'three', '4' => 'four', '5' => 'five', '6' => 'six', '7' => 'seven', '8' => 'eight', '9' => 'nine', '10' => 'ten', '11' => 'eleven', '12' => 'twelve', '13' => 'thirteen', '14' => 'fourteen', '15' => 'fifteen', '16' => 'sixteen', '17' => 'seventeen', '18' => 'eighteen', '19' => 'nineteen', '20' => 'twenty', '30' => 'thirty', '40' => 'forty', '50' => 'fifty', '60' => 'sixty', '70' => 'seventy', '80' => 'eighty', '90' => 'ninety');
+    $digits = array('', 'hundred', 'thousand', 'lakh', 'crore');
     while ($i < $digits_1) {
         $divider = ($i == 2) ? 10 : 100;
-        $number = floor($no % $divider);
+        $num = floor($no % $divider);
         $no = floor($no / $divider);
         $i += ($divider == 10) ? 1 : 2;
-        if ($number) {
-            $plural = (($counter = count($str)) && $number > 9) ? 's' : null;
+        if ($num) {
+            $plural = (($counter = count($str)) && $num > 9) ? 's' : null;
             $hundred = ($counter == 1 && $str[0]) ? ' and ' : null;
-            $str [] = ($number < 21) ? $words[$number] . " " . $digits[$counter] . $plural . " " . $hundred : $words[floor($number / 10) * 10] . " " . $words[$number % 10] . " " . $digits[$counter] . $plural . " " . $hundred;
+            $str [] = ($num < 21) ? $words[$num] . " " . $digits[$counter] . $plural . " " . $hundred : $words[floor($num / 10) * 10] . " " . $words[$num % 10] . " " . $digits[$counter] . $plural . " " . $hundred;
         } else $str[] = null;
     }
     $str = array_reverse($str);
     $result = implode('', $str);
-    return ($result ? $result . 'Rupees Only' : 'Zero Rupees Only');
+    return ucwords($result) . "Rupees Only";
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Receipt_<?php echo $rcp_id; ?></title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Receipt_<?php echo $receipt_no; ?></title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; padding: 20px; color: #1e293b; }
-        .receipt-card { background: white; max-width: 850px; margin: auto; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; border: 1px solid #e2e8f0; }
-        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #166534; padding-bottom: 20px; margin-bottom: 30px; }
-        .brand h1 { color: #166534; margin: 0; font-size: 24px; text-transform: uppercase; }
-        .brand p { margin: 2px 0; font-size: 12px; color: #64748b; }
-        .title-bar { text-align: center; background: #f0fdf4; color: #166534; padding: 10px; font-weight: bold; font-size: 18px; margin-bottom: 30px; border-radius: 4px; border: 1px solid #bbf7d0; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; font-size: 13px; }
-        .info-box h4 { margin: 0 0 10px 0; color: #166534; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; text-transform: uppercase; font-size: 11px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th { background: #166534; color: white; padding: 12px; text-align: left; font-size: 12px; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-        .summary-wrapper { display: flex; justify-content: flex-end; margin-top: 20px; }
-        .summary-table { width: 300px; }
-        .summary-table td { padding: 5px 12px; border: none; }
-        .total-row { background: #166534; color: white; font-weight: bold; border-radius: 4px; }
-        .total-row td { padding: 10px 12px; }
-        .paid-stamp { position: absolute; top: 150px; right: 80px; border: 5px double #166534; color: #166534; padding: 10px 30px; font-weight: 900; font-size: 40px; transform: rotate(-20deg); border-radius: 12px; opacity: 0.1; pointer-events: none; }
-        .no-print-btn { background: #166534; color: white; padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto; }
-        @media print { .no-print-btn { display: none; } body { padding: 0; background: white; } .receipt-card { box-shadow: none; border: none; width: 100%; max-width: 100%; } }
+        @page { size: A4; margin: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; color: #333; }
+        .receipt-container { background: white; width: 210mm; margin: 20px auto; padding: 20mm; box-sizing: border-box; position: relative; border: 1px solid #ddd; }
+        .header-table { width: 100%; margin-bottom: 30px; border-bottom: 2px solid #0b3c74; padding-bottom: 10px; }
+        .company-name { font-size: 24px; font-weight: bold; color: #0b3c74; }
+        .receipt-label { font-size: 22px; font-weight: bold; color: #ff8c00; text-align: right; }
+        .details-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .details-table td { padding: 8px 0; font-size: 14px; border-bottom: 1px solid #f9f9f9; }
+        .label { font-weight: bold; color: #666; width: 180px; }
+        .amount-section { background: #f8fafc; border: 2px dashed #0b3c74; padding: 20px; text-align: center; margin-top: 20px; }
+        .amount-val { font-size: 28px; font-weight: 800; color: #0b3c74; }
+        .footer-sig { margin-top: 60px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .print-btn { position: fixed; top: 20px; right: 20px; background: #0b3c74; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        @media print { .print-btn { display: none; } body { background: white; } .receipt-container { margin: 0; border: none; } }
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-top: 40px;
+            margin-top: auto;
+        }
+
+        .footer-img {
+            width: 110px;
+            height: auto;
+            display: block;
+            margin: 5px auto;
+        }
+
+        .stamp-img {
+            width: 90px;
+            height: auto;
+            opacity: 0.9;
+        }
+
     </style>
 </head>
 <body>
 
-    <button class="no-print-btn" onclick="window.print()">
-        <i class="fas fa-print"></i> Print Official Receipt
-    </button>
+<button class="print-btn" onclick="window.print()">Print Receipt</button>
 
-    <div class="receipt-card">
-        <div class="paid-stamp">PAID</div>
-        
-        <div class="header">
-            <div class="brand">
-                <h1>KARUNESH KUMAR & ASSOCIATES</h1>
-                <p>2nd Floor, Shyam Market, Patna, Bihar, 800014</p>
-                <p>GSTIN: 10DJZPK5889N1Z3 | PAN: DJZPK5889N</p>
-            </div>
-            <div style="text-align: right; font-size: 13px;">
-                <p><strong>Receipt #:</strong> <?php echo $data['receipt_no']; ?></p>
-                <p><strong>Date:</strong> <?php echo date('d-m-Y', strtotime($data['created_at'])); ?></p>
-                <p><strong>Invoice Ref:</strong> #<?php echo $data['invoice_no']; ?></p>
-            </div>
+<div class="receipt-container">
+    <table class="header-table">
+        <tr>
+            <td>
+                <div class="company-name">Karunesh Kumar & Associates</div>
+                <div style="font-size: 12px; color: #555;">Patna, Bihar | GSTIN: 10DJZPK5889N1Z3</div>
+            </td>
+            <td class="receipt-label">PAYMENT RECEIPT</td>
+        </tr>
+    </table>
+
+    <table class="details-table">
+        <tr>
+            <td class="label">Receipt Number</td>
+            <td><strong>#<?php echo $data['receipt_no']; ?></strong></td>
+        </tr>
+        <tr>
+            <td class="label">Date of Payment</td>
+            <td><?php echo date('d F Y', strtotime($data['created_at'])); ?></td>
+        </tr>
+        <tr>
+            <td class="label">Received From</td>
+            <td><strong><?php echo strtoupper($data['company_name']); ?></strong></td>
+        </tr>
+        <tr>
+            <td class="label">Against Invoice No.</td>
+            <td>#<?php echo $data['invoice_no']; ?> (<?php echo $data['service_name']; ?>)</td>
+        </tr>
+        <tr>
+            <td class="label">Payment Method</td>
+            <td><?php echo $data['method']; ?> (<?php echo $data['payment_mode']; ?>)</td>
+        </tr>
+    </table>
+
+    <div class="amount-section">
+        <div style="font-size: 12px; color: #666; text-transform: uppercase; margin-bottom: 5px;">Total Amount Received</div>
+        <div class="amount-val">₹<?php echo number_format($total_received, 2); ?></div>
+        <div style="margin-top: 10px; font-size: 13px; font-style: italic;">
+            (<?php echo getIndianCurrency($total_received); ?>)
         </div>
+    </div>
 
-        <div class="title-bar">PAYMENT RECEIPT</div>
+    <div style="margin-top: 40px; font-size: 12px; color: #777; line-height: 1.6;">
+        <strong>Note:</strong> This is a formal acknowledgement of the payment received. 
+        For detailed tax breakdown and HSN/SAC codes, please refer to the original Tax Invoice <strong>#<?php echo $data['invoice_no']; ?></strong>.
+    </div>
 
-        <div class="info-grid">
-            <div class="info-box">
-                <h4>Received From</h4>
-                <strong><?php echo strtoupper($data['company_name'] ?? 'Walk-in Client'); ?></strong><br>
-                <?php echo $data['address'] ?? 'N/A'; ?><br>
-                GSTIN: <?php echo $data['gst_no'] ?: 'N/A'; ?>
-            </div>
-            <div class="info-box">
-                <h4>Payment Details</h4>
-                <p><strong>Payment Mode:</strong> <?php echo $data['payment_mode'] ?? 'N/A'; ?></p>
-                <p><strong>Transaction ID:</strong> <?php echo $data['transaction_id'] ?? 'N/A'; ?></p>
-                <p><strong>Status:</strong> Success / Completed</p>
-            </div>
+    <div class="footer-sig">
+        <div style="font-size: 11px; color: #999;">
+            Issued on: <?php echo date('d-m-Y H:i'); ?>
         </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th style="text-align: center;">HSN</th>
-                    <th style="text-align: right;">Base Amount</th>
-                    <th style="text-align: right;">GST (<?php echo $tax_rate; ?>%)</th>
-                    <th style="text-align: right;">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><strong><?php echo $data['service_name'] ?? 'Professional Services'; ?></strong></td>
-                    <td style="text-align: center;">9982</td>
-                    <td style="text-align: right;">₹<?php echo number_format($base, 2); ?></td>
-                    <td style="text-align: right;">₹<?php echo number_format($tax_amt, 2); ?></td>
-                    <td style="text-align: right;"><strong>₹<?php echo number_format($total, 2); ?></strong></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="summary-wrapper">
-            <table class="summary-table">
-                <tr>
-                    <td>Sub-Total:</td>
-                    <td style="text-align: right;">₹<?php echo number_format($base, 2); ?></td>
-                </tr>
-                <tr>
-                    <td>CGST (<?php echo $tax_rate/2; ?>%):</td>
-                    <td style="text-align: right;">₹<?php echo number_format($half_tax, 2); ?></td>
-                </tr>
-                <tr>
-                    <td>SGST (<?php echo $tax_rate/2; ?>%):</td>
-                    <td style="text-align: right;">₹<?php echo number_format($half_tax, 2); ?></td>
-                </tr>
-                <tr class="total-row">
-                    <td><strong>Total Paid:</strong></td>
-                    <td style="text-align: right;"><strong>₹<?php echo number_format($total, 2); ?></strong></td>
-                </tr>
-            </table>
-        </div>
-
-        <div style="margin-top: 20px; font-size: 12px; font-style: italic; color: #475569;">
-            <strong>Amount in words:</strong> <?php echo getIndianCurrency($total); ?>
-        </div>
-
-        <div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: flex-end;">
-            <div style="font-size: 11px; color: #94a3b8;">
-                * This is a computer generated receipt. No signature required.
+          <div class="footer-container">
+            <div class="stamp-area">
+                <img src="../assets/kkstamp.png" alt="Stamp" class="stamp-img">
+                <div style="font-size: 10px; font-weight: bold; margin-top: 5px; color: #777;">OFFICIAL STAMP</div>
             </div>
-            <div style="text-align: center;">
-                <div style="height: 40px;"></div>
-                <div style="border-top: 1px solid #1e293b; width: 200px; font-size: 12px; padding-top: 5px; font-weight: bold;">
-                    Authorized Signatory
-                </div>
+
+            <div class="signature-area" style="text-align: center; width: 250px;">
+                <span style="font-size: 11px; font-weight: bold;"> KARUNESH KUMAR & ASSOCIATES</span>
+                <img src="../assets/kksign.png" alt="Signature" class="footer-img">
+                <strong style="font-size: 12px; border-top: 1px solid #333; display: block; padding-top: 5px;">Authorized Signatory</strong>
             </div>
         </div>
     </div>
+</div>
+
 </body>
 </html>
