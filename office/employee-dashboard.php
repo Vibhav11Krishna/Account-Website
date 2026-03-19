@@ -14,7 +14,12 @@ $updateSuccess = false;
 // Logic to complete a task
 if (isset($_POST['complete_task'])) {
     $tid = $conn->real_escape_string($_POST['task_id']); 
-    $sql = "UPDATE service_requests SET status='Completed' WHERE id='$tid' AND assigned_to='$email'";
+    // ADDED completed_date=CURDATE() to the query below
+    $sql = "UPDATE service_requests 
+            SET status='Completed', 
+                completed_date=CURDATE() 
+            WHERE id='$tid' AND assigned_to='$email'";
+            
     if ($conn->query($sql)) {
         $updateSuccess = true;
     }
@@ -239,10 +244,10 @@ $completedCount = $completedRes->fetch_assoc()['total'];
                             <span class="status-pill"><i class="fas fa-hourglass-half"></i> Work in Progress</span>
                             <h3 style="margin:15px 0 5px 0;"><?php echo htmlspecialchars($t['service_type']); ?></h3>
                             <p style="color:#64748b; margin-bottom:15px;">
-                                Client ID: <strong><?php echo htmlspecialchars($t['client_id']); ?></strong> 
-                                <span style="margin: 0 10px; color: #cbd5e1;">|</span>
-                                Date: <?php echo date('d-m-Y', strtotime($t['created_at'])); ?>
-                            </p>
+    Client ID: <strong><?php echo htmlspecialchars($t['client_id']); ?></strong> 
+    <span style="margin: 0 10px; color: #cbd5e1;">|</span>
+    Assigned on: <?php echo date('d-m-Y', strtotime($t['assigned_date'])); ?>
+</p>
                             <p style="background:#f1f5f9; padding:15px; border-radius:10px; font-style:italic; color: #475569;">
                                 "<?php echo nl2br(htmlspecialchars($t['description'])); ?>"
                             </p>
