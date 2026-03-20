@@ -8,13 +8,23 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     exit();
 }
 
-// 2. FETCH TOTALS FOR COUNTER CARDS
-// Summing only the actual remaining balance (Total - Paid)
-$stats_query = $conn->query("SELECT SUM(amount - paid_amount) as total_unpaid, COUNT(id) as count_unpaid FROM invoices WHERE paid_amount < amount");
+// 2. GET FILTERS (Yearly & Search)
+// Default to the current financial year end
+$selected_year = isset($_GET['filter_year']) ? mysqli_real_escape_string($conn, $_GET['filter_year']) : (date('m') > 3 ? date('Y') + 1 : date('Y'));
+$search_pending = isset($_GET['search_pending']) ? mysqli_real_escape_string($conn, $_GET['search_pending']) : '';
+$search_received = isset($_GET['search_received']) ? mysqli_real_escape_string($conn, $_GET['search_received']) : '';
+
+// Financial Year Date Range Logic
+$fy_start = ($selected_year - 1) . "-04-01";
+$fy_end = $selected_year . "-03-31";
+
+// 3. FETCH TOTALS FOR COUNTER CARDS (Filtered by FY Range)
+$stats_query = $conn->query("SELECT SUM(amount - paid_amount) as total_unpaid, COUNT(id) as count_unpaid 
+                             FROM invoices 
+                             WHERE paid_amount < amount AND created_at BETWEEN '$fy_start' AND '$fy_end'");
 $stats = $stats_query->fetch_assoc();
 
-// Paid Stats
-$paid_stats_query = $conn->query("SELECT SUM(amount_paid) as total_received FROM receipts");
+$paid_stats_query = $conn->query("SELECT SUM(amount_paid) as total_received FROM receipts WHERE created_at BETWEEN '$fy_start' AND '$fy_end'");
 $paid_stats = $paid_stats_query->fetch_assoc();
 $total_received = $paid_stats['total_received'] ?? 0;
 ?>
@@ -44,21 +54,19 @@ $total_received = $paid_stats['total_received'] ?? 0;
             color: #334155;
         }
 
-          /* Sidebar */
-       .sidebar {
-    width: 280px;
-    background: var(--sidebar);
-    color: white;
-    height: 100vh;
-    position: fixed;
-    padding: 30px 20px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    
-    /* ADD THIS LINE */
-    border-right: 4px solid var(--orange); 
-}
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding: 30px 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            border-right: 4px solid var(--orange); 
+        }
 
         .sidebar h2 {
             font-size: 22px;
@@ -80,8 +88,7 @@ $total_received = $paid_stats['total_received'] ?? 0;
             transition: 0.3s;
         }
 
-        .sidebar a:hover,
-        .active {
+        .sidebar a:hover, .active {
             background: rgba(255, 255, 255, 0.1);
             color: white;
             border-left: 4px solid var(--orange);
@@ -94,7 +101,6 @@ $total_received = $paid_stats['total_received'] ?? 0;
             box-sizing: border-box;
         }
 
-        /* Stat Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -125,7 +131,6 @@ $total_received = $paid_stats['total_received'] ?? 0;
             color: var(--navy);
         }
 
-        /* Table Style */
         .table-card {
             background: white;
             border-radius: 24px;
@@ -172,25 +177,9 @@ $total_received = $paid_stats['total_received'] ?? 0;
             text-transform: uppercase;
         }
 
-        .aging-new {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .aging-mid {
-            background: #fef9c3;
-            color: #854d0e;
-        }
-
-        .aging-old {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .status-paid {
-            background: #e0f2fe;
-            color: #0369a1;
-        }
+        .aging-new { background: #dcfce7; color: #166534; }
+        .aging-mid { background: #fef9c3; color: #854d0e; }
+        .aging-old { background: #fee2e2; color: #991b1b; }
 
         .btn-remind {
             color: var(--navy);
@@ -206,7 +195,8 @@ $total_received = $paid_stats['total_received'] ?? 0;
             background: var(--navy);
             color: white;
         }
-             .dropdown-content {
+
+        .dropdown-content {
             display: none;
             background: rgba(0, 0, 0, 0.15);
             margin: 0 10px;
@@ -214,14 +204,18 @@ $total_received = $paid_stats['total_received'] ?? 0;
             padding-left: 10px;
         }
 
-        .show-menu {
-            display: block !important;
-        }
+        .show-menu { display: block !important; }
+        .rotate-chevron { transform: rotate(180deg); }
 
-        .rotate-chevron {
-            transform: rotate(180deg);
+        .search-input {
+            padding: 8px 15px;
+            border-radius: 50px;
+            border: 1px solid #cbd5e1;
+            font-size: 12px;
+            outline: none;
+            transition: 0.3s;
         }
-
+        .search-input:focus { border-color: var(--orange); }
     </style>
 </head>
 
@@ -239,7 +233,7 @@ $total_received = $paid_stats['total_received'] ?? 0;
                 <a href="quotations.php"><i class="fas fa-file-signature"></i> Quotations</a>
                 <a href="invoices.php" ><i class="fas fa-receipt"></i> Invoices</a>
                 <a href="receipts.php"><i class="fas fa-check-double"></i> Receipts</a>
-                <a href="outstanding.php"style="background:rgba(255,255,255,0.1); color:white;"><i class="fas fa-exclamation-circle"></i> Outstanding</a>
+                <a href="outstanding.php" style="background:rgba(255,255,255,0.1); color:white;"><i class="fas fa-exclamation-circle"></i> Outstanding</a>
             </div>
         </div>
         <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
@@ -254,9 +248,32 @@ $total_received = $paid_stats['total_received'] ?? 0;
     <div class="main">
         <h1>Financial Overview</h1>
 
+        <div style="background: white; padding: 20px; border-radius: 20px; margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #edf2f7; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+            <div>
+                <h2 style="margin:0; font-size:18px; color:var(--navy);">Financial Year: <?php echo ($selected_year - 1) . "-" . substr($selected_year, -2); ?></h2>
+                <p style="margin:0; font-size:12px; color:var(--text-light);">Showing analytics and records from <?php echo date('d M Y', strtotime($fy_start)); ?> to <?php echo date('d M Y', strtotime($fy_end)); ?></p>
+            </div>
+
+            <form method="GET" style="display: flex; gap: 10px; align-items: center;">
+                <i class="fas fa-calendar-alt" style="color:var(--orange);"></i>
+                <select name="filter_year" onchange="this.form.submit()" style="padding: 10px 20px; border-radius: 50px; border: 1px solid #cbd5e1; font-weight: bold; color: var(--navy); cursor: pointer; background: white;">
+                    <?php
+                    $start_year = 2025; 
+                    $current_yr = date('m') > 3 ? date('Y') + 1 : date('Y');
+                    for ($i = $current_yr; $i >= $start_year; $i--) {
+                        $sel = ($selected_year == $i) ? 'selected' : '';
+                        $display_fy = ($i - 1) . "-" . substr($i, -2);
+                        echo "<option value='$i' $sel>$display_fy</option>";
+                    }
+                    ?>
+                </select>
+                <a href="outstanding.php" style="text-decoration:none; font-size:12px; color:var(--danger); margin-left:10px;">Reset Filters</a>
+            </form>
+        </div>
+
         <div class="stats-grid">
             <div class="stat-card">
-                <h3><i class="fas fa-hand-holding-dollar"></i> Total Outstanding</h3>
+                <h3><i class="fas fa-hand-holding-dollar"></i> Total Outstanding (FY <?php echo substr($selected_year, -2); ?>)</h3>
                 <p style="color:var(--danger);">₹<?php echo number_format($stats['total_unpaid'], 2); ?></p>
             </div>
             <div class="stat-card">
@@ -269,69 +286,77 @@ $total_received = $paid_stats['total_received'] ?? 0;
             </div>
         </div>
 
-      <div class="table-card">
-    <div class="table-header" style="background: #fff1f2;">
-        <h3 style="margin:0; color:#991b1b; font-size:14px;"><i class="fas fa-exclamation-triangle"></i> Pending Payments</h3>
-    </div>
-    <table>
-        <thead>
-            <tr>
-                <th>Invoice No</th>
-                <th>Client Name</th>
-                <th>Issue Date</th>
-                <th>Aging</th>
-                <th>Balance Due</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            // Query fetches invoices where balance > 0
-            $query = "SELECT i.*, u.name, 
-                      (i.amount - i.paid_amount) as balance_due, 
-                      DATEDIFF(NOW(), i.created_at) as days_old 
-                      FROM invoices i 
-                      JOIN users u ON i.client_id = u.identifier 
-                      WHERE i.paid_amount < i.amount 
-                      ORDER BY days_old DESC";
+        <div class="table-card">
+            <div class="table-header" style="background: #fff1f2;">
+                <h3 style="margin:0; color:#991b1b; font-size:14px;"><i class="fas fa-exclamation-triangle"></i> Pending Payments</h3>
+                <form method="GET">
+                    <input type="hidden" name="filter_year" value="<?php echo $selected_year; ?>">
+                    <input type="text" name="search_pending" value="<?php echo $search_pending; ?>" class="search-input" placeholder="Search Client or Invoice...">
+                </form>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Invoice No</th>
+                        <th>Client Name</th>
+                        <th>Issue Date</th>
+                        <th>Aging</th>
+                        <th>Balance Due</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $p_sql = "SELECT i.*, u.name, (i.amount - i.paid_amount) as balance_due, DATEDIFF(NOW(), i.created_at) as days_old 
+                              FROM invoices i 
+                              JOIN users u ON i.client_id = u.identifier 
+                              WHERE i.paid_amount < i.amount AND i.created_at BETWEEN '$fy_start' AND '$fy_end'";
 
-            $result = $conn->query($query);
-            if ($result && $result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    $age = $row['days_old'];
-                    $class = ($age > 15) ? "aging-old" : (($age > 7) ? "aging-mid" : "aging-new");
-                    
-                    // Logic to label partial payments
-                    $is_partial = ($row['paid_amount'] > 0);
-                    $status_label = $is_partial ? "Partially Paid" : "Unpaid";
-                    $status_style = $is_partial ? "background:#fef9c3; color:#854d0e; border:1px solid #fde047;" : "background:#fee2e2; color:#991b1b; border:1px solid #fecaca;";
+                    if ($search_pending) {
+                        $p_sql .= " AND (u.name LIKE '%$search_pending%' OR i.invoice_no LIKE '%$search_pending%')";
+                    }
 
-                    echo "<tr>
-                        <td>
-                            <div style='font-weight:700;'>#{$row['invoice_no']}</div>
-                            <span style='font-size:9px; padding:2px 5px; border-radius:4px; text-transform:uppercase; font-weight:bold; $status_style'>$status_label</span>
-                        </td>
-                        <td>{$row['name']}</td>
-                        <td>" . date('d M Y', strtotime($row['created_at'])) . "</td>
-                        <td><span class='aging-pill $class'>$age Days Old</span></td>
-                        <td>
-                            <div style='font-weight:700; color:var(--danger);'>₹" . number_format($row['balance_due'], 2) . "</div>
-                            <div style='font-size:10px; color:var(--text-light);'>Total Bill: ₹" . number_format($row['amount'], 2) . "</div>
-                        </td>
-                        <td><a href='receipts.php' class='btn-remind'>Record Payment</a></td>
-                    </tr>";
-                }
-            } else {
-                echo "<tr><td colspan='6' style='text-align:center; padding:30px;'>No pending payments.</td></tr>";
-            }
-            ?>
-        </tbody>
-    </table>
-</div>
+                    $p_sql .= " ORDER BY days_old DESC";
+                    $result = $conn->query($p_sql);
+
+                    if ($result && $result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                            $age = $row['days_old'];
+                            $class = ($age > 15) ? "aging-old" : (($age > 7) ? "aging-mid" : "aging-new");
+                            $is_partial = ($row['paid_amount'] > 0);
+                            $status_label = $is_partial ? "Partially Paid" : "Unpaid";
+                            $status_style = $is_partial ? "background:#fef9c3; color:#854d0e; border:1px solid #fde047;" : "background:#fee2e2; color:#991b1b; border:1px solid #fecaca;";
+
+                            echo "<tr>
+                                <td>
+                                    <div style='font-weight:700;'>#{$row['invoice_no']}</div>
+                                    <span style='font-size:9px; padding:2px 5px; border-radius:4px; text-transform:uppercase; font-weight:bold; $status_style'>$status_label</span>
+                                </td>
+                                <td>{$row['name']}</td>
+                                <td>" . date('d M Y', strtotime($row['created_at'])) . "</td>
+                                <td><span class='aging-pill $class'>$age Days Old</span></td>
+                                <td>
+                                    <div style='font-weight:700; color:var(--danger);'>₹" . number_format($row['balance_due'], 2) . "</div>
+                                    <div style='font-size:10px; color:var(--text-light);'>Total: ₹" . number_format($row['amount'], 2) . "</div>
+                                </td>
+                                <td><a href='invoices.php' class='btn-remind'>Record Payment</a></td>
+                            </tr>";
+                        }
+                    } else {
+                        echo "<tr><td colspan='6' style='text-align:center; padding:30px;'>No pending records found for this period.</td></tr>";
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
 
         <div class="table-card">
             <div class="table-header" style="background: #f0fdf4;">
-                <h3 style="margin:0; color:#166534; font-size:14px;"><i class="fas fa-check-circle"></i> Recently Received Payments</h3>
+                <h3 style="margin:0; color:#166534; font-size:14px;"><i class="fas fa-check-circle"></i> Payments Received (FY <?php echo ($selected_year - 1) . "-" . substr($selected_year, -2); ?>)</h3>
+                <form method="GET">
+                    <input type="hidden" name="filter_year" value="<?php echo $selected_year; ?>">
+                    <input type="text" name="search_received" value="<?php echo $search_received; ?>" class="search-input" placeholder="Search Receipt/Client...">
+                </form>
             </div>
             <table>
                 <thead>
@@ -345,36 +370,47 @@ $total_received = $paid_stats['total_received'] ?? 0;
                 </thead>
                 <tbody>
                     <?php
-                    // Fetch the latest 5 paid receipts
-                    $paid_query = "SELECT r.*, u.name 
-                               FROM receipts r 
-                               JOIN users u ON r.client_id = u.identifier 
-                               ORDER BY r.created_at DESC LIMIT 5";
-                    $paid_res = $conn->query($paid_query);
+                    $r_sql = "SELECT r.*, u.name FROM receipts r 
+                              JOIN users u ON r.client_id = u.identifier 
+                              WHERE r.created_at BETWEEN '$fy_start' AND '$fy_end'";
+
+                    if ($search_received) {
+                        $r_sql .= " AND (u.name LIKE '%$search_received%' OR r.receipt_no LIKE '%$search_received%' OR r.invoice_no LIKE '%$search_received%')";
+                    }
+
+                    $r_sql .= " ORDER BY r.created_at DESC";
+                    $paid_res = $conn->query($r_sql);
 
                     if ($paid_res && $paid_res->num_rows > 0) {
                         while ($p = $paid_res->fetch_assoc()) {
                             echo "<tr>
-                            <td style='font-weight:700;'>{$p['receipt_no']}</td>
-                            <td>#{$p['invoice_no']}</td>
-                            <td>{$p['name']}</td>
-                            <td>" . date('d M Y', strtotime($p['created_at'])) . "</td>
-                            <td style='font-weight:700; color:var(--success);'>₹" . number_format($p['amount_paid'], 2) . "</td>
-                        </tr>";
+                                <td style='font-weight:700;'>{$p['receipt_no']}</td>
+                                <td>#{$p['invoice_no']}</td>
+                                <td>{$p['name']}</td>
+                                <td>" . date('d M Y', strtotime($p['created_at'])) . "</td>
+                                <td style='font-weight:700; color:var(--success);'>₹" . number_format($p['amount_paid'], 2) . "</td>
+                            </tr>";
                         }
                     } else {
-                        echo "<tr><td colspan='5' style='text-align:center; padding:30px;'>No payment history yet.</td></tr>";
+                        echo "<tr><td colspan='5' style='text-align:center; padding:30px;'>No payment history for this selection.</td></tr>";
                     }
                     ?>
                 </tbody>
+                <tfoot style="background: #f8fafc; border-top: 2px solid #edf2f7;">
+                    <tr>
+                        <td colspan="4" style="text-align:right; font-weight:800; padding:15px;">TOTAL RECEIVED (FY):</td>
+                        <td style="font-weight:800; color:var(--success); font-size:16px;">₹<?php echo number_format($total_received, 2); ?></td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     </div>
-<script>
+
+    <script>
         function toggleBilling() {
             document.getElementById('billingMenu').classList.toggle('show-menu');
+            document.getElementById('chevron').classList.toggle('rotate-chevron');
         }
     </script>
 </body>
-
 </html>

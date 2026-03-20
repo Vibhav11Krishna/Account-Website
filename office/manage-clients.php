@@ -8,7 +8,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     exit();
 }
 
-// --- NEW UPDATE LOGIC ADDED HERE ---
+// --- UPDATE LOGIC ---
 if (isset($_POST['update_client'])) {
     $identifier = mysqli_real_escape_string($conn, $_POST['identifier']);
     $company_name = mysqli_real_escape_string($conn, $_POST['company_name']);
@@ -30,7 +30,6 @@ if (isset($_POST['update_client'])) {
                    WHERE client_id = '$identifier'";
 
     if ($conn->query($update_sql)) {
-        // Sync name in users table
         $conn->query("UPDATE users SET name = '$owner_name' WHERE identifier = '$identifier'");
         header("Location: manage-clients.php?msg=updated");
         exit();
@@ -39,31 +38,42 @@ if (isset($_POST['update_client'])) {
     }
 }
 
-// Delete Logic
+// --- DELETE LOGIC ---
 if (isset($_GET['delete'])) {
     $id = mysqli_real_escape_string($conn, $_GET['delete']);
-    $conn->query("DELETE FROM client_profiles WHERE client_id='$id'");
-    $conn->query("DELETE FROM users WHERE identifier='$id' AND role='client'");
-    header("Location: manage-clients.php?msg=deleted");
+    
+    // Remove from both tables to maintain integrity
+    $del_profile = $conn->query("DELETE FROM client_profiles WHERE client_id='$id'");
+    $del_user = $conn->query("DELETE FROM users WHERE identifier='$id' AND role='client'");
+    
+    if ($del_profile && $del_user) {
+        header("Location: manage-clients.php?msg=deleted");
+    } else {
+        header("Location: manage-clients.php?msg=error");
+    }
     exit();
 }
 
-// Quick Create Client Logic
+// --- QUICK CREATE LOGIC (Format: 501801, 501802...) ---
 if (isset($_POST['quick_create'])) {
     $n = mysqli_real_escape_string($conn, $_POST['name']);
     $p = mysqli_real_escape_string($conn, $_POST['pass']);
     $role = 'client';
 
-    $year = date("Y");
+    // Get current client count
     $count_res = $conn->query("SELECT id FROM users WHERE role='client'");
     $count = $count_res->num_rows + 1;
-    $id = "KK/$year/" . str_pad($count, 3, "0", STR_PAD_LEFT);
+    
+    // Logic: Base 5018 + Padded sequence (01, 02...)
+    $base_id = "5018";
+    $sequence = str_pad($count, 2, "0", STR_PAD_LEFT);
+    $final_id = $base_id . $sequence; // Results in 501801, 501802, etc.
 
-    $sql = "INSERT INTO users (name, identifier, password, role) VALUES ('$n', '$id', '$p', '$role')";
+    $sql = "INSERT INTO users (name, identifier, password, role) VALUES ('$n', '$final_id', '$p', '$role')";
     
     if ($conn->query($sql)) {
-        $conn->query("INSERT INTO client_profiles (client_id, owner_name) VALUES ('$id', '$n')");
-        echo "<script>alert('Client Created! ID: $id'); window.location='manage-clients.php';</script>";
+        $conn->query("INSERT INTO client_profiles (client_id, owner_name) VALUES ('$final_id', '$n')");
+        echo "<script>alert('Client Created! ID: $final_id'); window.location='manage-clients.php';</script>";
     }
 }
 ?>
@@ -90,19 +100,22 @@ if (isset($_POST['quick_create'])) {
             color: #334155;
         }
 
-        /* SIDEBAR */
-        .sidebar {
-            width: 280px;
-            background: var(--sidebar);
-            color: white;
-            height: 100vh;
-            position: fixed;
-            padding: 30px 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            border-right: 4px solid var(--orange);
-        }
+        /* Sidebar */
+       .sidebar {
+    width: 280px;
+    background: var(--sidebar);
+    color: white;
+    height: 100vh;
+    position: fixed;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    
+    /* ADD THIS LINE */
+    border-right: 4px solid var(--orange); 
+}
+
 
         .sidebar h2 {
             font-size: 22px;
@@ -124,10 +137,25 @@ if (isset($_POST['quick_create'])) {
             transition: 0.3s;
         }
 
-        .sidebar a:hover, .active {
+        .sidebar a:hover,
+        .active {
             background: rgba(255, 255, 255, 0.1);
             color: white;
             border-left: 4px solid var(--orange);
+        }
+
+        /* Main Area */
+        .main {
+            margin-left: 280px;
+            padding: 50px;
+            width: calc(100% - 280px);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
         }
 
         .dropdown-content {
@@ -181,7 +209,7 @@ if (isset($_POST['quick_create'])) {
         
         .action-btn { width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; text-decoration: none; transition: 0.2s; }
         .btn-edit { color: #3b82f6; background: #eff6ff; }
-        .btn-delete { color: #ef4444; background: #fef2f2; }
+        .btn-delete { color: #ef4444; background: #fef2f2; border: none; cursor: pointer; }
 
         .add-client-form { display: none; background: white; padding: 25px; border-radius: 20px; border: 1.5px solid var(--orange); margin-bottom: 30px; }
 
@@ -206,13 +234,17 @@ if (isset($_POST['quick_create'])) {
             margin-bottom: 25px;
             font-weight: 500;
         }
+        .msg-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
         <h2>Karunesh Kumar & Associates Admin</h2>
-        <a href="admin-dashboard.php" ><i class="fas fa-chart-pie"></i>Dashboard</a>
+        <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i>Dashboard</a>
 
         <div class="dropdown-container">
             <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleBilling()">
@@ -230,15 +262,19 @@ if (isset($_POST['quick_create'])) {
         <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
         <a href="admin-review.php"><i class="fas fa-file-signature"></i> Quality Control</a>
         <a href="Master-Vault.php"><i class="fas fa-vault"></i>Master Vault</a>
-        <a href="manage-clients.php"class="active"><i class="fas fa-users"></i> Manage Clients</a>
+        <a href="manage-clients.php" class="active"><i class="fas fa-users"></i> Manage Clients</a>
         <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
         <a href="attendance.php"><i class="fas fa-calendar-check"></i> Attendance</a>
         <a href="../logout.php" style="margin-top:auto; color:#fda4af;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 
     <div class="main">
-        <?php if(isset($_GET['msg']) && $_GET['msg'] == 'updated'): ?>
-            <div class="msg-alert"><i class="fas fa-check-circle"></i> Profile updated successfully!</div>
+        <?php if(isset($_GET['msg'])): ?>
+            <?php if($_GET['msg'] == 'updated'): ?>
+                <div class="msg-alert"><i class="fas fa-check-circle"></i> Profile updated successfully!</div>
+            <?php elseif($_GET['msg'] == 'deleted'): ?>
+                <div class="msg-alert msg-danger"><i class="fas fa-trash-alt"></i> Client and all profile records deleted.</div>
+            <?php endif; ?>
         <?php endif; ?>
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
@@ -292,7 +328,11 @@ if (isset($_POST['quick_create'])) {
                         <td><small>GST: <?php echo $row['gst_no'] ?: '-'; ?><br>PAN: <?php echo $row['pan_no'] ?: '-'; ?></small></td>
                         <td style="text-align: center;">
                             <a href="client-profile.php?id=<?php echo $row['identifier']; ?>" class="action-btn btn-edit"><i class="fas fa-pencil-alt"></i></a>
-                            <a href="?delete=<?php echo $row['identifier']; ?>" class="action-btn btn-delete" onclick="return confirm('Delete client?')"><i class="fas fa-trash-alt"></i></a>
+                            <a href="?delete=<?php echo $row['identifier']; ?>" 
+                               class="action-btn btn-delete" 
+                               onclick="return confirm('Permanently delete this client and all profile data?')">
+                               <i class="fas fa-trash-alt"></i>
+                            </a>
                         </td>
                     </tr>
                     <?php endwhile; ?>
