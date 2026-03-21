@@ -215,8 +215,8 @@ if (isset($_GET['delete_inv'])) {
                 <i class="fas fa-chevron-down rotate-chevron" id="chevron" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
             </a>
             <div class="dropdown-content show-menu" id="billingMenu">
-                <a href="quotations.php"><i class="fas fa-file-signature"></i> Quotations</a>
-                <a href="invoices.php" style="background:rgba(255,255,255,0.1); color:white;"><i class="fas fa-receipt"></i> Invoices</a>
+                <a href="quotations.php"></i> Quotations</a>
+                <a href="invoices.php" style="background:rgba(255,255,255,0.1); color:white;"></i> Invoices</a>
                 <a href="receipts.php"><i class="fas fa-check-double"></i> Receipts</a>
                 <a href="outstanding.php"><i class="fas fa-exclamation-circle"></i> Outstanding</a>
             </div>
