@@ -353,12 +353,12 @@ $total_res = $conn->query("SELECT
 
     <div class="dropdown-container">
         <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('vaultMenu', 'vaultChev')">
-            <i class="fas fa-folder-open"></i> Compliance Vault
+            <i class="fas fa-folder-open"></i> Documents
             <i class="fas fa-chevron-down" id="vaultChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
         </a>
         <div class="dropdown-content" id="vaultMenu">
-            <a href="admin-review.php"><i class="fas fa-clipboard-check"></i> Quality Control</a>
-            <a href="Master-Vault.php"><i class="fas fa-vault"></i> Master Vault</a>
+            <a href="admin-review.php"></i> Quality Control</a>
+            <a href="Master-Vault.php"></i>Services</a>
         </div>
     </div>
 
@@ -369,8 +369,6 @@ $total_res = $conn->query("SELECT
         </a>
         <div class="dropdown-content" id="reportsMenu">
            <a href="dsc-register.php" class="active"></i> DSC Register</a>
-            <a href="reports.php?tab=clients">Client Reports</a>
-            <a href="reports.php?tab=tasks">Task Reports</a>
         </div>
     </div>
 

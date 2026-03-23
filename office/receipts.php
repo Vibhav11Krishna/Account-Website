@@ -262,28 +262,50 @@ if (!$receipts) {
 
 <body>
  <div class="sidebar">
-        <h2>Karunesh Kumar & Associates Admin</h2>
-        <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i>Dashboard</a>
-        <div class="dropdown-container">
-            <a href="javascript:void(0)" class="dropdown-btn active" onclick="toggleBilling()">
-                <i class="fas fa-file-invoice-dollar"></i> Billing
-                <i class="fas fa-chevron-down rotate-chevron" id="chevron" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
-            </a>
-            <div class="dropdown-content show-menu" id="billingMenu">
-                <a href="quotations.php"><i class="fas fa-file-signature"></i> Quotations</a>
-                <a href="invoices.php" ><i class="fas fa-receipt"></i> Invoices</a>
-                <a href="receipts.php"style="background:rgba(255,255,255,0.1); color:white;"><i class="fas fa-check-double"></i> Receipts</a>
-                <a href="outstanding.php"><i class="fas fa-exclamation-circle"></i> Outstanding</a>
-            </div>
+    <h2>Karunesh Kumar & Associates Admin</h2>
+    <a href="admin-dashboard.php" ><i class="fas fa-chart-pie"></i> Dashboard</a>
+
+    <div class="dropdown-container">
+        <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('billingMenu', 'billChev')">
+            <i class="fas fa-file-invoice-dollar"></i> Billing
+            <i class="fas fa-chevron-down" id="billChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+        </a>
+        <div class="dropdown-content" id="billingMenu">
+            <a href="quotations.php">Quotations</a>
+            <a href="invoices.php">Invoices</a>
+            <a href="receipts.php" class="active">Receipts</a>
+            <a href="outstanding.php">Outstanding</a>
         </div>
-        <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
-        <a href="admin-review.php"><i class="fas fa-file-signature"></i> Quality Control</a>
-        <a href="Master-Vault.php"><i class="fas fa-file-signature"></i>Master Vault</a>
-        <a href="manage-clients.php"><i class="fas fa-users"></i> Manage Clients</a>
-        <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
-        <a href="attendance.php"><i class="fas fa-calendar-check"></i> Attendance</a>
-        <a href="../logout.php" style="margin-top:auto; color:#fda4af;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
+
+    <div class="dropdown-container">
+        <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('vaultMenu', 'vaultChev')">
+            <i class="fas fa-folder-open"></i> Documents
+            <i class="fas fa-chevron-down" id="vaultChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+        </a>
+        <div class="dropdown-content" id="vaultMenu">
+            <a href="admin-review.php"></i> Quality Control</a>
+            <a href="Master-Vault.php"></i> Services</a>
+        </div>
+    </div>
+
+    <div class="dropdown-container">
+        <a href="javascript:void(0)" class="dropdown-btn"class="active" onclick="toggleMenu('reportsMenu', 'repChev')">
+            <i class="fas fa-file-contract"></i> Reports
+            <i class="fas fa-chevron-down" id="repChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+        </a>
+        <div class="dropdown-content" id="reportsMenu">
+           <a href="dsc-register.php"></i> DSC Register</a>
+        </div>
+    </div>
+
+    <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
+    <a href="manage-clients.php"><i class="fas fa-users"></i> Manage Clients</a>
+    <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
+    <a href="attendance.php"><i class="fas fa-calendar-check"></i> Attendance</a>
+    
+    <a href="../logout.php" style="margin-top:auto; color:#fda4af;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</div>
 
     <div class="main">
         <?php if (isset($_GET['msg']) && $_GET['msg'] == 'deleted'): ?>
@@ -388,9 +410,29 @@ if (!$receipts) {
         </div>
     </div>
 <script>
-        function toggleBilling() {
-            document.getElementById('billingMenu').classList.toggle('show-menu');
-        }
+       
+         function toggleMenu(menuId, chevronId) {
+    const menu = document.getElementById(menuId);
+    const chevron = document.getElementById(chevronId);
+
+    // Toggle the specific menu clicked
+    menu.classList.toggle('show-menu');
+
+    // Rotate the specific arrow clicked
+    chevron.classList.toggle('rotate-chevron');
+
+    // Optional: Close other menus when opening a new one
+    const allMenus = document.querySelectorAll('.dropdown-content');
+    const allChevrons = document.querySelectorAll('.fa-chevron-down');
+
+    allMenus.forEach((m) => {
+        if (m.id !== menuId) m.classList.remove('show-menu');
+    });
+    
+    allChevrons.forEach((c) => {
+        if (c.id !== chevronId) c.classList.remove('rotate-chevron');
+    });
+}
         function confirmDelete(receiptNo) {
     if (confirm("Are you sure you want to delete Receipt #" + receiptNo + "? This action cannot be undone.")) {
         window.location.href = "receipts.php?delete_receipt=" + receiptNo;

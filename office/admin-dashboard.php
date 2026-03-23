@@ -34,26 +34,12 @@ $r = 'office'; // Hardcode the role to office/staff
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* Billing Dropdown specific styles */
-        .dropdown-content {
+         .dropdown-content {
             display: none;
-            /* Hidden by default */
             background: rgba(0, 0, 0, 0.15);
             margin: 0 10px;
             border-radius: 10px;
             padding-left: 10px;
-        }
-
-        .dropdown-content a {
-            font-size: 14px;
-            padding: 10px 14px;
-            margin-bottom: 2px;
-            border-left: none !important;
-            /* Remove the orange border from sub-items */
-        }
-
-        .dropdown-content a:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--orange);
         }
 
         .show-menu {
@@ -343,12 +329,12 @@ $r = 'office'; // Hardcode the role to office/staff
 
     <div class="dropdown-container">
         <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('vaultMenu', 'vaultChev')">
-            <i class="fas fa-folder-open"></i> Compliance Vault
+            <i class="fas fa-folder-open"></i> Documents
             <i class="fas fa-chevron-down" id="vaultChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
         </a>
         <div class="dropdown-content" id="vaultMenu">
-            <a href="admin-review.php"><i class="fas fa-clipboard-check"></i> Quality Control</a>
-            <a href="Master-Vault.php"><i class="fas fa-vault"></i> Master Vault</a>
+            <a href="admin-review.php"></i> Quality Control</a>
+            <a href="Master-Vault.php"></i> Services</a>
         </div>
     </div>
 
@@ -359,8 +345,6 @@ $r = 'office'; // Hardcode the role to office/staff
         </a>
         <div class="dropdown-content" id="reportsMenu">
            <a href="dsc-register.php"></i> DSC Register</a>
-            <a href="reports.php?tab=clients">Client Reports</a>
-            <a href="reports.php?tab=tasks">Task Reports</a>
         </div>
     </div>
 
