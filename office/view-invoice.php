@@ -94,31 +94,98 @@ function getIndianCurrency(float $number)
     <meta charset="UTF-8">
     <title>Invoice_<?php echo $data['invoice_no']; ?></title>
     <style>
-        .balance-row { color: #e11d48; font-weight: bold; }
-        .remarks-box { width: 50%; font-size: 11px; color: #555; background: #fcfcfc; padding: 10px; border: 1px dashed #ccc; border-radius: 5px; text-align: left; }
-        @page { size: A4; margin: 0; }
-        body { font-family: 'Helvetica', 'Arial', sans-serif; margin: 0; padding: 0; background: #525659; color: #333; }
-        .page { background: white; width: 210mm; height:310mm; margin: auto; padding: 15mm; box-sizing: border-box; display: flex; flex-direction: column; position: relative; }
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-        .header-left { font-size: 13px; line-height: 1.6; }
-        .title { text-align: center; font-size: 22px; font-weight: bold; letter-spacing: 2px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 5px; }
-        .billing-grid { width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed; }
-        .billing-grid th { text-align: left; font-size: 14px; border-bottom: 1px solid #333; padding: 8px 0; }
-        .billing-grid td { padding: 12px 0; font-size: 12px; line-height: 1.6; vertical-align: top; }
-        .label { font-weight: bold; color: #555; width: 95px; display: inline-block; }
-        .main-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .main-table th { background: #000; color: #fff; padding: 10px 8px; font-size: 11px; text-align: left; border: 1px solid #333; }
-        .main-table td { border: 1px solid #ccc; padding: 12px 8px; font-size: 12px; }
-        .summary-container { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; }
-        .summary-table { width: 45%; border-collapse: collapse; }
-        .summary-table td { padding: 6px; border-bottom: 1px solid #eee; font-size: 12px; }
-        .total-row { background: #f4f4f4; font-weight: bold; font-size: 13px !important; border-top: 2px solid #333 !important; }
-        .print-btn { position: fixed; top: 20px; right: 20px; background: #ff8c00; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; z-index: 100; }
-        @media print { .print-btn { display: none; } body { background: white; } .page { box-shadow: none; margin: 0; width: 100%; height: 297mm; } }
-        .footer-container { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 40px; margin-top: auto; }
-        .footer-img { width: 110px; height: auto; display: block; margin: 5px auto; }
-        .stamp-img { width: 90px; height: auto; opacity: 0.9; }
-    </style>
+    :root {
+        --navy: #0b3c74;
+        --orange: #ff8c00;
+        --text: #333;
+    }
+
+    /* 1. Physical Printer Settings */
+    @page { 
+        size: A4; 
+        margin: 8mm; /* Fixed margins for the printer */
+    }
+
+    body { 
+        font-family: 'Helvetica', 'Arial', sans-serif; 
+        margin: 0; 
+        padding: 0; 
+        background: #525659; 
+        color: var(--text); 
+    }
+
+    /* 2. THE FIX: Flexible height + Border Box */
+    .page { 
+        background: white; 
+        width: 210mm; 
+        /* min-height ensures it looks like a page but doesn't force a 2nd page if empty */
+        min-height: 277mm; 
+        margin: 20px auto; 
+        padding: 8mm 15mm; 
+        box-sizing: border-box; /* Includes padding inside the height calculation */
+        display: flex; 
+        flex-direction: column; 
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        position: relative;
+    }
+
+    /* This wrapper takes up all available space, pushing footer to the bottom */
+    .content-wrapper {
+        flex: 1 0 auto;
+    }
+
+    /* Layout Elements */
+    .header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .header-left { font-size: 13px; line-height: 1.6; }
+    .title { text-align: center; font-size: 22px; font-weight: bold; letter-spacing: 2px; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 5px; }
+
+    /* Tables */
+    .billing-grid { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
+    .billing-grid th { text-align: left; font-size: 14px; border-bottom: 1px solid #333; padding: 5px 0; }
+    .billing-grid td { padding: 8px 0; font-size: 12px; line-height: 1.5; vertical-align: top; }
+    .label { font-weight: bold; color: #555; width: 95px; display: inline-block; }
+
+    .main-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    .main-table th { background: #000; color: #fff; padding: 8px; font-size: 11px; text-align: left; border: 1px solid #333; }
+    .main-table td { border: 1px solid #ccc; padding: 10px 8px; font-size: 12px; }
+
+    /* Summary & Totals */
+    .summary-container { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10px; page-break-inside: avoid; }
+    .summary-table { width: 45%; border-collapse: collapse; }
+    .summary-table td { padding: 5px; border-bottom: 1px solid #eee; font-size: 12px; }
+    .total-row { background: #f4f4f4; font-weight: bold; border-top: 2px solid #333 !important; }
+
+    /* Footer Logic */
+    .footer-section {
+        flex-shrink: 0; 
+        margin-top: 15px;
+    }
+    .footer-container { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: flex-end; 
+        padding-top: 15px;
+        page-break-inside: avoid; 
+    }
+    .footer-img { width: 110px; height: auto; }
+    .stamp-img { width: 85px; height: auto; opacity: 0.9; }
+
+    .print-btn { position: fixed; top: 20px; right: 20px; background: var(--orange); color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; z-index: 100; }
+
+    @media print { 
+        .print-btn { display: none; } 
+        body { background: white; margin: 0; } 
+        .page { 
+            box-shadow: none; 
+            margin: 0; 
+            width: 100%; 
+            min-height: 100%; 
+            padding: 5mm 8mm; 
+        }
+        /* Prevents table rows from being cut in half across pages */
+        tr { page-break-inside: avoid; }
+    }
+</style>
 </head>
 <body>
 
