@@ -295,39 +295,60 @@ $status_msg = "";
             </table>
         </div>
 
-        <div id="career-tab" class="card">
-            <h3><i class="fas fa-user-tie"></i> Career Applications</h3>
-            <table>
+       <div id="career-tab" class="card">
+    <h3><i class="fas fa-user-tie"></i> Career Applications</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Applicant</th>
+                <th>Contact info</th> <!-- New Column Header -->
+                <th>Position & Exp</th>
+                <th>Resume</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            $apps = $conn->query("SELECT * FROM career_applications ORDER BY id DESC");
+            if ($apps && $apps->num_rows > 0):
+                while ($a = $apps->fetch_assoc()): 
+                    $app_date = !empty($a['created_at']) ? date('d M Y', strtotime($a['created_at'])) : 'N/A';
+            ?>
                 <tr>
-                    <th>Date</th>
-                    <th>Applicant</th>
-                    <th>Position & Exp</th>
-                    <th>Resume</th>
+                    <td><?= $app_date ?></td>
+                    <td><strong><?= htmlspecialchars($a['name']) ?></strong></td>
+                    <td>
+                        <i class="fas fa-envelope" style="font-size: 11px; color: #64748b;"></i> <?= htmlspecialchars($a['email']) ?><br>
+                        <i class="fas fa-phone" style="font-size: 11px; color: #64748b;"></i> 
+                        <a href="tel:<?= $a['phone'] ?>" style="text-decoration:none; color:inherit;"><?= htmlspecialchars($a['phone']) ?></a>
+                        <!-- Quick WhatsApp Link -->
+                        <a href="https://wa.me/91<?= preg_replace('/[^0-9]/', '', $a['phone']) ?>" target="_blank" style="color:#25D366; margin-left:5px;">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <span class="badge badge-career"><?= htmlspecialchars($a['position'] ?? 'N/A') ?></span><br>
+                        <small>Experience: <?= htmlspecialchars($a['experience'] ?? 'N/A') ?></small>
+                    </td>
+                    <td>
+                        <?php if (!empty($a['resume'])): ?>
+                            <a href="../uploads/resumes/<?= $a['resume'] ?>" class="btn-view" target="_blank">
+                                <i class="fas fa-file-pdf"></i> View PDF
+                            </a>
+                        <?php else: ?>
+                            <small style="color:red;">No Resume</small>
+                        <?php endif; ?>
+                    </td>
                 </tr>
-                <?php
-                $apps = $conn->query("SELECT * FROM career_applications ORDER BY id DESC");
-                while ($a = $apps->fetch_assoc()): ?>
-                    <tr>
-                        <td><?= date('d M Y', strtotime($a['created_at'])) ?></td>
-                        <td><strong><?= $a['name'] ?></strong><br><small><?= $a['email'] ?></small></td>
-                        <td>
-                            <span class="badge badge-career"><?= $a['position'] ?></span><br>
-                            <small>Exp: <?= $a['experience'] ?></small>
-                        </td>
-                        <td>
-                            <?php if (!empty($a['resume'])): ?>
-                                <a href="../uploads/resumes/<?= $a['resume'] ?>" class="btn-view" target="_blank">
-                                    <i class="fas fa-file-pdf"></i> View PDF
-                                </a>
-                            <?php else: ?>
-                                <small style="color:red;">No Resume</small>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                <?php endwhile; ?>
-            </table>
-        </div>
-    </div>
+            <?php 
+                endwhile; 
+            else:
+            ?>
+                <tr><td colspan="5" style="text-align:center; padding:20px;">No applications found.</td></tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>
 
     <script>
         function showTab(tabId, btn) {
