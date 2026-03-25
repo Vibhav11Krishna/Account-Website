@@ -195,7 +195,6 @@ $completedCount = $completedRes->fetch_assoc()['total'];
         <a href="employee-dashboard.php" class="active"><i class="fas fa-tasks"></i> My Tasks</a>
         <a href="work-basket.php"><i class="fas fa-briefcase"></i> Work Basket</a>
         <a href="employee-payments.php"><i class="fas fa-wallet"></i> Payments</a>
-        <a href="all-messages.php"><i class="fas fa-inbox"></i> Web Inbox</a>
         <a href="staff-attendance.php"><i class="fas fa-clock"></i> Attendance</a>
         <a href="../logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>

@@ -242,14 +242,14 @@ if (isset($_GET['delete_inv'])) {
         </a>
         <div class="dropdown-content" id="reportsMenu">
            <a href="dsc-register.php"></i> DSC Register</a>
+           <a href="attendance.php"></i> Attendance</a>
         </div>
     </div>
 
     <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
     <a href="manage-clients.php"><i class="fas fa-users"></i> Manage Clients</a>
     <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
-    <a href="attendance.php"><i class="fas fa-calendar-check"></i> Attendance</a>
-    
+    <a href="all-messages.php"><i class="fas fa-inbox"></i> Web Inbox</a>
     <a href="../logout.php" style="margin-top:auto; color:#fda4af;"><i class="fas fa-sign-out-alt"></i> Logout</a>
 </div>
     <div class="main">

@@ -3,7 +3,7 @@ session_start();
 include('../db.php');
 
 // Security Check - Matches your 'office' role
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'office') {
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     header("Location: ../Login.php");
     exit();
 }
@@ -14,7 +14,7 @@ $status_msg = "";
 <html lang="en">
 
 <head>
-    <title>Web Inbox | KKA Staff</title>
+    <title>Web Inbox | KKA Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -67,7 +67,21 @@ $status_msg = "";
             border-radius: 12px;
             transition: 0.3s;
         }
+ .dropdown-content {
+            display: none;
+            background: rgba(0, 0, 0, 0.15);
+            margin: 0 10px;
+            border-radius: 10px;
+            padding-left: 10px;
+        }
 
+        .show-menu {
+            display: block !important;
+        }
+
+        .rotate-chevron {
+            transform: rotate(180deg);
+        }
         .sidebar a:hover,
         .sidebar a.active {
             background: rgba(255, 255, 255, 0.1);
@@ -178,13 +192,49 @@ $status_msg = "";
 <body>
 
     <div class="sidebar">
-        <h2>Karunesh Kumar & Associates Employee</h2>
-        <a href="employee-dashboard.php"><i class="fas fa-tasks"></i> My Tasks</a>
-        <a href="work-basket.php"><i class="fas fa-briefcase"></i> Work Basket</a>
-        <a href="employee-payments.php"><i class="fas fa-wallet"></i> Payments</a>
-        <a href="all-messages.php" class="active"><i class="fas fa-inbox"></i> Web Inbox</a>
-        <a href="staff-attendance.php"><i class="fas fa-clock"></i> Attendance</a>
-        <a href="../logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        <h2>Karunesh Kumar & Associates Admin</h2>
+          <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i> Dashboard</a>
+
+    <div class="dropdown-container">
+        <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('billingMenu', 'billChev')">
+            <i class="fas fa-file-invoice-dollar"></i> Billing
+            <i class="fas fa-chevron-down" id="billChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+        </a>
+        <div class="dropdown-content" id="billingMenu">
+            <a href="quotations.php">Quotations</a>
+            <a href="invoices.php">Invoices</a>
+            <a href="receipts.php">Receipts</a>
+            <a href="outstanding.php">Outstanding</a>
+        </div>
+    </div>
+
+    <div class="dropdown-container">
+        <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('vaultMenu', 'vaultChev')">
+            <i class="fas fa-folder-open"></i> Documents
+            <i class="fas fa-chevron-down" id="vaultChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+        </a>
+        <div class="dropdown-content" id="vaultMenu">
+            <a href="admin-review.php"></i> Quality Control</a>
+            <a href="Master-Vault.php"></i> Services</a>
+        </div>
+    </div>
+
+    <div class="dropdown-container">
+        <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('reportsMenu', 'repChev')">
+            <i class="fas fa-file-contract"></i> Reports
+            <i class="fas fa-chevron-down" id="repChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+        </a>
+        <div class="dropdown-content" id="reportsMenu">
+           <a href="dsc-register.php"></i> DSC Register</a>
+           <a href="attendance.php"></i> Attendance</a>
+        </div>
+    </div>
+
+    <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
+    <a href="manage-clients.php"><i class="fas fa-users"></i> Manage Clients</a>
+    <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
+     <a href="all-messages.php" class="active"><i class="fas fa-inbox"></i> Web Inbox</a>
+    <a href="../logout.php" style="margin-top:auto; color:#fda4af;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 
     <div class="main">
@@ -286,6 +336,28 @@ $status_msg = "";
             document.getElementById(tabId).classList.add('active');
             btn.classList.add('active');
         }
+          function toggleMenu(menuId, chevronId) {
+    const menu = document.getElementById(menuId);
+    const chevron = document.getElementById(chevronId);
+
+    // Toggle the specific menu clicked
+    menu.classList.toggle('show-menu');
+
+    // Rotate the specific arrow clicked
+    chevron.classList.toggle('rotate-chevron');
+
+    // Optional: Close other menus when opening a new one
+    const allMenus = document.querySelectorAll('.dropdown-content');
+    const allChevrons = document.querySelectorAll('.fa-chevron-down');
+
+    allMenus.forEach((m) => {
+        if (m.id !== menuId) m.classList.remove('show-menu');
+    });
+    
+    allChevrons.forEach((c) => {
+        if (c.id !== chevronId) c.classList.remove('rotate-chevron');
+    });
+}
     </script>
 
 </body>
