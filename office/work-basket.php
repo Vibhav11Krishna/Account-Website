@@ -182,6 +182,7 @@ if (isset($_POST['submit_work'])) {
         <a href="employee-dashboard.php"><i class="fas fa-tasks"></i> My Tasks</a>
         <a href="work-basket.php" class="active"><i class="fas fa-briefcase"></i> Work Basket</a>
         <a href="employee-payments.php"><i class="fas fa-wallet"></i> Payments</a>
+        <a href="Employee_profiles.php"><i class="fas fa-user-circle"></i> Profile</a>
         <a href="staff-attendance.php"><i class="fas fa-clock"></i> Attendance</a>
 
         <a href="../logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>

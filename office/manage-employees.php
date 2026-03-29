@@ -186,7 +186,14 @@ if (isset($_POST['process_salary'])) {
                             FROM users u 
                             WHERE u.role='office' 
                             ORDER BY u.name ASC";
-
+$sql = "SELECT u.*, 
+        ep.aadhaar_no, ep.aadhaar_photo, ep.pan_no, ep.address, 
+        ep.dob, ep.emergency_contact, ep.profile_pic, ep.date_of_joining,
+        (SELECT login_time FROM attendance WHERE email = u.identifier AND log_date = '$today' LIMIT 1) as attendance_time 
+        FROM users u 
+        LEFT JOIN employee_profiles ep ON u.id = ep.user_id
+        WHERE u.role='office' 
+        ORDER BY u.name ASC";
                     $res = $conn->query($sql);
                     while ($row = $res->fetch_assoc()) {
                         $is_present = !empty($row['attendance_time']);
@@ -234,10 +241,16 @@ if (isset($_POST['process_salary'])) {
                                 </button>
                             </td>
                             <td>
-                                <a href="?delete=<?php echo $row['id']; ?>" class="delete-link" onclick="return confirm('Remove employee?')">
-                                    <i class="fas fa-trash-alt" style="color:var(--danger);"></i>
-                                </a>
-                            </td>
+    <div style="display:flex; gap:15px; align-items:center;">
+        <a href="javascript:void(0)" onclick="viewEmployee(<?php echo htmlspecialchars(json_encode($row)); ?>)" title="View Full Profile">
+            <i class="fas fa-eye" style="color: var(--navy); cursor:pointer;"></i>
+        </a>
+        
+        <a href="?delete=<?php echo $row['id']; ?>" class="delete-link" onclick="return confirm('Remove employee?')">
+            <i class="fas fa-trash-alt" style="color:var(--danger);"></i>
+        </a>
+    </div>
+</td>
                         </tr>
                     <?php } ?>
                 </tbody>
@@ -267,7 +280,47 @@ if (isset($_POST['process_salary'])) {
             </form>
         </div>
     </div>
+<div id="viewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div style="background:white; width:550px; border-radius:20px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+        <div style="background:var(--navy); color:white; padding:20px; display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0;"><i class="fas fa-user-shield"></i> Detailed Staff Profile</h3>
+            <i class="fas fa-times" onclick="closeViewModal()" style="cursor:pointer;"></i>
+        </div>
+        <div style="padding:25px; max-height: 85vh; overflow-y: auto;">
+            <div style="text-align:center; margin-bottom:20px;">
+                <img id="v_img" src="../uploads/profile_pics/default-avatar.png" style="width:90px; height:90px; border-radius:50%; object-fit:cover; border:3px solid var(--orange); padding:2px; background:white;">
+                <h2 id="v_name" style="margin:10px 0 5px 0; color:var(--navy);"></h2>
+                <span id="v_email" style="color:#64748b; font-size:14px;"></span>
+            </div>
+            
+            <style>
+                .d-row{display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f1f5f9; align-items: center;} 
+                .d-lbl{color:#64748b; font-weight:bold; font-size:11px; text-transform:uppercase; letter-spacing:0.5px;}
+                .d-val{font-weight:600; color:var(--navy); font-size:13px; text-align:right;}
+            </style>
+            
+            <div class="d-row"><span class="d-lbl">Joining Date</span><span id="v_join" class="d-val"></span></div>
+            <div class="d-row"><span class="d-lbl">Date of Birth</span><span id="v_dob" class="d-val"></span></div>
+            <div class="d-row"><span class="d-lbl">Aadhaar No</span><span id="v_aadhaar" class="d-val"></span></div>
+            <div class="d-row"><span class="d-lbl">PAN No</span><span id="v_pan" class="d-val"></span></div>
+            <div class="d-row"><span class="d-lbl">Emergency Contact</span><span id="v_emg" class="d-val"></span></div>
+            <div class="d-row" style="flex-direction:column; align-items:flex-start;">
+                <span class="d-lbl" style="margin-bottom:5px;">Residential Address</span>
+                <span id="v_addr" style="font-size:13px; line-height:1.5; color:#475569;"></span>
+            </div>
 
+            <div style="margin-top:20px;">
+                <span class="d-lbl">Aadhaar Document Preview</span>
+                <div style="margin-top:10px; text-align:center; background:#f8fafc; padding:15px; border-radius:12px; border:1px dashed #cbd5e1;">
+                    <img id="v_aadhaar_img" src="" style="max-width:100%; border-radius:8px; display:none; border:1px solid #e2e8f0; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+                    <span id="v_no_photo" style="font-size:12px; color:#94a3b8; font-style:italic;">No Aadhaar document uploaded by staff.</span>
+                </div>
+            </div>
+
+            <button onclick="closeViewModal()" style="width:100%; margin-top:25px; padding:14px; border:none; background:#f1f5f9; color:var(--navy); border-radius:12px; font-weight:bold; cursor:pointer; transition:0.2s;">Close Profile View</button>
+        </div>
+    </div>
+</div>
     <script>
         function toggleMenu(menuId, chevronId) {
     const menu = document.getElementById(menuId);
@@ -334,6 +387,41 @@ if (isset($_POST['process_salary'])) {
         function closeSalaryModal() {
             document.getElementById('salaryModal').style.display = 'none';
         }
+        function viewEmployee(data) {
+    document.getElementById('viewModal').style.display = 'flex';
+    
+    // Basic Info
+    document.getElementById('v_name').innerText = data.name;
+    document.getElementById('v_email').innerText = data.identifier;
+    
+    // Profile Fields
+    document.getElementById('v_join').innerText = data.date_of_joining || 'Not Set';
+    document.getElementById('v_dob').innerText = data.dob || 'Not Set';
+    document.getElementById('v_aadhaar').innerText = data.aadhaar_no || 'Not Set';
+    document.getElementById('v_pan').innerText = data.pan_no || 'Not Set';
+    document.getElementById('v_emg').innerText = data.emergency_contact || 'Not Set';
+    document.getElementById('v_addr').innerText = data.address || 'Address not provided';
+    
+    // Profile Picture Logic
+    const profileImg = document.getElementById('v_img');
+    profileImg.src = data.profile_pic ? "../uploads/profile_pics/" + data.profile_pic : "../uploads/profile_pics/default-avatar.png";
+
+    // Aadhaar Photo Logic
+    const aImg = document.getElementById('v_aadhaar_img');
+    const aText = document.getElementById('v_no_photo');
+    if(data.aadhaar_photo && data.aadhaar_photo !== "") {
+        aImg.src = "../uploads/documents/" + data.aadhaar_photo;
+        aImg.style.display = "block";
+        aText.style.display = "none";
+    } else {
+        aImg.style.display = "none";
+        aText.style.display = "block";
+    }
+}
+
+function closeViewModal() {
+    document.getElementById('viewModal').style.display = 'none';
+}
     </script>
 </body>
 </html>
