@@ -1014,6 +1014,8 @@
                 <a href="terms-of-service.php">Terms of Service</a>
                 <span class="sep">|</span>
                 <a href="cookies.php">Cookies Policy</a>
+                 <span class="sep">|</span>
+                <a href="refund-policy.php">Refund & Cancellation Policy</a>
             </div>
         </div>
     </div>

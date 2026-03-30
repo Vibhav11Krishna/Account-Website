@@ -1643,6 +1643,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="../Account-Website/terms-of-service.php">Terms of Service</a>
                  <span class="sep">|</span>
                 <a href=../Account-Website/cookies.php>Cookies Policy</a>
+                 <span class="sep">|</span>
+                <a href="../Account-Website/refund-policy.php">Refund & Cancellation Policy</a>
             </div>
         </div>
     </div>
