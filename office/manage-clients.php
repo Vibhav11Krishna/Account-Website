@@ -17,8 +17,29 @@ if (isset($_POST['update_client'])) {
     $email = mysqli_real_escape_string($conn, $_POST['business_email']); 
     $gst = mysqli_real_escape_string($conn, $_POST['gst_no']);
     $pan = mysqli_real_escape_string($conn, $_POST['pan_no']);
-    $address = mysqli_real_escape_string($conn, $_POST['address']);
+    
+    // ADD THESE THREE LINES:
+    $tan = mysqli_real_escape_string($conn, $_POST['tan_no']);
+    $cin = mysqli_real_escape_string($conn, $_POST['cin_no']);
+    $tin = mysqli_real_escape_string($conn, $_POST['tin_no']);
 
+    $address = mysqli_real_escape_string($conn, $_POST['address']);
+    $nature = mysqli_real_escape_string($conn, $_POST['business_nature']);
+    $aadhaar = mysqli_real_escape_string($conn, $_POST['aadhaar_no']);
+    $task = mysqli_real_escape_string($conn, $_POST['task_asked']);
+
+    // Photo logic remains the same...
+    $photo_query = "";
+    if (!empty($_FILES['profile_pic']['name'])) {
+        $target_dir = "../uploads/client_pics/";
+        $file_ext = pathinfo($_FILES["profile_pic"]["name"], PATHINFO_EXTENSION);
+        $new_filename = "client_" . $identifier . "_" . time() . "." . $file_ext;
+        if (move_uploaded_file($_FILES["profile_pic"]["tmp_name"], $target_dir . $new_filename)) {
+            $photo_query = ", profile_pic = '$new_filename'";
+        }
+    }
+
+    // UPDATE THE SQL TO INCLUDE THE NEW COLUMNS:
     $update_sql = "UPDATE client_profiles SET 
                    company_name = '$company_name', 
                    owner_name = '$owner_name', 
@@ -26,7 +47,14 @@ if (isset($_POST['update_client'])) {
                    business_email = '$email', 
                    gst_no = '$gst', 
                    pan_no = '$pan', 
-                   address = '$address' 
+                   tan_no = '$tan', 
+                   cin_no = '$cin', 
+                   tin_no = '$tin', 
+                   address = '$address',
+                   business_nature = '$nature', 
+                   aadhaar_no = '$aadhaar', 
+                   task_asked = '$task' 
+                   $photo_query 
                    WHERE client_id = '$identifier'";
 
     if ($conn->query($update_sql)) {
@@ -37,7 +65,6 @@ if (isset($_POST['update_client'])) {
         die("Update Error: " . $conn->error);
     }
 }
-
 // --- DELETE LOGIC ---
 if (isset($_GET['delete'])) {
     $id = mysqli_real_escape_string($conn, $_GET['delete']);
@@ -330,14 +357,15 @@ if (isset($_POST['quick_create'])) {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    $sql = "SELECT u.identifier, cp.company_name, cp.owner_name, cp.phone, cp.business_email, cp.gst_no, cp.pan_no 
-                            FROM users u 
-                            LEFT JOIN client_profiles cp ON u.identifier = cp.client_id 
-                            WHERE u.role='client' ORDER BY u.id DESC";
-                    $res = $conn->query($sql);
-                    while ($row = $res->fetch_assoc()):
-                    ?>
+                  <?php
+// Change the query to select everything from client_profiles
+$sql = "SELECT u.identifier, cp.* FROM users u 
+        LEFT JOIN client_profiles cp ON u.identifier = cp.client_id 
+        WHERE u.role='client' ORDER BY u.id DESC";
+
+$res = $conn->query($sql);
+while ($row = $res->fetch_assoc()):
+?>
                     <tr>
                         <td><span class="id-badge"><?php echo $row['identifier']; ?></span></td>
                         <td>
@@ -346,14 +374,23 @@ if (isset($_POST['quick_create'])) {
                         </td>
                         <td><?php echo $row['phone'] ?: '-'; ?><br><small><?php echo $row['business_email'] ?: '-'; ?></small></td>
                         <td><small>GST: <?php echo $row['gst_no'] ?: '-'; ?><br>PAN: <?php echo $row['pan_no'] ?: '-'; ?></small></td>
-                        <td style="text-align: center;">
-                            <a href="client-profile.php?id=<?php echo $row['identifier']; ?>" class="action-btn btn-edit"><i class="fas fa-pencil-alt"></i></a>
-                            <a href="?delete=<?php echo $row['identifier']; ?>" 
-                               class="action-btn btn-delete" 
-                               onclick="return confirm('Permanently delete this client and all profile data?')">
-                               <i class="fas fa-trash-alt"></i>
-                            </a>
-                        </td>
+                       <td style="text-align: center;">
+    <?php 
+        // We convert the whole row to JSON so the "Eye" can read it instantly
+        $clientJson = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8'); 
+    ?>
+    <a href="javascript:void(0)" class="action-btn btn-view" onclick='openViewModal(<?php echo $clientJson; ?>)'>
+        <i class="fas fa-eye"></i>
+    </a>
+
+    <a href="client-profile.php?id=<?php echo $row['identifier']; ?>" class="action-btn btn-edit">
+        <i class="fas fa-pencil-alt"></i>
+    </a>
+
+    <a href="?delete=<?php echo $row['identifier']; ?>" class="action-btn btn-delete" onclick="return confirm('Delete this client?')">
+        <i class="fas fa-trash-alt"></i>
+    </a>
+</td>
                     </tr>
                     <?php endwhile; ?>
                 </tbody>
@@ -395,6 +432,104 @@ if (isset($_POST['quick_create'])) {
                 tr[i].style.display = tr[i].textContent.toUpperCase().indexOf(filter) > -1 ? "" : "none";
             }
         }
+        function openViewModal(data) {
+    // Fill the image
+   // Change this line:
+document.getElementById('v_photo').src = data.profile_pic ? '../uploads/client_pics/' + data.profile_pic : '../uploads/client_pics/default-company.png';
+    
+    // Fill text fields
+    document.getElementById('v_company_title').innerText = data.company_name || 'Individual Client';
+    document.getElementById('v_id_badge').innerText = 'ID: ' + data.identifier;
+    document.getElementById('v_owner').innerText = data.owner_name || 'N/A';
+    document.getElementById('v_nature').innerText = data.business_nature || 'Not Specified';
+    document.getElementById('v_aadhaar').innerText = data.aadhaar_no || 'Not Provided';
+    document.getElementById('v_phone').innerText = data.phone || 'N/A';
+    document.getElementById('v_gst').innerText = data.gst_no || 'N/A';
+    document.getElementById('v_pan').innerText = data.pan_no || 'N/A';
+    document.getElementById('v_task').innerText = data.task_asked || 'No pending tasks recorded.';
+    document.getElementById('v_address').innerText = data.address || 'No address provided.';
+    document.getElementById('v_tan').innerText = data.tan_no || 'N/A';
+    document.getElementById('v_cin').innerText = data.cin_no || 'N/A';
+    document.getElementById('v_tin').innerText = data.tin_no || 'N/A';
+
+    // Show modal
+    document.getElementById('viewModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('viewModal').style.display = 'none';
+}
+
+// Close modal if user clicks outside the white box
+window.onclick = function(event) {
+    let modal = document.getElementById('viewModal');
+    if (event.target == modal) {
+        closeModal();
+    }
+}
     </script>
+    <div id="viewModal" class="modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px);">
+    <div class="modal-content" style="background:white; margin:2% auto; padding:30px; width:600px; border-radius:20px; position:relative; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
+        <span onclick="closeModal()" style="position:absolute; right:25px; top:20px; font-size:28px; cursor:pointer; color:#94a3b8;">&times;</span>
+        
+        <div style="text-align:center; margin-bottom:20px;">
+            <img id="v_photo" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid #ff8c00; margin-bottom:10px;">
+            <h2 id="v_company_title" style="margin:0; color:#0b3c74;"></h2>
+            <span id="v_id_badge" class="id-badge"></span>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; border-top:1px solid #f1f5f9; padding-top:20px;">
+            <div>
+                <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Owner Name</label>
+                <p id="v_owner" style="margin:5px 0 15px 0; font-weight:600;"></p>
+            </div>
+            <div>
+                <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Phone</label>
+                <p id="v_phone" style="margin:5px 0 15px 0; font-weight:600;"></p>
+            </div>
+            <div>
+                <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Nature of Business</label>
+                <p id="v_nature" style="margin:5px 0 15px 0; font-weight:600;"></p>
+            </div>
+             <div>
+                <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Aadhaar No</label>
+                <p id="v_aadhaar" style="margin:5px 0 15px 0; font-weight:600;"></p>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; background: #f1f5f9; padding: 15px; border-radius: 12px; margin-top: 5px;">
+            <div>
+                <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">GST No</label>
+                <p id="v_gst" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
+            </div>
+            <div>
+                <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">PAN No</label>
+                <p id="v_pan" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
+            </div>
+            <div>
+                <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">TAN No</label>
+                <p id="v_tan" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
+            </div>
+            <div style="margin-top:10px;">
+                <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">CIN No</label>
+                <p id="v_cin" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
+            </div>
+            <div style="margin-top:10px;">
+                <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">TIN / VAT</label>
+                <p id="v_tin" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
+            </div>
+        </div>
+
+        <div style="margin-top:15px; padding:15px; background:#fff7ed; border-radius:12px; border:1px solid #ffedd5;">
+            <label style="font-size:10px; font-weight:800; color:var(--orange); text-transform:uppercase;">Task / Service Requested</label>
+            <p id="v_task" style="margin:5px 0 0 0; font-size:14px; color:#1e293b; line-height:1.5; font-weight:500;"></p>
+        </div>
+
+        <div style="margin-top:15px;">
+            <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Office Address</label>
+            <p id="v_address" style="margin:5px 0 0 0; font-size:13px; color:#475569;"></p>
+        </div>
+    </div>
+</div>
 </body>
 </html>
