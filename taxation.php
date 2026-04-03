@@ -420,6 +420,45 @@
           </div>
           <div class="hover-border"></div>
         </div>
+
+         <div class="premium-card">
+          <div class="card-image-box">
+            <img src="assets/Tds.jpg" alt="Equity Design">
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-icon-float"><i class="fa-solid fa-magnifying-glass-dollar"></i></div>
+          <div class="card-details">
+            <h4>TDS & TCS Return</h4>
+            <p>Managing periodic filings for taxes deducted or collected on business payments</p>
+          </div>
+          <div class="hover-border"></div>
+        </div>
+
+         <div class="premium-card">
+          <div class="card-image-box">
+            <img src="assets/International.jpg" alt="Equity Design">
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-icon-float"><i class="fa-solid fa-magnifying-glass-dollar"></i></div>
+          <div class="card-details">
+            <h4>International Taxation</h4>
+            <p>Advisory on cross-border tax laws and avoiding double taxation on global income</p>
+          </div>
+          <div class="hover-border"></div>
+        </div>
+
+         <div class="premium-card">
+          <div class="card-image-box">
+            <img src="assets/Scrunity.jpg" alt="Equity Design">
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-icon-float"><i class="fa-solid fa-magnifying-glass-dollar"></i></div>
+          <div class="card-details">
+            <h4>Tax Scrutiny Support</h4>
+            <p>Expert representation and documentation for responding to tax department queries</p>
+          </div>
+          <div class="hover-border"></div>
+        </div>
       </div>
 
 

@@ -419,6 +419,46 @@
           </div>
           <div class="hover-border"></div>
         </div>
+
+        <div class="premium-card">
+          <div class="card-image-box">
+            <img src="assets/Startup6.jpg" alt="Equity Design">
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-icon-float"><i class="fa-solid fa-chart-pie"></i></div>
+          <div class="card-details">
+            <h4>Project Report</h4>
+            <p>Creating detailed financial and operational blueprints to secure funding</p>
+          </div>
+          <div class="hover-border"></div>
+        </div>
+
+        <div class="premium-card">
+          <div class="card-image-box">
+            <img src="assets/Startup6.jpg" alt="Equity Design">
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-icon-float"><i class="fa-solid fa-chart-pie"></i></div>
+          <div class="card-details">
+            <h4>Business Loan Assistance</h4>
+            <p>Navigating the application process to secure debt financing and working capital</p>
+          </div>
+          <div class="hover-border"></div>
+        </div>
+
+        
+        <div class="premium-card">
+          <div class="card-image-box">
+            <img src="assets/Startup6.jpg" alt="Equity Design">
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-icon-float"><i class="fa-solid fa-chart-pie"></i></div>
+          <div class="card-details">
+            <h4>Pitch Deck & Valuation</h4>
+            <p>Crafting investor presentations and professional business valuation models</p>
+          </div>
+          <div class="hover-border"></div>
+        </div>
       </div>
 
 <section class="process-section">

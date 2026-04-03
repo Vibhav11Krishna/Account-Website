@@ -420,6 +420,45 @@
           </div>
           <div class="hover-border"></div>
         </div>
+
+        <div class="premium-card">
+          <div class="card-image-box">
+            <img src="assets/Audit7.jpg" alt="Startup India">
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-icon-float"><i class="fa-solid fa-boxes-stacked"></i></div>
+          <div class="card-details">
+            <h4>GST Audit</h4>
+            <p>Verification of turnover and tax credits to ensure compliance with GST laws</p>
+          </div>
+          <div class="hover-border"></div>
+        </div>
+
+        <div class="premium-card">
+          <div class="card-image-box">
+            <img src="assets/Audit8.jpg" alt="Startup India">
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-icon-float"><i class="fa-solid fa-boxes-stacked"></i></div>
+          <div class="card-details">
+            <h4>System & IT Audit</h4>
+            <p>Security review of your digital infrastructure to protect data integrity</p>
+          </div>
+          <div class="hover-border"></div>
+        </div>
+
+        <div class="premium-card">
+          <div class="card-image-box">
+            <img src="assets/Audit9.jpg" alt="Startup India">
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-icon-float"><i class="fa-solid fa-boxes-stacked"></i></div>
+          <div class="card-details">
+            <h4>Due Diligence</h4>
+            <p>Comprehensive financial investigation before business acquisitions or mergers</p>
+          </div>
+          <div class="hover-border"></div>
+        </div>
       </div>
 
 <section class="process-section">

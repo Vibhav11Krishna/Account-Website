@@ -420,6 +420,45 @@
           </div>
           <div class="hover-border"></div>
         </div>
+
+        <div class="premium-card">
+          <div class="card-image-box">
+            <img src="assets/Consulting5.jpg" alt="Equity Design">
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-icon-float"><i class="fa-solid fa-scale-balanced"></i></div>
+          <div class="card-details">
+            <h4>Cost Study & Analysis</h4>
+            <p>Identifying cost-saving opportunities to improve overall business margins</p>
+          </div>
+          <div class="hover-border"></div>
+        </div>
+
+        <div class="premium-card">
+          <div class="card-image-box">
+            <img src="assets/Consulting5.jpg" alt="Equity Design">
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-icon-float"><i class="fa-solid fa-scale-balanced"></i></div>
+          <div class="card-details">
+            <h4>Investment & Trading</h4>
+            <p>Strategic advice on managing corporate wealth through financial markets</p>
+          </div>
+          <div class="hover-border"></div>
+        </div>
+
+        <div class="premium-card">
+          <div class="card-image-box">
+            <img src="assets/Consulting5.jpg" alt="Equity Design">
+            <div class="card-overlay"></div>
+          </div>
+          <div class="card-icon-float"><i class="fa-solid fa-scale-balanced"></i></div>
+          <div class="card-details">
+            <h4>Tender Filling</h4>
+            <p>Expert documentation and bidding support for government and private contracts</p>
+          </div>
+          <div class="hover-border"></div>
+        </div>
       </div>
 
 
