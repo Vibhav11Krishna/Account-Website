@@ -26,7 +26,21 @@ if (isset($_POST['update_client'])) {
     $address = mysqli_real_escape_string($conn, $_POST['address']);
     $nature = mysqli_real_escape_string($conn, $_POST['business_nature']);
     $aadhaar = mysqli_real_escape_string($conn, $_POST['aadhaar_no']);
-    $task = mysqli_real_escape_string($conn, $_POST['task_asked']);
+  // --- SMART TASK HANDLER ---
+if (isset($_POST['task_asked']) && !empty($_POST['task_asked'])) {
+    
+    if (is_array($_POST['task_asked'])) {
+        // If it comes from old checkboxes (array)
+        $task_list = implode(', ', $_POST['task_asked']);
+    } else {
+        // If it comes from our new "Add Service" tags (string)
+        $task_list = $_POST['task_asked'];
+    }
+    
+    $task = mysqli_real_escape_string($conn, $task_list);
+} else {
+    $task = "";
+}
 
     // Photo logic remains the same...
     $photo_query = "";
@@ -303,6 +317,7 @@ if (isset($_POST['quick_create'])) {
         </a>
         <div class="dropdown-content" id="reportsMenu">
            <a href="dsc-register.php"></i> DSC Register</a>
+           <a href="service-report.php"></i> Service Report</a>
            <a href="attendance.php"></i> Attendance</a>
         </div>
     </div>

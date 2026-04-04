@@ -78,19 +78,12 @@ if (!$client) {
             border-left: 4px solid var(--orange);
         }
 
-        /* Dropdown specific styles */
         .dropdown-content {
             display: none;
             background: rgba(0, 0, 0, 0.15);
             margin: 0 10px;
             border-radius: 10px;
             padding-left: 10px;
-        }
-
-        .dropdown-content a {
-            font-size: 14px;
-            padding: 10px 14px;
-            border-left: none !important;
         }
 
         .show-menu {
@@ -186,6 +179,68 @@ if (!$client) {
             background: var(--orange);
             transform: translateY(-2px);
         }
+        /* Service Box Styling */
+.services-wrapper {
+    background: #fff;
+    border: 1px solid var(--border);
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.add-service-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.add-service-row input {
+    flex: 1;
+    margin-bottom: 0; /* Override default margin */
+}
+
+.btn-add-service {
+    background: var(--orange);
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: 0.3s;
+}
+
+.btn-add-service:hover {
+    background: var(--navy);
+}
+
+.added-services-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.service-tag {
+    background: #f1f5f9;
+    color: var(--navy);
+    padding: 8px 15px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+}
+
+.service-tag i {
+    color: #ef4444;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.service-tag i:hover {
+    transform: scale(1.2);
+}
     </style>
 </head>
 
@@ -226,6 +281,8 @@ if (!$client) {
             </a>
             <div class="dropdown-content" id="reportsMenu">
                 <a href="dsc-register.php"></i> DSC Register</a>
+                 <a href="service-report.php"></i> Service Report</a>
+           <a href="attendance.php"></i> Attendance</a>
             </div>
         </div>
 
@@ -321,10 +378,29 @@ if (!$client) {
                     <input type="text" name="tin_no" value="<?php echo htmlspecialchars($client['tin_no']); ?>">
                 </div>
 
-                <div class="form-group">
-                    <label style="color: var(--orange);"><i class="fa-solid fa-clipboard-list"></i> Task / Service Asked For</label>
-                    <textarea name="task_asked" rows="2"><?php echo htmlspecialchars($client['task_asked']); ?></textarea>
-                </div>
+              <div class="form-group full-width">
+    <label style="color: var(--orange); margin-bottom: 15px; display: block;">
+        <i class="fa-solid fa-clipboard-list"></i> Services / Tasks Requested
+    </label>
+    
+    <div class="services-wrapper">
+        <div class="add-service-row">
+            <input type="text" id="newServiceInput" placeholder="Enter service name (e.g. GST Filing)">
+            <button type="button" class="btn-add-service" onclick="addService()">
+                <i class="fas fa-plus"></i> Add
+            </button>
+        </div>
+
+        <div class="added-services-container" id="servicesList">
+            </div>
+
+        <input type="hidden" name="task_asked" id="finalServiceInput">
+    </div>
+    
+    <small style="color: #94a3b8; display: block; margin-top: 8px;">
+        <i class="fa-solid fa-circle-info"></i> Type a service and click Add. These will be saved to the client profile.
+    </small>
+</div>
 
                 <div class="form-group">
                     <label>Office Address</label>
@@ -361,6 +437,70 @@ if (!$client) {
                 if (c.id !== chevronId) c.classList.remove('rotate-chevron');
             });
         }
+        // 1. Get existing services from PHP
+let servicesArray = <?php 
+    // Clean the string and convert to JS array
+    $current = array_filter(array_map('trim', explode(', ', $client['task_asked'])));
+    echo json_encode(array_values($current)); 
+?>;
+
+const servicesList = document.getElementById('servicesList');
+const newServiceInput = document.getElementById('newServiceInput');
+const finalInput = document.getElementById('finalServiceInput');
+
+// 2. Initial Render
+function renderServices() {
+    servicesList.innerHTML = '';
+    
+    servicesArray.forEach((service, index) => {
+        const div = document.createElement('div');
+        div.className = 'service-tag';
+        div.innerHTML = `
+            <span>${service}</span>
+            <i class="fas fa-times-circle" onclick="removeService(${index})"></i>
+        `;
+        servicesList.appendChild(div);
+    });
+
+    // Keep the hidden input updated for PHP form submission
+    finalInput.value = servicesArray.join(', ');
+}
+
+// 3. Function to Add Service
+function addService() {
+    const val = newServiceInput.value.trim();
+    
+    if (val === "") {
+        alert("Please enter a service name.");
+        return;
+    }
+
+    if (servicesArray.includes(val)) {
+        alert("This service is already added.");
+        return;
+    }
+
+    servicesArray.push(val);
+    newServiceInput.value = ''; // Clear input
+    renderServices();
+}
+
+// 4. Function to Remove Service
+function removeService(index) {
+    servicesArray.splice(index, 1);
+    renderServices();
+}
+
+// Allow pressing "Enter" to add service
+newServiceInput.addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        addService();
+    }
+});
+
+// Run on page load
+renderServices();
     </script>
 </body>
 

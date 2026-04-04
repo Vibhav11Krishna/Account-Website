@@ -369,6 +369,7 @@ $total_res = $conn->query("SELECT
         </a>
         <div class="dropdown-content" id="reportsMenu">
            <a href="dsc-register.php" class="active"></i> DSC Register</a>
+           <a href="service-report.php"></i> Service Report</a>
            <a href="attendance.php"></i> Attendance</a>
         </div>
     </div>

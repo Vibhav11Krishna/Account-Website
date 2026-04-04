@@ -337,6 +337,7 @@ $search = isset($_GET['q']) ? $_GET['q'] : '';
         </a>
         <div class="dropdown-content" id="reportsMenu">
            <a href="dsc-register.php"></i> DSC Register</a>
+           <a href="service-report.php"></i> Service Report</a>
            <a href="attendance.php"></i> Attendance</a>
         </div>
     </div>

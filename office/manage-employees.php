@@ -104,10 +104,22 @@ if (isset($_POST['process_salary'])) {
         .badge-absent { background: #f1f5f9; color: #64748b; }
 
         /* Dropdown Styles */
-        .dropdown-content { display: none; background: rgba(0, 0, 0, 0.2); margin: 0 5px; border-radius: 8px; padding-left: 15px; }
-        .dropdown-content a { font-size: 14px; padding: 10px; color: rgba(255, 255, 255, 0.6); }
-        .show-menu { display: block; }
-        .rotate-chevron { transform: rotate(90deg); }
+        .dropdown-content {
+            display: none;
+            background: rgba(0, 0, 0, 0.15);
+            margin: 0 10px;
+            border-radius: 10px;
+            padding-left: 10px;
+        }
+
+        .show-menu {
+            display: block !important;
+        }
+
+        .rotate-chevron {
+            transform: rotate(180deg);
+        }
+
     </style>
 </head>
 
@@ -148,6 +160,7 @@ if (isset($_POST['process_salary'])) {
         </a>
         <div class="dropdown-content" id="reportsMenu">
            <a href="dsc-register.php"></i> DSC Register</a>
+           <a href="service-report.php"></i> Service Report</a>
             <a href="attendance.php"></i> Attendance</a>
         </div>
     </div>

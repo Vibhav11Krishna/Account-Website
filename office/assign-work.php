@@ -70,25 +70,22 @@ if (isset($_GET['delete_doc'])) {
     <title>Assign Work | KKA Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .dropdown-content {
+       .dropdown-content {
             display: none;
             background: rgba(0, 0, 0, 0.15);
             margin: 0 10px;
             border-radius: 10px;
             padding-left: 10px;
         }
-        .dropdown-content a {
-            font-size: 14px;
-            padding: 10px 14px;
-            margin-bottom: 2px;
-            border-left: none !important;
+
+        .show-menu {
+            display: block !important;
         }
-        .dropdown-content a:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--orange);
+
+        .rotate-chevron {
+            transform: rotate(180deg);
         }
-        .show-menu { display: block !important; }
-        .rotate-chevron { transform: rotate(180deg); }
+
         :root {
             --navy: #0b3c74;
             --orange: #ff8c00;
@@ -227,6 +224,7 @@ if (isset($_GET['delete_doc'])) {
         </a>
         <div class="dropdown-content" id="reportsMenu">
            <a href="dsc-register.php"></i> DSC Register</a>
+           <a href="service-report.php"></i> Service Report</a>
             <a href="attendance.php"></i> Attendance</a>
         </div>
     </div>
