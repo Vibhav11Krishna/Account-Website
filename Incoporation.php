@@ -425,7 +425,7 @@
             <img src="assets/Fssai.jpg" alt="Equity Design">
             <div class="card-overlay"></div>
           </div>
-          <div class="card-icon-float"><i class="fa-solid fa-chart-pie"></i></div>
+          <div class="card-icon-float"><i class="fa-solid fa-utensils"></i></div>
           <div class="card-details">
             <h4>FSSAI Registration</h4>
             <p>Mandatory food safety licensing for businesses handling or processing food products</p>
@@ -438,7 +438,7 @@
             <img src="assets/Trade.jpg" alt="Equity Design">
             <div class="card-overlay"></div>
           </div>
-          <div class="card-icon-float"><i class="fa-solid fa-chart-pie"></i></div>
+          <div class="card-icon-float"><i class="fa-solid fa-trademark"></i></div>
           <div class="card-details">
             <h4>Trade Mark & Shop Licence</h4>
             <p>Legal protection for your brand and mandatory local municipal registration for outlets</p>
@@ -451,7 +451,7 @@
             <img src="assets/Dsc.jpg" alt="Equity Design">
             <div class="card-overlay"></div>
           </div>
-          <div class="card-icon-float"><i class="fa-solid fa-chart-pie"></i></div>
+          <div class="card-icon-float"><i class="fa-solid fa-pen-nib"></i></div>
           <div class="card-details">
             <h4>Labour License & DSC</h4>
             <p>Statutory workforce compliance and secure digital keys for all electronic filings</p>

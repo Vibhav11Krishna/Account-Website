@@ -423,10 +423,10 @@
 
         <div class="premium-card">
           <div class="card-image-box">
-            <img src="assets/Consulting5.jpg" alt="Equity Design">
+            <img src="assets/Cost.jpg" alt="Equity Design">
             <div class="card-overlay"></div>
           </div>
-          <div class="card-icon-float"><i class="fa-solid fa-scale-balanced"></i></div>
+          <div class="card-icon-float"><i class="fa-solid fa-chart-line"></i></div>
           <div class="card-details">
             <h4>Cost Study & Analysis</h4>
             <p>Identifying cost-saving opportunities to improve overall business margins</p>
@@ -436,10 +436,10 @@
 
         <div class="premium-card">
           <div class="card-image-box">
-            <img src="assets/Consulting5.jpg" alt="Equity Design">
+            <img src="assets/Trading.jpg" alt="Equity Design">
             <div class="card-overlay"></div>
           </div>
-          <div class="card-icon-float"><i class="fa-solid fa-scale-balanced"></i></div>
+          <div class="card-icon-float"><i class="fa-solid fa-arrow-trend-up"></i></div>
           <div class="card-details">
             <h4>Investment & Trading</h4>
             <p>Strategic advice on managing corporate wealth through financial markets</p>
@@ -449,10 +449,10 @@
 
         <div class="premium-card">
           <div class="card-image-box">
-            <img src="assets/Consulting5.jpg" alt="Equity Design">
+            <img src="assets/Tender.jpg" alt="Equity Design">
             <div class="card-overlay"></div>
           </div>
-          <div class="card-icon-float"><i class="fa-solid fa-scale-balanced"></i></div>
+          <div class="card-icon-float"><i class="fa-solid fa-file-signature"></i></div>
           <div class="card-details">
             <h4>Tender Filling</h4>
             <p>Expert documentation and bidding support for government and private contracts</p>

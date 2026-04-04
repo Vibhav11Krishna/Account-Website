@@ -426,7 +426,7 @@
             <img src="assets/Preparation.jpg" alt="Startup India">
             <div class="card-overlay"></div>
           </div>
-          <div class="card-icon-float"><i class="fa-solid fa-users-gear"></i></div>
+          <div class="card-icon-float"><i class="fa-solid fa-file-invoice-dollar"></i></div>
           <div class="card-details">
             <h4>Accounts Preparation</h4>
             <p>Compiling transaction data into professional summaries for statutory reporting</p>
@@ -439,7 +439,7 @@
             <img src="assets/Balance.jpg" alt="Startup India">
             <div class="card-overlay"></div>
           </div>
-          <div class="card-icon-float"><i class="fa-solid fa-users-gear"></i></div>
+          <div class="card-icon-float"><i class="fa-solid fa-scale-balanced"></i></div>
           <div class="card-details">
             <h4>Balance Sheet & P&L</h4>
             <p>Essential financial snapshots showing your business's net worth and profitability</p>
@@ -452,7 +452,7 @@
             <img src="assets/Management.jpg" alt="Startup India">
             <div class="card-overlay"></div>
           </div>
-          <div class="card-icon-float"><i class="fa-solid fa-users-gear"></i></div>
+          <div class="card-icon-float"><i class="fa-solid fa-boxes-stacked"></i></div>
           <div class="card-details">
             <h4>Inventory Management</h4>
             <p>Optimizing stock levels to reduce costs and maintain smooth supply chains</p>

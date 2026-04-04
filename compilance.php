@@ -424,10 +424,10 @@
 
         <div class="premium-card">
           <div class="card-image-box">
-            <img src="assets/Compilance5.jpg" alt="Equity Design">
+            <img src="assets/Epf.jpg" alt="Equity Design">
             <div class="card-overlay"></div>
           </div>
-          <div class="card-icon-float"><i class="fa-solid fa-people-group"></i></div>
+          <div class="card-icon-float"><i class="fa-solid fa-users-gear"></i></div>
           <div class="card-details">
             <h4>EPF & ESIC Return</h4>
             <p>Handling monthly social security filings for employee provident fund and insurance</p>
@@ -437,10 +437,10 @@
 
         <div class="premium-card">
           <div class="card-image-box">
-            <img src="assets/Compilance5.jpg" alt="Equity Design">
+            <img src="assets/Secretial.jpg" alt="Equity Design">
             <div class="card-overlay"></div>
           </div>
-          <div class="card-icon-float"><i class="fa-solid fa-people-group"></i></div>
+          <div class="card-icon-float"><i class="fa-solid fa-user-tie"></i></div>
           <div class="card-details">
             <h4>Secretarial Audit</h4>
             <p>Independent verification of compliance with the Companies Act and corporate laws</p>
@@ -450,10 +450,10 @@
 
         <div class="premium-card">
           <div class="card-image-box">
-            <img src="assets/Compilance5.jpg" alt="Equity Design">
+            <img src="assets/Kyc.jpg" alt="Equity Design">
             <div class="card-overlay"></div>
           </div>
-          <div class="card-icon-float"><i class="fa-solid fa-people-group"></i></div>
+          <div class="card-icon-float"><i class="fa-solid fa-id-card"></i></div>
           <div class="card-details">
             <h4>KYC & DIN Compliance</h4>
             <p>Managing annual director identity updates to maintain active company status</p>
