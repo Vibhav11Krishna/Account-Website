@@ -129,7 +129,7 @@ $total_res = $conn->query("SELECT
         .main {
             margin-left: 280px;
             padding: 50px;
-            width: calc(100% - 280px);
+            width: calc(100% - 100px);
             box-sizing: border-box;
         }
    .dropdown-content {
