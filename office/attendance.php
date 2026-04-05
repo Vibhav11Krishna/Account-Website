@@ -235,6 +235,7 @@ $today = date('Y-m-d');
         <div class="dropdown-content" id="reportsMenu">
            <a href="dsc-register.php" ></i> DSC Register</a>
            <a href="service-report.php"></i> Service Report</a>
+           <a href="revenue-analytics.php"></i> Revenue Analytics</a>
             <a href="attendance.php" class="active"></i> Attendance</a>
         </div>
     </div>
