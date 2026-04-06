@@ -301,6 +301,61 @@ $today = date('Y-m-d');
             }
             ?>
         </div>
+        <div class="ledger-card" style="background: white; padding: 30px; border-radius: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 30px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px;">
+        <div style="width:4px; height:20px; background:#ff8c00; border-radius:10px;"></div>
+        <h2 style="margin:0; font-size: 18px; color: #0b3c74;">Today's Check-in Ledger</h2>
+    </div>
+    
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+            <tr style="background: #f8fafc; color: #64748b; font-size: 13px; text-align: left;">
+                <th style="padding: 15px; border-bottom: 2px solid #e2e8f0;">EMPLOYEE NAME</th>
+                <th style="padding: 15px; border-bottom: 2px solid #e2e8f0;">IDENTIFIER (EMAIL)</th>
+                <th style="padding: 15px; border-bottom: 2px solid #e2e8f0;">DATE</th>
+                <th style="padding: 15px; border-bottom: 2px solid #e2e8f0;">CHECK-IN TIME</th>
+                <th style="padding: 15px; border-bottom: 2px solid #e2e8f0;">STATUS</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            // Fetching only employees who checked in today
+            $ledger_sql = "SELECT a.*, u.name 
+                           FROM attendance a 
+                           JOIN users u ON a.email = u.identifier 
+                           WHERE a.log_date = '$today' 
+                           ORDER BY a.login_time DESC";
+            $ledger_res = $conn->query($ledger_sql);
+
+            if ($ledger_res->num_rows > 0):
+                while ($row = $ledger_res->fetch_assoc()): ?>
+                    <tr style="border-bottom: 1px solid #f1f5f9; font-size: 14px;">
+                        <td style="padding: 15px; font-weight: 700; color: #334155;"><?= $row['name'] ?></td>
+                        <td style="padding: 15px; color: #64748b;"><?= $row['email'] ?></td>
+                        <td style="padding: 15px;"><?= date('d M, Y', strtotime($row['log_date'])) ?></td>
+                        <td style="padding: 15px;">
+                            <span style="background: #eff6ff; color: #1d4ed8; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 12px;">
+                                <?= date('h:i A', strtotime($row['login_time'])) ?>
+                            </span>
+                        </td>
+                        <td style="padding: 15px;">
+                            <span style="color: #059669; font-weight: 700;">
+                                <i class="fas fa-check-circle"></i> PRESENT
+                            </span>
+                        </td>
+                    </tr>
+                <?php endwhile; 
+            else: ?>
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: #94a3b8;">
+                        <i class="fas fa-user-clock" style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
+                        No check-ins recorded for today yet.
+                    </td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>
     </div>
     <script>
        function toggleMenu(menuId, chevronId) {
