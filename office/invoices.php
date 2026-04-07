@@ -249,7 +249,17 @@ if (isset($_GET['delete_inv'])) {
     </div>
 
     <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
-    <a href="manage-clients.php"><i class="fas fa-users"></i> Manage Clients</a>
+     <div class="dropdown-container">
+    <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('clientMenu', 'clientChev')">
+        <i class="fas fa-users"></i> Manage Clients
+        <i class="fas fa-chevron-down" id="clientChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+    </a>
+    <div class="dropdown-content" id="clientMenu">
+        <a href="manage-clients.php">Clients</a>
+        <a href="client-groups.php">Client Groups</a>
+        <a href="client-services.php">Services</a>
+    </div>
+</div>
     <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
     <a href="all-messages.php"><i class="fas fa-inbox"></i> Web Inbox</a>
     <a href="../logout.php" style="margin-top:auto; color:#fda4af;"><i class="fas fa-sign-out-alt"></i> Logout</a>
