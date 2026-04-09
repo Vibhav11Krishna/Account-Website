@@ -311,25 +311,24 @@ $today = date('Y-m-d');
             }
             ?>
         </div>
-        <div class="ledger-card" style="background: white; padding: 30px; border-radius: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 30px;">
+       <div class="ledger-card" style="background: white; padding: 30px; border-radius: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 30px;">
     <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px;">
         <div style="width:4px; height:20px; background:#ff8c00; border-radius:10px;"></div>
-        <h2 style="margin:0; font-size: 18px; color: #0b3c74;">Today's Check-in Ledger</h2>
+        <h2 style="margin:0; font-size: 18px; color: #0b3c74;">Today's Attendance Ledger</h2>
     </div>
     
     <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
         <thead>
             <tr style="background: #f8fafc; color: #64748b; font-size: 13px; text-align: left;">
                 <th style="padding: 15px; border-bottom: 2px solid #e2e8f0;">EMPLOYEE NAME</th>
-                <th style="padding: 15px; border-bottom: 2px solid #e2e8f0;">IDENTIFIER (EMAIL)</th>
-                <th style="padding: 15px; border-bottom: 2px solid #e2e8f0;">DATE</th>
-                <th style="padding: 15px; border-bottom: 2px solid #e2e8f0;">CHECK-IN TIME</th>
+                <th style="padding: 15px; border-bottom: 2px solid #e2e8f0;">CHECK-IN</th>
+                <th style="padding: 15px; border-bottom: 2px solid #e2e8f0;">CHECK-OUT</th>
                 <th style="padding: 15px; border-bottom: 2px solid #e2e8f0;">STATUS</th>
             </tr>
         </thead>
         <tbody>
             <?php
-            // Fetching only employees who checked in today
+            // Fetching employees who checked in today, including logout_time
             $ledger_sql = "SELECT a.*, u.name 
                            FROM attendance a 
                            JOIN users u ON a.email = u.identifier 
@@ -340,26 +339,42 @@ $today = date('Y-m-d');
             if ($ledger_res->num_rows > 0):
                 while ($row = $ledger_res->fetch_assoc()): ?>
                     <tr style="border-bottom: 1px solid #f1f5f9; font-size: 14px;">
-                        <td style="padding: 15px; font-weight: 700; color: #334155;"><?= $row['name'] ?></td>
-                        <td style="padding: 15px; color: #64748b;"><?= $row['email'] ?></td>
-                        <td style="padding: 15px;"><?= date('d M, Y', strtotime($row['log_date'])) ?></td>
                         <td style="padding: 15px;">
-                            <span style="background: #eff6ff; color: #1d4ed8; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 12px;">
-                                <?= date('h:i A', strtotime($row['login_time'])) ?>
+                            <div style="font-weight: 700; color: #334155;"><?= $row['name'] ?></div>
+                            <div style="font-size: 11px; color: #64748b;"><?= $row['email'] ?></div>
+                        </td>
+                        <td style="padding: 15px;">
+                            <span style="background: #ecfdf5; color: #059669; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 12px;">
+                                <i class="far fa-clock"></i> <?= date('h:i A', strtotime($row['login_time'])) ?>
                             </span>
                         </td>
                         <td style="padding: 15px;">
-                            <span style="color: #059669; font-weight: 700;">
-                                <i class="fas fa-check-circle"></i> PRESENT
-                            </span>
+                            <?php if ($row['logout_time']): ?>
+                                <span style="background: #fef2f2; color: #dc2626; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 12px;">
+                                    <i class="fas fa-sign-out-alt"></i> <?= date('h:i A', strtotime($row['logout_time'])) ?>
+                                </span>
+                            <?php else: ?>
+                                <span style="color: #94a3b8; font-size: 12px; font-style: italic;">Active Session</span>
+                            <?php endif; ?>
+                        </td>
+                        <td style="padding: 15px;">
+                            <?php if (!$row['logout_time']): ?>
+                                <span style="color: #22c55e; font-weight: 700; font-size: 12px;">
+                                    <i class="fas fa-circle" style="font-size: 8px;"></i> WORKING
+                                </span>
+                            <?php else: ?>
+                                <span style="color: #64748b; font-weight: 700; font-size: 12px;">
+                                    <i class="fas fa-check-double"></i> COMPLETED
+                                </span>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endwhile; 
             else: ?>
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 40px; color: #94a3b8;">
+                    <td colspan="4" style="text-align: center; padding: 40px; color: #94a3b8;">
                         <i class="fas fa-user-clock" style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
-                        No check-ins recorded for today yet.
+                        No check-ins recorded for today.
                     </td>
                 </tr>
             <?php endif; ?>

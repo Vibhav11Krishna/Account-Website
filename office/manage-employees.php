@@ -411,7 +411,7 @@ $sql = "SELECT u.*,
         function closeSalaryModal() {
             document.getElementById('salaryModal').style.display = 'none';
         }
-        function viewEmployee(data) {
+       function viewEmployee(data) {
     document.getElementById('viewModal').style.display = 'flex';
     
     // Basic Info
@@ -430,19 +430,42 @@ $sql = "SELECT u.*,
     const profileImg = document.getElementById('v_img');
     profileImg.src = data.profile_pic ? "../uploads/profile_pics/" + data.profile_pic : "../uploads/profile_pics/default-avatar.png";
 
-    // Aadhaar Photo Logic
+    // --- SMART AADHAAR LOGIC (HANDLES BOTH JPG & PDF) ---
     const aImg = document.getElementById('v_aadhaar_img');
     const aText = document.getElementById('v_no_photo');
+    
     if(data.aadhaar_photo && data.aadhaar_photo !== "") {
-        aImg.src = "../uploads/documents/" + data.aadhaar_photo;
-        aImg.style.display = "block";
-        aText.style.display = "none";
+        const fileName = data.aadhaar_photo;
+        const filePath = "../uploads/documents/" + fileName;
+        
+        // Get the extension (pdf, jpg, png, etc.)
+        const fileExt = fileName.split('.').pop().toLowerCase();
+
+        if (fileExt === 'pdf') {
+            // HIDE the image tag, and put a PDF Link/Icon in the aText div
+            aImg.style.display = "none";
+            aText.style.display = "block";
+            aText.innerHTML = `
+                <div style="background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px;">
+                    <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 32px; margin-bottom: 10px;"></i>
+                    <p style="font-size: 13px; font-weight: bold; color: var(--navy);">Aadhaar Document (PDF)</p>
+                    <a href="${filePath}" target="_blank" style="background: var(--navy); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 12px; display: inline-block; margin-top: 5px;">
+                        <i class="fas fa-eye"></i> View PDF in New Tab
+                    </a>
+                </div>`;
+        } else {
+            // It's an image: SHOW the image tag and HIDE the text div
+            aImg.src = filePath;
+            aImg.style.display = "block";
+            aText.style.display = "none";
+        }
     } else {
+        // No file uploaded at all
         aImg.style.display = "none";
         aText.style.display = "block";
+        aText.innerHTML = "No Aadhaar document uploaded by staff.";
     }
 }
-
 function closeViewModal() {
     document.getElementById('viewModal').style.display = 'none';
 }
