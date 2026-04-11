@@ -11,9 +11,15 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
 $quote_id = isset($_GET['id']) ? mysqli_real_escape_string($conn, $_GET['id']) : '';
 if (!$quote_id) { header("Location: quotations.php"); exit(); }
 
-// 2. FETCH EXISTING DATA
-$quote_res = $conn->query("SELECT q.*, u.name as client_name FROM quotations q JOIN users u ON q.client_id = u.identifier WHERE q.id = '$quote_id'");
+// 2. FETCH EXISTING DATA (Updated to join client_profiles)
+$quote_res = $conn->query("SELECT q.*, cp.company_name 
+                           FROM quotations q 
+                           JOIN client_profiles cp ON q.client_id = cp.client_id 
+                           WHERE q.id = '$quote_id'");
 $quote = $quote_res->fetch_assoc();
+
+// If no quotation found, redirect
+if (!$quote) { header("Location: quotations.php"); exit(); }
 
 $items_res = $conn->query("SELECT * FROM quotation_items WHERE quotation_id = '$quote_id'");
 
@@ -127,7 +133,9 @@ if (isset($_POST['update_quote'])) {
     <div class="main">
         <div class="header-area">
             <a href="quotations.php" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Ledger</a>
-            <h1 style="margin: 10px 0;">Edit Quotation <span style="color: var(--orange);"><?php echo $quote['quote_no']; ?></span></h1>
+            <h1 style="margin: 10px 0;">
+    Edit Quotation for <span style="color: var(--orange); text-transform: uppercase;"><?php echo $quote['company_name']; ?></span>
+</h1>
         </div>
 
         <div class="card">
@@ -135,15 +143,16 @@ if (isset($_POST['update_quote'])) {
                 <div class="form-grid">
                     <div class="field-group">
                         <label>Client</label>
-                        <select name="client_id" required>
-                            <?php
-                            $clients = $conn->query("SELECT identifier, name FROM users WHERE role='client'");
-                            while ($c = $clients->fetch_assoc()) {
-                                $sel = ($c['identifier'] == $quote['client_id']) ? 'selected' : '';
-                                echo "<option value='{$c['identifier']}' $sel>{$c['name']}</option>";
-                            }
-                            ?>
-                        </select>
+                       <select name="client_id" required>
+        <?php
+        // Fetching from client_profiles to get company_name
+        $clients = $conn->query("SELECT client_id, company_name FROM client_profiles ORDER BY company_name ASC");
+        while ($c = $clients->fetch_assoc()) {
+            $sel = ($c['client_id'] == $quote['client_id']) ? 'selected' : '';
+            echo "<option value='{$c['client_id']}' $sel>{$c['company_name']}</option>";
+        }
+        ?>
+    </select>
                     </div>
                     <div class="field-group">
                         <label>Place of Supply</label>

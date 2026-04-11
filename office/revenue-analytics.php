@@ -426,15 +426,48 @@ $table_res = $conn->query($table_query);
                     hoverBackgroundColor: '#ff8c00'
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                    x: { grid: { display: false } }
+           // FIND THIS SECTION IN YOUR CODE AND REPLACE IT:
+options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { 
+        legend: { display: false },
+        tooltip: {
+            callbacks: {
+                label: function(context) {
+                    // This makes the pop-up show full currency format: ₹1,50,000.00
+                    return 'Revenue: ' + new Intl.NumberFormat('en-IN', { 
+                        style: 'currency', 
+                        currency: 'INR' 
+                    }).format(context.parsed.y);
                 }
             }
+        }
+    },
+    scales: {
+        y: { 
+            beginAtZero: true,
+            // suggestedMax ensures the graph always looks "tall" 
+            // even if you only have ₹4,000 in data.
+            suggestedMax: 10000, 
+            grid: { color: '#f1f5f9' },
+            ticks: {
+                // This converts 1,00,000 to "₹1 L" and 5,000 to "₹5k"
+                callback: function(value) {
+                    if (value >= 100000) return '₹' + (value / 100000).toFixed(1) + ' L';
+                    if (value >= 1000) return '₹' + (value / 1000) + 'k';
+                    return '₹' + value;
+                },
+                font: { weight: '600' },
+                color: '#64748b'
+            }
+        },
+        x: { 
+            grid: { display: false },
+            ticks: { color: '#64748b' }
+        }
+    }
+}
         });
     </script>
 </body>

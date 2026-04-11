@@ -332,13 +332,26 @@ if (isset($_POST['add_quote'])) {
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px;">
                         <div>
                             <label style="font-size:11px; font-weight:700;">CLIENT</label>
-                            <select name="client_id" required>
-                                <option value="">Select Client</option>
-                                <?php
-                                $clients = $conn->query("SELECT identifier, name FROM users WHERE role='client'");
-                                while ($c = $clients->fetch_assoc()) echo "<option value='{$c['identifier']}'>{$c['identifier']} - {$c['name']}</option>";
-                                ?>
-                            </select>
+                           <select name="client_id" required>
+    <option value="">-- Choose Client (Name + ID) --</option>
+    <?php
+    // Fetching company names and IDs directly from client_profiles
+    $client_query = "SELECT client_id, company_name FROM client_profiles ORDER BY company_name ASC";
+    $client_result = $conn->query($client_query);
+
+    if ($client_result && $client_result->num_rows > 0) {
+        while ($row = $client_result->fetch_assoc()) {
+            // Check if this is the auto-filled client from GET parameters
+            $selected = ($auto_cid == $row['client_id']) ? 'selected' : '';
+            
+            // Format the display string: Company Name [ID]
+            $displayName = htmlspecialchars($row['company_name']) . " [" . $row['client_id'] . "]";
+            
+            echo "<option value='{$row['client_id']}' $selected>{$displayName}</option>";
+        }
+    }
+    ?>
+</select>
                         </div>
                         <div>
                             <label style="font-size:11px; font-weight:700;">PLACE OF SUPPLY</label>
@@ -428,67 +441,69 @@ if (isset($_POST['add_quote'])) {
                                 <th style="text-align:center;">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php
-                            $query = "SELECT q.*, u.name FROM quotations q JOIN users u ON q.client_id = u.identifier";
+                      <tbody>
+    <?php
+    // The query is already correctly joining cp (client_profiles)
+    $query = "SELECT q.*, cp.company_name 
+              FROM quotations q 
+              JOIN client_profiles cp ON q.client_id = cp.client_id";
 
-                            if ($from_date && $to_date) {
-                                $query .= " WHERE DATE(q.created_at) BETWEEN '$from_date' AND '$to_date'";
-                            } elseif ($from_date) {
-                                $query .= " WHERE DATE(q.created_at) >= '$from_date'";
-                            } elseif ($to_date) {
-                                $query .= " WHERE DATE(q.created_at) <= '$to_date'";
-                            }
+    if ($from_date && $to_date) {
+        $query .= " WHERE DATE(q.created_at) BETWEEN '$from_date' AND '$to_date'";
+    } elseif ($from_date) {
+        $query .= " WHERE DATE(q.created_at) >= '$from_date'";
+    } elseif ($to_date) {
+        $query .= " WHERE DATE(q.created_at) <= '$to_date'";
+    }
 
-                            $query .= " ORDER BY q.id DESC";
-                            $res = $conn->query($query);
+    $query .= " ORDER BY q.id DESC";
+    $res = $conn->query($query);
 
-                            if ($res && $res->num_rows > 0) {
-                                while ($q = $res->fetch_assoc()) {
-                            ?>
-                                    <tr>
-                                        <td style="padding:15px 25px;">
-                                            <span style="font-weight:600; color:#1e293b;"><?php echo date('d M, Y', strtotime($q['created_at'])); ?></span><br>
-
-                                        </td>
-                                        <td>
-                                            <span style="background:#f1f5f9; padding:4px 8px; border-radius:5px; font-family:monospace; font-weight:700; color:var(--navy);">
-                                                <?php echo $q['quote_no']; ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <b style="color:#0f172a;"><?php echo $q['name']; ?></b><br>
-                                            <span style="font-size:12px; color:var(--text-light);"><?php echo $q['service_name']; ?></span>
-                                        </td>
-                                        <td>
-                                            <span style="font-size:10px; background:<?php echo ($q['tax_type'] == 'CGST+SGST' ? '#dcfce7' : '#dbeafe'); ?>; color:<?php echo ($q['tax_type'] == 'CGST+SGST' ? '#166534' : '#1e40af'); ?>; padding:3px 8px; border-radius:12px; font-weight:bold;">
-                                                <?php echo $q['tax_type']; ?>
-                                            </span>
-                                        </td>
-                                        <td style="text-align:right; font-weight:800; color:#0f172a; font-size:15px;">
-                                            ₹<?php echo number_format($q['total_amount'], 2); ?>
-                                        </td>
-                                        <td style="text-align:center;">
-                                            <div style="display:flex; justify-content:center; gap:5px;">
-                                                <a href="view-quotation.php?id=<?php echo $q['id']; ?>" class="btn-sm btn-pdf" target="_blank" title="View PDF"><i class="fas fa-file-pdf"></i></a>
-
-                                                <a href="edit-quotation.php?id=<?php echo $q['id']; ?>" class="btn-sm" style="background:#fef9c3; color:#854d0e; border:1px solid #fde047;" title="Edit"><i class="fas fa-edit"></i></a>
-
-                                                <a href="convert-to-invoice.php?quote_id=<?php echo $q['id']; ?>" class="btn-sm btn-convert" onclick="return confirm('Convert to Invoice?')" title="Convert"><i class="fas fa-exchange-alt"></i></a>
-                                                <a href="?delete_id=<?php echo $q['id']; ?>" class="btn-sm" style="background:#fee2e2; color:#b91c1c;" onclick="return confirm('Delete?')" title="Delete"><i class="fas fa-trash"></i></a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                            <?php
-                                }
-                            } else {
-                                echo "<tr><td colspan='6' style='text-align:center; padding:50px; color:var(--text-light);'>
-                            <i class='fas fa-search' style='font-size:30px; opacity:0.3; margin-bottom:10px; display:block;'></i>
-                            No quotations found for the selected range.
-                          </td></tr>";
-                            }
-                            ?>
-                        </tbody>
+    if ($res && $res->num_rows > 0) {
+        while ($q = $res->fetch_assoc()) {
+    ?>
+            <tr>
+                <td style="padding:15px 25px;">
+                    <span style="font-weight:600; color:#1e293b;"><?php echo date('d M, Y', strtotime($q['created_at'])); ?></span><br>
+                </td>
+                <td>
+                    <span style="background:#f1f5f9; padding:4px 8px; border-radius:5px; font-family:monospace; font-weight:700; color:var(--navy);">
+                        <?php echo $q['quote_no']; ?>
+                    </span>
+                </td>
+                <td>
+                    <b style="color:#0f172a; text-transform: uppercase;">
+                        <?php echo htmlspecialchars($q['company_name']); ?>
+                    </b><br>
+                    <span style="font-size:12px; color:var(--text-light);"><?php echo htmlspecialchars($q['service_name']); ?></span>
+                </td>
+                <td>
+                    <span style="font-size:10px; background:<?php echo ($q['tax_type'] == 'CGST+SGST' ? '#dcfce7' : '#dbeafe'); ?>; color:<?php echo ($q['tax_type'] == 'CGST+SGST' ? '#166534' : '#1e40af'); ?>; padding:3px 8px; border-radius:12px; font-weight:bold;">
+                        <?php echo $q['tax_type']; ?>
+                    </span>
+                </td>
+                <td style="text-align:right; font-weight:800; color:#0f172a; font-size:15px;">
+                    ₹<?php echo number_format($q['total_amount'], 2); ?>
+                </td>
+                <td style="text-align:center;">
+                    <div style="display:flex; justify-content:center; gap:5px;">
+                        <a href="view-quotation.php?id=<?php echo $q['id']; ?>" class="btn-sm btn-pdf" target="_blank" title="View PDF"><i class="fas fa-file-pdf"></i></a>
+                        <a href="edit-quotation.php?id=<?php echo $q['id']; ?>" class="btn-sm" style="background:#fef9c3; color:#854d0e; border:1px solid #fde047;" title="Edit"><i class="fas fa-edit"></i></a>
+                        <a href="convert-to-invoice.php?quote_id=<?php echo $q['id']; ?>" class="btn-sm btn-convert" onclick="return confirm('Convert to Invoice?')" title="Convert"><i class="fas fa-exchange-alt"></i></a>
+                        <a href="?delete_id=<?php echo $q['id']; ?>" class="btn-sm" style="background:#fee2e2; color:#b91c1c;" onclick="return confirm('Delete?')" title="Delete"><i class="fas fa-trash"></i></a>
+                    </div>
+                </td>
+            </tr>
+    <?php
+        }
+    } else {
+        echo "<tr><td colspan='6' style='text-align:center; padding:50px; color:var(--text-light);'>
+                <i class='fas fa-search' style='font-size:30px; opacity:0.3; margin-bottom:10px; display:block;'></i>
+                No quotations found for the selected range.
+              </td></tr>";
+    }
+    ?>
+</tbody>
                     </table>
                 </div>
             </div>

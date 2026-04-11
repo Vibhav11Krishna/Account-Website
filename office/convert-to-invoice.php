@@ -17,10 +17,32 @@ if (isset($_GET['quote_id'])) {
         $today = date('Y-m-d H:i:s');
         $due_date = date('Y-m-d', strtotime('+7 days'));
 
-        // Generate Invoice Number (Matching your INV-YEAR-000 format)
-        $count_res = $conn->query("SELECT id FROM invoices");
-        $next_id = ($count_res->num_rows > 0) ? $count_res->num_rows + 1 : 1;
-        $inv_no = "INV-" . date('Y') . "-" . str_pad($next_id, 3, "0", STR_PAD_LEFT);
+        // --- IMPROVED INVOICE NUMBER LOGIC ---
+        $year = date('Y');
+        $prefix = "INV-$year-";
+        
+        // Find the highest existing numeric suffix for the current year
+        $check_max = $conn->query("SELECT invoice_no FROM invoices 
+                                   WHERE invoice_no LIKE '$prefix%' 
+                                   ORDER BY id DESC LIMIT 1");
+        
+        if ($check_max && $check_max->num_rows > 0) {
+            $last_inv = $check_max->fetch_assoc()['invoice_no'];
+            // Extract number from 'INV-2026-006' -> 6
+            $last_num = (int)substr($last_inv, strrpos($last_inv, '-') + 1);
+            $next_num = $last_num + 1;
+        } else {
+            $next_num = 1; // Start at 1 if no invoices exist this year
+        }
+
+        $inv_no = $prefix . str_pad($next_num, 3, "0", STR_PAD_LEFT);
+
+        // Safety Loop: If the number exists (due to a deletion gap), skip to next
+        while($conn->query("SELECT id FROM invoices WHERE invoice_no = '$inv_no'")->num_rows > 0) {
+            $next_num++;
+            $inv_no = $prefix . str_pad($next_num, 3, "0", STR_PAD_LEFT);
+        }
+        // --- END IMPROVED LOGIC ---
 
         // Calculate Tax Breakdown
         $tax_total = $total_amt - $base_amt;
@@ -40,9 +62,9 @@ if (isset($_GET['quote_id'])) {
         )";
 
         if ($conn->query($sql_master)) {
-            $new_invoice_id = $conn->insert_id; // The numeric ID for foreign key
+            $new_invoice_id = $conn->insert_id;
 
-            // 3. Fetch ALL items from quotation_items and move to invoice_items
+            // 3. Move items to invoice_items
             $items_res = $conn->query("SELECT * FROM quotation_items WHERE quotation_id = '$quote_id'");
             
             while ($item = $items_res->fetch_assoc()) {
@@ -62,11 +84,11 @@ if (isset($_GET['quote_id'])) {
             // 4. Mark Quotation as Accepted
             $conn->query("UPDATE quotations SET status = 'Accepted' WHERE id = '$quote_id'");
 
-            // Redirect to the invoices list with success message
-            header("Location: invoices.php?msg=Invoice Generated Successfully");
+            header("Location: invoices.php?msg=updated");
             exit();
         } else {
-            echo "Error: " . $conn->error;
+            // This will now catch other SQL errors instead of the Duplicate Entry one
+            die("Database Error: " . $conn->error);
         }
     }
 }

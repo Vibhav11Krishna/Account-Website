@@ -273,13 +273,27 @@ if (isset($_GET['delete_inv'])) {
                 <h3>Create New Bill</h3>
                 <form method="POST" id="invoiceForm">
                     <label>Select Client</label>
-                    <select name="client_id" required>
-                        <option value="">-- Choose Client --</option>
-                        <?php
-                                $clients = $conn->query("SELECT identifier, name FROM users WHERE role='client'");
-                                while ($c = $clients->fetch_assoc()) echo "<option value='{$c['identifier']}'>{$c['identifier']} - {$c['name']}</option>";
-                                ?>
-                    </select>
+                 
+<select name="client_id" required>
+    <option value="">-- Choose Client (Name + ID) --</option>
+    <?php
+    // Fetching company names and IDs directly from client_profiles
+    $client_query = "SELECT client_id, company_name FROM client_profiles ORDER BY company_name ASC";
+    $client_result = $conn->query($client_query);
+
+    if ($client_result && $client_result->num_rows > 0) {
+        while ($row = $client_result->fetch_assoc()) {
+            // Check if this is the auto-filled client from GET parameters
+            $selected = ($auto_cid == $row['client_id']) ? 'selected' : '';
+            
+            // Format the display string: Company Name [ID]
+            $displayName = htmlspecialchars($row['company_name']) . " [" . $row['client_id'] . "]";
+            
+            echo "<option value='{$row['client_id']}' $selected>{$displayName}</option>";
+        }
+    }
+    ?>
+</select>
 
                     <label>Place of Supply (For GST)</label>
                     <select name="client_state" required>
@@ -365,10 +379,13 @@ if (isset($_GET['delete_inv'])) {
                     <th>Status & Action</th>
                 </tr>
             </thead>
-           <tbody>
+       <tbody>
     <?php
-    // 1. BUILD FILTERED QUERY - Updated to filter by invoice_date
-    $query = "SELECT i.*, u.name FROM invoices i JOIN users u ON i.client_id = u.identifier";
+    // 1. BUILD FILTERED QUERY - Updated to JOIN with client_profiles instead of users
+    // We link i.client_id to cp.client_id to get the company_name
+    $query = "SELECT i.*, cp.company_name 
+              FROM invoices i 
+              JOIN client_profiles cp ON i.client_id = cp.client_id";
     
     $conditions = [];
     if ($from_date) { $conditions[] = "i.invoice_date >= '$from_date'"; }
@@ -378,7 +395,7 @@ if (isset($_GET['delete_inv'])) {
         $query .= " WHERE " . implode(" AND ", $conditions);
     }
 
-    // 2. SORT BY INVOICE DATE - Most professional for accounting
+    // 2. SORT BY INVOICE DATE
     $query .= " ORDER BY i.invoice_date DESC, i.id DESC";
     $invoices = $conn->query($query);
     
@@ -400,7 +417,7 @@ if (isset($_GET['delete_inv'])) {
             </td>
             <td style='font-weight:700; color:var(--navy);'><?php echo $inv['invoice_no']; ?></td>
             <td>
-                <b><?php echo $inv['name']; ?></b><br>
+                <b><?php echo htmlspecialchars($inv['company_name']); ?></b><br>
                 <span class='tax-tag'><?php echo $inv['tax_type']; ?></span>
             </td>
             <td>

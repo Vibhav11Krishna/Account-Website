@@ -267,50 +267,59 @@ $today = date('Y-m-d');
             </button>
         </header>
 
-        <div class="attendance-grid">
-            <?php
-            // Fetch all staff
-            $res = $conn->query("SELECT * FROM users WHERE role='office' ORDER BY name ASC");
+       <div class="attendance-grid">
+    <?php
+    $res = $conn->query("SELECT * FROM users WHERE role='office' ORDER BY name ASC");
+    while ($staff = $res->fetch_assoc()) {
+        $email = $staff['identifier'];
+        $check = $conn->query("SELECT login_time, logout_time FROM attendance WHERE email='$email' AND log_date='$today' LIMIT 1");
+        $is_online = ($check->num_rows > 0);
+        $att_data = $check->fetch_assoc();
+    ?>
+        <div class="staff-card <?php echo $is_online ? 'online' : ''; ?>" 
+             onclick="openAttendanceModal('<?php echo $email; ?>', '<?php echo $staff['name']; ?>')"
+             style="cursor: pointer; transition: transform 0.2s;">
+            
+            <span class="status-badge <?php echo $is_online ? 'badge-online' : 'badge-offline'; ?>">
+                <?php echo $is_online ? 'PRESENT' : 'ABSENT'; ?>
+            </span>
 
-            while ($staff = $res->fetch_assoc()) {
-                $email = $staff['identifier'];
+            <div class="avatar"><i class="fas fa-user-tie"></i></div>
+            <h3 class="staff-name"><?php echo $staff['name']; ?></h3>
+            <p class="staff-email"><?php echo $email; ?></p>
 
-                // CHECK IF STAFF HAS LOGGED IN TODAY
-                // NOTE: This assumes you have a table named 'attendance' with columns 'email', 'log_date', and 'login_time'
-                $check = $conn->query("SELECT login_time FROM attendance WHERE email='$email' AND log_date='$today' LIMIT 1");
-
-                $is_online = ($check->num_rows > 0);
-                $att_data = $check->fetch_assoc();
-            ?>
-
-                <div class="staff-card <?php echo $is_online ? 'online' : ''; ?>">
-                    <?php if ($is_online): ?>
-                        <span class="status-badge badge-online">PRESENT</span>
-                    <?php else: ?>
-                        <span class="status-badge badge-offline">ABSENT</span>
-                    <?php endif; ?>
-
-                    <div class="avatar">
-                        <i class="fas fa-user-tie"></i>
-                    </div>
-                    <h3 class="staff-name"><?php echo $staff['name']; ?></h3>
-                    <p class="staff-email"><?php echo $email; ?></p>
-
-                    <div class="log-box">
-                        <?php if ($is_online): ?>
-                            <i class="far fa-clock" style="color: #22c55e;"></i>
-                            In: <strong><?php echo date('h:i A', strtotime($att_data['login_time'])); ?></strong>
-                        <?php else: ?>
-                            <i class="fas fa-exclamation-circle" style="color: #94a3b8;"></i>
-                            Not checked in yet.
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-            <?php
-            }
-            ?>
+            <div class="log-box">
+                <?php if ($is_online): ?>
+                    <i class="far fa-clock" style="color: #22c55e;"></i> 
+                    In: <strong><?php echo date('h:i A', strtotime($att_data['login_time'])); ?></strong>
+                <?php else: ?>
+                    <i class="fas fa-exclamation-circle" style="color: #94a3b8;"></i> Not checked in.
+                <?php endif; ?>
+            </div>
         </div>
+    <?php } ?>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
+    <div class="ledger-card" style="background: white; padding: 30px; border-radius: 24px;">
+        <h2 style="font-size: 18px; color: var(--navy); margin-bottom: 20px;">Daily Presence Ratio</h2>
+        <div style="max-width: 300px; margin: auto;">
+            <canvas id="attendanceChart"></canvas>
+        </div>
+    </div>
+    
+    </div>
+
+<div id="attModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter: blur(5px);">
+    <div style="background:white; margin: 5% auto; padding: 30px; width: 60%; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+            <h2 id="modalTitle" style="margin:0; color: var(--navy);">Employee History</h2>
+            <button onclick="closeModal()" style="background:none; border:none; font-size: 24px; cursor:pointer;">&times;</button>
+        </div>
+        <div id="modalBody" style="margin-top:20px; max-height: 400px; overflow-y: auto;">
+            </div>
+    </div>
+</div>
        <div class="ledger-card" style="background: white; padding: 30px; border-radius: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 30px;">
     <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px;">
         <div style="width:4px; height:20px; background:#ff8c00; border-radius:10px;"></div>
@@ -406,6 +415,49 @@ $today = date('Y-m-d');
     });
 }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// --- PIE CHART LOGIC ---
+const ctx = document.getElementById('attendanceChart').getContext('2d');
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Present', 'Absent'],
+        datasets: [{
+            data: [
+                <?php 
+                    $presentCount = $conn->query("SELECT count(*) as total FROM attendance WHERE log_date='$today'")->fetch_assoc()['total'];
+                    $totalStaff = $conn->query("SELECT count(*) as total FROM users WHERE role='office'")->fetch_assoc()['total'];
+                    $absentCount = $totalStaff - $presentCount;
+                    echo "$presentCount, $absentCount";
+                ?>
+            ],
+            backgroundColor: ['#22c55e', '#e2e8f0'],
+            borderWidth: 0
+        }]
+    },
+    options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+});
+
+// --- MODAL & AJAX LOGIC ---
+function openAttendanceModal(email, name) {
+    document.getElementById('attModal').style.display = 'block';
+    document.getElementById('modalTitle').innerText = name + "'s Attendance History";
+    document.getElementById('modalBody').innerHTML = '<p style="text-align:center;">Loading history...</p>';
+
+    // Fetch history from a small helper file
+    fetch('fetch_employee_history.php?email=' + email)
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('modalBody').innerHTML = data;
+        });
+}
+
+function closeModal() {
+    document.getElementById('attModal').style.display = 'none';
+}
+</script>
 </body>
 
 </html>

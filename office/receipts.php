@@ -25,15 +25,15 @@ $from_date = isset($_GET['from_date']) ? mysqli_real_escape_string($conn, $_GET[
 $to_date = isset($_GET['to_date']) ? mysqli_real_escape_string($conn, $_GET['to_date']) : '';
 
 // 3. BUILD DYNAMIC QUERY
-// Using LEFT JOIN so receipts show even if the client was deleted
-$query = "SELECT r.*, u.name 
+// Using LEFT JOIN with client_profiles to get the company_name
+$query = "SELECT r.*, cp.company_name 
           FROM receipts r 
-          LEFT JOIN users u ON r.client_id = u.identifier 
+          LEFT JOIN client_profiles cp ON r.client_id = cp.client_id 
           WHERE 1=1";
 
-// Filter by Search Text
+// Filter by Search Text (Updated to search company_name)
 if (!empty($search)) {
-    $query .= " AND (u.name LIKE '%$search%' OR r.receipt_no LIKE '%$search%' OR r.invoice_no LIKE '%$search%')";
+    $query .= " AND (cp.company_name LIKE '%$search%' OR r.receipt_no LIKE '%$search%' OR r.invoice_no LIKE '%$search%')";
 }
 
 // Filter by Date Range (Correctly handles the created_at timestamp)
@@ -363,7 +363,10 @@ if (!$receipts) {
     if ($receipts->num_rows > 0) {
         while ($r = $receipts->fetch_assoc()) {
             $date = date('d M Y', strtotime($r['created_at']));
-            $c_name = !empty($r['name']) ? $r['name'] : "<span style='color:#94a3b8;'>ID: {$r['client_id']}</span>";
+           // UPDATED: Use company_name from client_profiles
+            $c_name = !empty($r['company_name']) 
+                      ? "<b style='color:#0f172a; text-transform: uppercase;'>" . htmlspecialchars($r['company_name']) . "</b>" 
+                      : "<span style='color:#94a3b8;'>ID: {$r['client_id']}</span>";
 
             // Determine Icon and Color for the Method
             $method = !empty($r['method']) ? $r['method'] : 'Not Specified';
