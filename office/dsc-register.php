@@ -371,6 +371,7 @@ $total_res = $conn->query("SELECT
            <a href="dsc-register.php" class="active"></i> DSC Register</a>
            <a href="service-report.php"></i> Service Report</a>
            <a href="revenue-analytics.php"></i> Revenue Analytics</a>
+           <a href="Client-Revenue.php"></i>Client Revenue</a>
            <a href="attendance.php"></i> Attendance</a>
         </div>
     </div>

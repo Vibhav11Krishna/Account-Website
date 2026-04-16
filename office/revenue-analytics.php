@@ -269,6 +269,7 @@ $table_res = $conn->query($table_query);
                 <a href="dsc-register.php"></i> DSC Register</a>
                 <a href="service-report.php" ></i> Service Report</a>
                 <a href="revenue-analytics.php"class="active"></i> Revenue Analytics</a>
+                <a href="Client-Revenue.php"></i>Client Revenue</a>
                 <a href="attendance.php"></i> Attendance</a>
             </div>
         </div>

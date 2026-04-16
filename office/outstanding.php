@@ -258,6 +258,7 @@ $total_received = $paid_stats['total_received'] ?? 0;
            <a href="dsc-register.php"></i> DSC Register</a>
            <a href="service-report.php"></i> Service Report</a>
            <a href="revenue-analytics.php"></i> Revenue Analytics</a>
+           <a href="Client-Revenue.php"></i>Client Revenue</a>
             <a href="attendance.php"></i> Attendance</a>
         </div>
     </div>
