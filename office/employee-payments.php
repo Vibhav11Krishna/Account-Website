@@ -7,7 +7,25 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'office') {
     header("Location: ../Register.php"); 
     exit();
 }
+// 1. Get the email from session
+$user_email = $_SESSION['user']['identifier'];
 
+// 2. JOIN using u.id and p.user_id instead of email
+$sql = "SELECT u.name, p.profile_pic, p.first_name 
+        FROM users u 
+        LEFT JOIN employee_profiles p ON u.id = p.user_id 
+        WHERE u.identifier = '$user_email'";
+
+$profileRes = $conn->query($sql);
+
+if ($profileRes) {
+    $user_data = $profileRes->fetch_assoc();
+}
+
+// 3. Fallback logic
+$display_name = !empty($user_data['name']) ? $user_data['name'] : "Employee";
+$first_name = !empty($user_data['first_name']) ? $user_data['first_name'] : $display_name;
+$profile_img = !empty($user_data['profile_pic']) ? $user_data['profile_pic'] : 'default-avatar.png';
 $email = $_SESSION['user']['identifier'];
 $u_id = $_SESSION['user']['id'];
 $message = "";
@@ -81,14 +99,35 @@ $user = $conn->query("SELECT * FROM users WHERE id='$u_id'")->fetch_assoc();
 <body>
 
     <div class="sidebar">
-        <h2>Karunesh Kumar & Associates Employee</h2>
+    <h2 style="font-size: 20px; color: var(--orange); margin-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 15px; text-align: center;">
+        Karunesh Kumar & Associates Employee
+    </h2>
+    
+    <div style="text-align: center; padding: 5px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
+        <div style="width: 90px; height: 90px; margin: 0 auto 12px; border-radius: 50%; overflow: hidden;  background: #eee; display: flex; align-items: center; justify-content: center;">
+            <img src="../uploads/profile_pics/<?php echo $profile_img; ?>" 
+                 onerror="this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($display_name); ?>&background=0b3c74&color=fff';"
+                 style="width: 100%; height: 100%; object-fit: cover; display: block;">
+        </div>
+        
+        <h4 style="margin: 0; color: white; font-size: 18px; font-weight: 600; line-height: 1.2;">
+            <?php echo htmlspecialchars($display_name); ?>
+        </h4>
+        <span style="color: var(--orange); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 5px;">
+            <i  style="font-size: 9px;"></i> Office Employee
+        </span>
+    </div>
+
+    <nav style="display: flex; flex-direction: column; gap: 2px;">
         <a href="employee-dashboard.php"><i class="fas fa-tasks"></i> My Tasks</a>
         <a href="work-basket.php"><i class="fas fa-briefcase"></i> Work Basket</a>
         <a href="employee-payments.php" class="active"><i class="fas fa-wallet"></i> Payments</a>
         <a href="Employee_profiles.php"><i class="fas fa-user-circle"></i> Profile</a>
         <a href="staff-attendance.php"><i class="fas fa-clock"></i> Attendance</a>
-        <a href="../logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
-    </div>
+    </nav>
+
+    <a href="../logout.php" class="logout-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</div>
 
     <div class="main">
         <header style="margin-bottom: 30px;">
