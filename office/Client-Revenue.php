@@ -12,21 +12,34 @@ $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['searc
 
 // Query focusing strictly on Firm, Owner, Contact, and Unpaid breakdown
 $query = "SELECT 
+            cp.client_id,
             cp.company_name, 
             cp.owner_name, 
             cp.business_email, 
             cp.phone,
             COALESCE(SUM(i.paid_amount), 0) as total_paid,
+            SUM(CASE WHEN i.invoice_date < DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND i.status != 'Paid' 
+                THEN (i.amount + i.cgst_amount + i.sgst_amount + i.igst_amount) - i.paid_amount ELSE 0 END) as previous_dues,
+            SUM(CASE WHEN i.invoice_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND i.status != 'Paid' 
+                THEN (i.amount + i.cgst_amount + i.sgst_amount + i.igst_amount) - i.paid_amount ELSE 0 END) as current_dues,
+            /* Date-wise formatted string for the popup */
             GROUP_CONCAT(
-                CASE WHEN (i.amount - i.paid_amount) > 0 
-                THEN CONCAT(i.invoice_no, ' (₹', FORMAT(i.amount - i.paid_amount, 2), ')') 
+                CASE WHEN i.status != 'Paid' 
+                THEN CONCAT(
+                    '<tr>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; color:#64748b;\">', DATE_FORMAT(i.invoice_date, '%d-%b-%y'), '</td>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; font-weight:bold; color:var(--navy);\">', i.invoice_no, '</td>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; color:#ef4444; text-align:right; font-weight:700;\">₹', FORMAT((i.amount + i.cgst_amount + i.sgst_amount + i.igst_amount) - i.paid_amount, 2), '</td>',
+                    '</tr>'
+                ) 
                 ELSE NULL END 
-                SEPARATOR '<br>'
-            ) as unpaid_breakdown
+                ORDER BY i.invoice_date DESC
+                SEPARATOR ''
+            ) as unpaid_breakdown,
+            SUM(i.amount + i.cgst_amount + i.sgst_amount + i.igst_amount) as grand_total_with_tax
           FROM client_profiles cp
           LEFT JOIN invoices i ON cp.client_id = i.client_id
           WHERE 1=1 ";
-
 if ($search) {
     $query .= " AND (cp.company_name LIKE '%$search%' OR cp.owner_name LIKE '%$search%')";
 }
@@ -56,6 +69,45 @@ $result = $conn->query($query);
             font-family: 'Inter', sans-serif;
             color: #334155;
         }
+
+        /* Full Screen Overlay */
+#popupOverlay {
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(15, 23, 42, 0.4); /* Dark translucent tint */
+    backdrop-filter: blur(10px); /* The Blur Effect */
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 99999; 
+    justify-content: center; 
+    align-items: center;
+}
+
+/* Modal Box */
+#popupContent {
+    background: white; 
+    width: 90%; 
+    max-width: 550px; 
+    border-radius: 24px; 
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); 
+    padding: 30px; 
+    position: relative; 
+    animation: modalSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalSlide {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.close-btn {
+    position: absolute; top: 20px; right: 20px; 
+    border: none; background: #f1f5f9; 
+    width: 35px; height: 35px; border-radius: 50%; 
+    cursor: pointer; color: #64748b; transition: 0.3s;
+}
+.close-btn:hover { background: #fee2e2; color: #ef4444; }
 
          /* Sidebar */
        .sidebar {
@@ -303,37 +355,80 @@ tr:hover td {
 
             <div class="table-card">
                 <table>
-                    <thead>
-                        <tr>
-                            <th>Firm Name</th>
-                            <th>Client Name</th>
-                            <th>Contact Information</th>
-                            <th>Paid Amount</th>
-                            
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if ($result->num_rows > 0): ?>
-                            <?php while ($row = $result->fetch_assoc()): ?>
-                                <tr>
-                                    <td style="font-weight:700; color:var(--navy);"><?php echo $row['company_name']; ?></td>
-                                    <td><?php echo $row['owner_name']; ?></td>
-                                    <td>
-                                        <div style="font-size:12px;">
-                                            <i class="fas fa-envelope"></i> <?php echo $row['business_email']; ?><br>
-                                            <i class="fas fa-phone"></i> <?php echo $row['phone']; ?>
-                                        </div>
-                                    </td>
-                                    <td class="paid-amt">₹<?php echo number_format($row['total_paid'], 2); ?></td>
-                                    
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="5" style="text-align:center;">No records found.</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
+                   <thead>
+    <tr>
+        <th>Firm & Contact</th>
+        <th>Total Billed (Inc. GST)</th>
+        <th>Total Paid</th>
+        <th>Balance Due</th>
+        <th>Unpaid Invoice Breakdown</th>
+    </tr>
+</thead>
+<tbody>
+    <?php if ($result->num_rows > 0): ?>
+        <?php while ($row = $result->fetch_assoc()): 
+            $total_balance = $row['previous_dues'] + $row['current_dues'];
+        ?>
+            <tr>
+                <td>
+                    <div style="font-weight:700; color:var(--navy);"><?php echo $row['company_name']; ?></div>
+                    <div style="font-size:11px; color:#64748b;">
+                        <i class="fas fa-user"></i> <?php echo $row['owner_name']; ?> | 
+                        <i class="fas fa-phone"></i> <?php echo $row['phone']; ?>
+                    </div>
+                </td>
+
+                <td style="font-weight:600;">₹<?php echo number_format($row['grand_total_with_tax'], 2); ?></td>
+
+                <td class="paid-amt">₹<?php echo number_format($row['total_paid'], 2); ?></td>
+
+                <td style="font-weight:700; color: <?php echo ($total_balance > 0) ? '#ef4444' : '#22c55e'; ?>;">
+                    ₹<?php echo number_format($total_balance, 2); ?>
+                </td>
+
+                <td>
+    <?php if ($total_balance > 0): ?>
+        <div style="display:none;" id="data-<?php echo $row['client_id']; ?>">
+            <div style="margin-bottom: 15px;">
+                <h2 style="margin:0; color:var(--navy); font-size:22px;"><?php echo htmlspecialchars($row['company_name']); ?></h2>
+                <p style="color:#64748b; margin:5px 0 0 0;"><i class="fas fa-file-invoice"></i> Pending Invoice Details</p>
+            </div>
+            
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="text-align:left; color:#94a3b8; font-size:11px; text-transform:uppercase; border-bottom:2px solid #f1f5f9;">
+                        <th style="padding:10px;">Date</th>
+                        <th style="padding:10px;">Invoice No</th>
+                        <th style="padding:10px; text-align:right;">Balance Due</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php echo $row['unpaid_breakdown']; ?>
+                </tbody>
+            </table>
+            
+            <div style="margin-top:20px; padding-top:15px; border-top:2px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:700; color:#64748b;">Grand Total Outstanding:</span>
+                <span style="font-size:24px; font-weight:900; color:#ef4444;">₹<?php echo number_format($total_balance, 2); ?></span>
+            </div>
+        </div>
+
+        <button onclick="showBreakdown('<?php echo $row['client_id']; ?>')" 
+                style="background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; padding: 10px 15px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size:12px;">
+            <i class="fas fa-calendar-alt"></i> View Date-wise Details
+        </button>
+    <?php else: ?>
+        <div style="color:#22c55e; font-weight:700; background:#f0fdf4; padding:8px 12px; border-radius:8px; display:inline-block; font-size:12px;">
+            <i class="fas fa-check-circle"></i> Fully Paid
+        </div>
+    <?php endif; ?>
+</td>
+            </tr>
+        <?php endwhile; ?>
+    <?php else: ?>
+        <tr><td colspan="5" style="text-align:center;">No records found.</td></tr>
+    <?php endif; ?>
+</tbody>
                 </table>
             </div>
         </div>
@@ -362,6 +457,40 @@ tr:hover td {
     });
 }
     </script>
+    <div id="popupOverlay" onclick="closeBreakdown()">
+    <div id="popupContent" onclick="event.stopPropagation()">
+        <button class="close-btn" onclick="closeBreakdown()"><i class="fas fa-times"></i></button>
+        <div id="popupData"></div>
+    </div>
+</div>
+
+<script>
+function showBreakdown(clientId) {
+    const htmlData = document.getElementById('data-' + clientId).innerHTML;
+    document.getElementById('popupData').innerHTML = htmlData;
+    
+    document.getElementById('popupOverlay').style.display = 'flex';
+    
+    // Blur everything EXCEPT the popup
+    document.querySelector('.main').style.filter = 'blur(10px)';
+    document.querySelector('.sidebar').style.filter = 'blur(10px)';
+    document.body.style.overflow = 'hidden'; // Stop scrolling
+}
+
+function closeBreakdown() {
+    document.getElementById('popupOverlay').style.display = 'none';
+    
+    // Remove blur
+    document.querySelector('.main').style.filter = 'none';
+    document.querySelector('.sidebar').style.filter = 'none';
+    document.body.style.overflow = 'auto'; // Restore scrolling
+}
+
+// Close on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeBreakdown();
+});
+</script>
 </body>
 
 </html>
