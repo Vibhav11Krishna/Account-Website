@@ -263,6 +263,11 @@ $today = date('Y-m-d');
                 <h1 style="margin:0;">Staff Attendance</h1>
                 <p style="color: #64748b; margin: 5px 0 0 0;">Live status for <?php echo date('d M, Y'); ?></p>
             </div>
+            <div style="display: flex; gap: 10px;">
+        <button onclick="exportFullHistory()" style="background: #6366f1; color: white; border:none; padding: 10px 20px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+    <i class="fas fa-database"></i> Export Excel
+</button>
+       
             <button onclick="window.location.reload();" style="background: var(--navy); color: white; border:none; padding: 10px 20px; border-radius: 10px; cursor: pointer;">
                 <i class="fas fa-sync-alt"></i> Refresh
             </button>
@@ -457,6 +462,46 @@ function openAttendanceModal(email, name) {
 
 function closeModal() {
     document.getElementById('attModal').style.display = 'none';
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+async function exportFullHistory() {
+    // 1. Show a simple loading state (optional)
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    btn.disabled = true;
+
+    try {
+        // 2. Fetch the data from the PHP file we made in Step 1
+        const response = await fetch('fetch_all_attendance.php');
+        const data = await response.json();
+
+        if (data.length === 0) {
+            alert("No records found to export.");
+            return;
+        }
+
+        // 3. Create a Worksheet from the JSON data
+        const ws = XLSX.utils.json_to_sheet(data);
+
+        // 4. Create a Workbook and add the worksheet
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Attendance History");
+
+        // 5. Download the file as a true .xlsx
+        XLSX.writeFile(wb, `Attendance_Master_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+
+    } catch (error) {
+        console.error("Export failed:", error);
+        alert("Failed to generate Excel file.");
+    } finally {
+        // 6. Reset button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
 }
 </script>
 </body>
