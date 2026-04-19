@@ -8,6 +8,33 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     exit();
 }
 
+if (isset($_POST['update_client'])) {
+    $id = mysqli_real_escape_string($conn, $_POST['identifier']);
+    
+    // 1. Logic for Custom Boxes
+    $custom_fields = [];
+    if (isset($_POST['custom_labels']) && isset($_POST['custom_values'])) {
+        foreach ($_POST['custom_labels'] as $index => $label) {
+            $label = trim($label);
+            $val = trim($_POST['custom_values'][$index]);
+            if (!empty($label)) {
+                $custom_fields[$label] = $val;
+            }
+        }
+    }
+    
+    // Convert array to JSON for SQL
+    $json_fields = mysqli_real_escape_string($conn, json_encode($custom_fields));
+
+    // 2. Add custom_fields to your existing SQL Update query
+    $sql = "UPDATE client_profiles SET 
+            company_name = '...', 
+            -- ... other fields ...
+            custom_fields = '$json_fields' 
+            WHERE client_id = '$id'";
+            
+    $conn->query($sql);
+}
 // --- UPDATE LOGIC ---
 if (isset($_POST['update_client'])) {
     $identifier = mysqli_real_escape_string($conn, $_POST['identifier']);
@@ -21,7 +48,6 @@ if (isset($_POST['update_client'])) {
     // ADD THESE THREE LINES:
     $tan = mysqli_real_escape_string($conn, $_POST['tan_no']);
     $cin = mysqli_real_escape_string($conn, $_POST['cin_no']);
-    $tin = mysqli_real_escape_string($conn, $_POST['tin_no']);
 
     $address = mysqli_real_escape_string($conn, $_POST['address']);
     $nature = mysqli_real_escape_string($conn, $_POST['business_nature']);
@@ -41,7 +67,21 @@ if (isset($_POST['task_asked']) && !empty($_POST['task_asked'])) {
 } else {
     $task = "";
 }
-
+// --- CUSTOM FIELDS HANDLER ---
+$custom_fields_array = [];
+if (isset($_POST['custom_labels']) && isset($_POST['custom_values'])) {
+    foreach ($_POST['custom_labels'] as $index => $label) {
+        $label = trim($label);
+        $val = trim($_POST['custom_values'][$index]);
+        
+        // Only save if the label (Box Name) is actually filled
+        if (!empty($label)) {
+            $custom_fields_array[$label] = $val;
+        }
+    }
+}
+// Convert to JSON and escape for SQL safety
+$json_fields = mysqli_real_escape_string($conn, json_encode($custom_fields_array));
     // Photo logic remains the same...
     $photo_query = "";
     if (!empty($_FILES['profile_pic']['name'])) {
@@ -63,10 +103,10 @@ if (isset($_POST['task_asked']) && !empty($_POST['task_asked'])) {
                    pan_no = '$pan', 
                    tan_no = '$tan', 
                    cin_no = '$cin', 
-                   tin_no = '$tin', 
                    address = '$address',
                    business_nature = '$nature', 
                    aadhaar_no = '$aadhaar', 
+                   custom_fields = '$json_fields',
                    task_asked = '$task' 
                    $photo_query 
                    WHERE client_id = '$identifier'";
@@ -477,7 +517,22 @@ document.getElementById('v_photo').src = data.profile_pic ? '../uploads/client_p
     document.getElementById('v_address').innerText = data.address || 'No address provided.';
     document.getElementById('v_tan').innerText = data.tan_no || 'N/A';
     document.getElementById('v_cin').innerText = data.cin_no || 'N/A';
-    document.getElementById('v_tin').innerText = data.tin_no || 'N/A';
+   // --- RENDER CUSTOM BOXES IN MODAL ---
+const customContainer = document.getElementById('v_custom_fields_container');
+customContainer.innerHTML = ''; 
+
+if (data.custom_fields) {
+    try {
+        const fields = JSON.parse(data.custom_fields);
+        for (const [label, value] of Object.entries(fields)) {
+            customContainer.innerHTML += `
+                <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">${label}</label>
+                    <p style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);">${value || 'N/A'}</p>
+                </div>`;
+        }
+    } catch (e) { console.error("JSON Parse Error", e); }
+}
 
     // Show modal
     document.getElementById('viewModal').style.display = 'block';
@@ -496,65 +551,80 @@ window.onclick = function(event) {
 }
     </script>
     <div id="viewModal" class="modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px);">
-    <div class="modal-content" style="background:white; margin:2% auto; padding:30px; width:600px; border-radius:20px; position:relative; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
-        <span onclick="closeModal()" style="position:absolute; right:25px; top:20px; font-size:28px; cursor:pointer; color:#94a3b8;">&times;</span>
+    <div class="modal-content" style="background:white; margin:5% auto; width:800px; border-radius:16px; position:relative; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); overflow:hidden;">
         
-        <div style="text-align:center; margin-bottom:20px;">
-            <img id="v_photo" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid #ff8c00; margin-bottom:10px;">
-            <h2 id="v_company_title" style="margin:0; color:#0b3c74;"></h2>
-            <span id="v_id_badge" class="id-badge"></span>
+        <div style="background: var(--navy); padding: 20px; color: white; display: flex; align-items: center; gap: 20px;">
+            <img id="v_photo" src="" style="width:70px; height:70px; border-radius:12px; object-fit:cover; border:2px solid white; background:white;">
+            <div>
+                <h2 id="v_company_title" style="margin:0; font-size: 20px; letter-spacing: -0.5px;"></h2>
+                <span id="v_id_badge" style="background:rgba(255,255,255,0.2); color:white; padding:2px 8px; border-radius:5px; font-size:12px; font-family:monospace;"></span>
+            </div>
+            <span onclick="closeModal()" style="margin-left:auto; font-size:28px; cursor:pointer; color:rgba(255,255,255,0.6);">&times;</span>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; border-top:1px solid #f1f5f9; padding-top:20px;">
-            <div>
-                <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Owner Name</label>
-                <p id="v_owner" style="margin:5px 0 15px 0; font-weight:600;"></p>
-            </div>
-            <div>
-                <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Phone</label>
-                <p id="v_phone" style="margin:5px 0 15px 0; font-weight:600;"></p>
-            </div>
-            <div>
-                <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Nature of Business</label>
-                <p id="v_nature" style="margin:5px 0 15px 0; font-weight:600;"></p>
-            </div>
-             <div>
-                <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Aadhaar No</label>
-                <p id="v_aadhaar" style="margin:5px 0 15px 0; font-weight:600;"></p>
-            </div>
-        </div>
+        <div style="padding: 25px; display: flex; gap: 25px;">
+            
+            <div style="flex: 1.5; border-right: 1px solid #eee; padding-right: 25px;">
+                <h4 style="margin: 0 0 15px 0; color: var(--orange); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Basic Information</h4>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Owner Name</label>
+                        <p id="v_owner" style="margin:4px 0; font-weight:600; color:#1e293b;"></p>
+                    </div>
+                    <div>
+                        <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Phone</label>
+                        <p id="v_phone" style="margin:4px 0; font-weight:600; color:#1e293b;"></p>
+                    </div>
+                    <div>
+                        <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Business Nature</label>
+                        <p id="v_nature" style="margin:4px 0; font-weight:600; color:#1e293b;"></p>
+                    </div>
+                    <div>
+                        <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Aadhaar No</label>
+                        <p id="v_aadhaar" style="margin:4px 0; font-weight:600; color:#1e293b;"></p>
+                    </div>
+                </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; background: #f1f5f9; padding: 15px; border-radius: 12px; margin-top: 5px;">
-            <div>
-                <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">GST No</label>
-                <p id="v_gst" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
-            </div>
-            <div>
-                <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">PAN No</label>
-                <p id="v_pan" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
-            </div>
-            <div>
-                <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">TAN No</label>
-                <p id="v_tan" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
-            </div>
-            <div style="margin-top:10px;">
-                <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">CIN No</label>
-                <p id="v_cin" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
-            </div>
-            <div style="margin-top:10px;">
-                <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">TIN / VAT</label>
-                <p id="v_tin" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
-            </div>
-        </div>
+                <div style="margin-top: 20px;">
+                    <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Office Address</label>
+                    <p id="v_address" style="margin:5px 0 0 0; font-size:13px; color:#475569; line-height: 1.4;"></p>
+                </div>
 
-        <div style="margin-top:15px; padding:15px; background:#fff7ed; border-radius:12px; border:1px solid #ffedd5;">
-            <label style="font-size:10px; font-weight:800; color:var(--orange); text-transform:uppercase;">Task / Service Requested</label>
-            <p id="v_task" style="margin:5px 0 0 0; font-size:14px; color:#1e293b; line-height:1.5; font-weight:500;"></p>
-        </div>
+                <div id="v_custom_fields_container" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top: 20px;">
+                    </div>
+            </div>
 
-        <div style="margin-top:15px;">
-            <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Office Address</label>
-            <p id="v_address" style="margin:5px 0 0 0; font-size:13px; color:#475569;"></p>
+            <div style="flex: 1;">
+                <h4 style="margin: 0 0 15px 0; color: var(--orange); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Tax Credentials</h4>
+                
+                <div style="background: #f8fafc; padding: 15px; border-radius: 12px; display: grid; grid-template-columns: 1fr; gap: 12px; border: 1px solid #e2e8f0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:11px; color:#64748b; font-weight:700;">GSTIN</span>
+                        <span id="v_gst" style="font-family:monospace; font-weight:700; color:var(--navy);"></span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:11px; color:#64748b; font-weight:700;">PAN</span>
+                        <span id="v_pan" style="font-family:monospace; font-weight:700; color:var(--navy);"></span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:11px; color:#64748b; font-weight:700;">TAN</span>
+                        <span id="v_tan" style="font-family:monospace; font-weight:700; color:var(--navy);"></span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:11px; color:#64748b; font-weight:700;">CIN</span>
+                        <span id="v_cin" style="font-family:monospace; font-weight:700; color:var(--navy);"></span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 25px;">
+                    <h4 style="margin: 0 0 10px 0; color: var(--orange); text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Requested Task</h4>
+                    <div style="background:#fff7ed; padding:12px; border-radius:10px; border:1px solid #ffedd5; min-height: 80px;">
+                        <p id="v_task" style="margin:0; font-size:13px; color:#7c2d12; line-height:1.5; font-weight:500;"></p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>

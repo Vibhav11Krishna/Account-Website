@@ -3,7 +3,7 @@ session_start();
 include('../db.php');
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
-    header("Location: ../Login.php");
+    header("Location: ../Register.php");
     exit();
 }
 
@@ -385,11 +385,42 @@ if (!$client) {
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>TIN / VAT Number (Legacy)</label>
-                    <input type="text" name="tin_no" value="<?php echo htmlspecialchars($client['tin_no']); ?>">
-                </div>
+                
 
+                <div class="form-group full-width" style="margin-top: 30px;">
+    <label style="color: var(--navy); margin-bottom: 15px; display: block; font-size: 14px;">
+        <i class="fa-solid fa-folder-plus"></i> Additional Information (Custom Boxes)
+    </label>
+    
+    <div class="services-wrapper" style="border-left: 4px solid var(--navy);">
+        <div id="dynamicBoxesContainer">
+            <?php
+            // Decode existing custom fields from the database
+            $custom_data = json_decode($client['custom_fields'] ?? '{}', true);
+            if (!empty($custom_data)) {
+                foreach ($custom_data as $label => $value) {
+                    echo '
+                    <div class="add-service-row custom-field-row">
+                        <input type="text" name="custom_labels[]" value="'.htmlspecialchars($label).'" placeholder="Box Name (e.g. GST Status)">
+                        <input type="text" name="custom_values[]" value="'.htmlspecialchars($value).'" placeholder="Value">
+                        <button type="button" class="btn-add-service" style="background:#ef4444;" onclick="this.parentElement.remove()">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>';
+                }
+            }
+            ?>
+        </div>
+
+        <button type="button" class="btn-add-service" onclick="addNewBox()" style="margin-top: 10px;">
+            <i class="fas fa-plus"></i> Add New Box
+        </button>
+    </div>
+    
+    <small style="color: #94a3b8; display: block; margin-top: 8px;">
+        <i class="fa-solid fa-circle-info"></i> Click "+" to add a custom box. Admin can fill the value and it will be saved to this client.
+    </small>
+</div>
               <div class="form-group full-width">
     <label style="color: var(--orange); margin-bottom: 15px; display: block;">
         <i class="fa-solid fa-clipboard-list"></i> Services / Tasks Requested
@@ -513,6 +544,22 @@ newServiceInput.addEventListener("keypress", function(event) {
 
 // Run on page load
 renderServices();
+
+function addNewBox() {
+    const container = document.getElementById('dynamicBoxesContainer');
+    const div = document.createElement('div');
+    div.className = 'add-service-row custom-field-row';
+    div.style.marginTop = '10px';
+    
+    div.innerHTML = `
+        <input type="text" name="custom_labels[]" placeholder="Box Name (e.g. Passport No)">
+        <input type="text" name="custom_values[]" placeholder="Value">
+        <button type="button" class="btn-add-service" style="background:#ef4444;" onclick="this.parentElement.remove()">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    container.appendChild(div);
+}
     </script>
 </body>
 

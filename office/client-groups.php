@@ -8,21 +8,17 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     exit();
 }
 
-// Fetch all unique owners
-$owner_query = "SELECT owner_name, business_email, COUNT(*) as count 
-                FROM client_profiles 
-                WHERE owner_name != ''
-                GROUP BY owner_name 
-                ORDER BY owner_name ASC";
-$owner_res = $conn->query($owner_query);
+// Fetch Custom Groups
+$custom_group_res = $conn->query("SELECT * FROM client_custom_groups ORDER BY created_at DESC");
 
-$selected_owner = isset($_GET['owner']) ? mysqli_real_escape_string($conn, $_GET['owner']) : '';
+$selected_group = isset($_GET['group_id']) ? intval($_GET['group_id']) : 0;
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+    <meta charset="UTF-8">
     <title>Client Groups | KKA Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -44,20 +40,21 @@ $selected_owner = isset($_GET['owner']) ? mysqli_real_escape_string($conn, $_GET
             overflow: hidden;
         }
 
-        /* Sidebar Styles */
         .sidebar {
-            width: 280px;
-            background: var(--sidebar);
-            color: white;
-            height: 100vh;
-            position: fixed;
-            padding: 30px 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            border-right: 4px solid var(--orange);
-            z-index: 100;
-        }
+    width: 280px;
+    background: var(--sidebar);
+    color: white;
+    height: 100vh;
+    position: fixed;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    
+    /* ADD THIS LINE */
+    border-right: 4px solid var(--orange); 
+}
+
 
         .sidebar h2 {
             font-size: 22px;
@@ -66,7 +63,6 @@ $selected_owner = isset($_GET['owner']) ? mysqli_real_escape_string($conn, $_GET
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding-bottom: 20px;
         }
-
 
         .sidebar a {
             color: rgba(255, 255, 255, 0.7);
@@ -87,23 +83,8 @@ $selected_owner = isset($_GET['owner']) ? mysqli_real_escape_string($conn, $_GET
             border-left: 4px solid var(--orange);
         }
 
-        .dropdown-content {
-            display: none;
-            background: rgba(0, 0, 0, 0.15);
-            margin: 0 10px;
-            border-radius: 10px;
-            padding-left: 10px;
-        }
 
-        .show-menu {
-            display: block !important;
-        }
-
-        .rotate-chevron {
-            transform: rotate(180deg);
-        }
-
-        /* Layout */
+        /* Main Layout */
         .content-area {
             margin-left: 280px;
             flex: 1;
@@ -121,30 +102,30 @@ $selected_owner = isset($_GET['owner']) ? mysqli_real_escape_string($conn, $_GET
             border-bottom: 1px solid var(--border);
         }
 
-        .top-header h1 {
-            margin: 0;
-            font-size: 25px;
-            color: var(--navy);
-        }
-
-        .search-bar {
-            width: 350px;
+        .search-container {
             position: relative;
+            width: 350px;
         }
 
-        .search-bar input {
+        .search-container input {
             width: 100%;
-            padding: 10px 15px 10px 35px;
+            padding: 12px 15px 12px 40px;
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 12px;
             outline: none;
+            transition: 0.3s;
         }
 
-        .search-bar i {
+        .search-container i {
             position: absolute;
-            left: 12px;
-            top: 13px;
+            left: 15px;
+            top: 15px;
             color: #94a3b8;
+        }
+
+        .search-container input:focus {
+            border-color: var(--orange);
+            box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.1);
         }
 
         .group-container {
@@ -153,7 +134,7 @@ $selected_owner = isset($_GET['owner']) ? mysqli_real_escape_string($conn, $_GET
             overflow: hidden;
         }
 
-        .owner-column {
+        .group-sidebar {
             width: 320px;
             background: white;
             border-right: 1px solid var(--border);
@@ -161,16 +142,14 @@ $selected_owner = isset($_GET['owner']) ? mysqli_real_escape_string($conn, $_GET
             flex-direction: column;
         }
 
-        .owner-list {
+        .group-list {
             flex: 1;
             overflow-y: auto;
         }
 
-        .owner-item {
-            padding: 15px 25px;
+        .group-item {
+            padding: 15px 20px;
             cursor: pointer;
-            border-right: 4px solid transparent;
-            /* Changed from border-left */
             transition: 0.2s;
             display: block;
             text-decoration: none;
@@ -178,16 +157,9 @@ $selected_owner = isset($_GET['owner']) ? mysqli_real_escape_string($conn, $_GET
             border-bottom: 1px solid #f8fafc;
         }
 
-        .owner-item:hover {
-            background: #f8fafc;
-        }
-
-        .owner-item.active {
+        .group-item.active {
             background: #eff6ff;
-            border-right-color: var(--orange);
-            /* Changed from border-left-color */
-            border-left: none;
-            /* Ensure no left border remains */
+            border-right: 4px solid var(--orange);
         }
 
         .main-content {
@@ -201,7 +173,7 @@ $selected_owner = isset($_GET['owner']) ? mysqli_real_escape_string($conn, $_GET
             padding: 20px;
             border-radius: 15px;
             border: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
 
         table {
@@ -222,77 +194,71 @@ $selected_owner = isset($_GET['owner']) ? mysqli_real_escape_string($conn, $_GET
         td {
             padding: 15px 12px;
             border-bottom: 1px solid #f1f5f9;
-            font-size: 13.5px;
+            font-size: 13px;
         }
 
         .id-badge {
             background: #fff7ed;
             color: var(--orange);
             font-weight: 700;
-            padding: 4px 10px;
+            padding: 4px 8px;
             border-radius: 6px;
             font-family: monospace;
         }
 
-        .btn-action {
-            padding: 8px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
+        .btn-view {
+            background: var(--navy);
+            color: white;
             border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+
+        /* Select Client Item UI */
+        .client-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
             transition: 0.2s;
         }
 
-        .btn-view {
-            background: #eff6ff;
-            color: var(--navy);
+        .client-card:hover {
+            border-color: var(--orange);
+            background: #fffaf5;
         }
-
-        .btn-edit {
-            background: #fff7ed;
-            color: var(--orange);
-            margin-right: 5px;
-        }
-
-        /* 1. Ensure the list has scrolling enabled */
-        .owner-list {
-            flex: 1;
-            overflow-y: auto;
-            /* Enables vertical scrolling */
-            overflow-x: hidden;
-            /* Prevents horizontal shifting */
-            padding-right: 5px;
-            /* Space for the scrollbar */
-        }
-
-        /* 2. Custom Scrollbar Styling (Chrome, Edge, Safari) */
-        .owner-list::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .owner-list::-webkit-scrollbar-track {
-            background: #f1f5f9;
+         .dropdown-content {
+            display: none;
+            background: rgba(0, 0, 0, 0.15);
+            margin: 0 10px;
             border-radius: 10px;
+            padding-left: 10px;
         }
 
-        .owner-list::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            /* Subtle gray */
-            border-radius: 10px;
-            transition: 0.3s;
+        .show-menu {
+            display: block !important;
         }
 
-        .owner-list::-webkit-scrollbar-thumb:hover {
-            background: var(--orange);
-            /* Turns orange when hovering over the list area */
-        }
-
-        /* 3. Firefox Support */
-        .owner-list {
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 #f1f5f9;
+        .rotate-chevron {
+            transform: rotate(180deg);
         }
     </style>
 </head>
@@ -360,213 +326,313 @@ $selected_owner = isset($_GET['owner']) ? mysqli_real_escape_string($conn, $_GET
 
     <div class="content-area">
         <div class="top-header">
-            <h1>Client Groups</h1>
-            <div class="search-bar">
+            <div class="search-container">
                 <i class="fas fa-search"></i>
-                <input type="text" id="groupSearch" onkeyup="filterContent()" placeholder="Search Name, Email or Firm...">
+                <input type="text" id="tableSearch" onkeyup="searchTable()" placeholder="Search firms in this group...">
             </div>
+            <button onclick="openGroupModal()" style="background:var(--orange); color:white; border:none; padding:12px 25px; border-radius:10px; cursor:pointer; font-weight:700;">
+                <i class="fas fa-plus"></i> Create New Group
+            </button>
         </div>
 
         <div class="group-container">
-            <div class="owner-column">
-                <div class="owner-list">
-                    <?php while ($owner = $owner_res->fetch_assoc()): ?>
-                        <a href="?owner=<?php echo urlencode($owner['owner_name']); ?>"
-                            class="owner-item <?php echo ($selected_owner == $owner['owner_name']) ? 'active' : ''; ?>"
-                            data-search="<?php echo htmlspecialchars($owner['owner_name'] . ' ' . $owner['business_email']); ?>">
-
-                            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-                                <div style="display:flex; align-items:center; gap:12px; flex: 1; min-width: 0;">
-                                    <div style="width:38px; height:38px; flex-shrink:0; background:<?php echo ($selected_owner == $owner['owner_name']) ? 'var(--orange)' : '#f1f5f9'; ?>; color:<?php echo ($selected_owner == $owner['owner_name']) ? 'white' : 'var(--navy)'; ?>; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:14px; transition: 0.3s;">
-                                        <i class="fas fa-user-tie"></i>
-                                    </div>
-
-                                    <div style="flex: 1; min-width: 0;">
-                                        <b style="font-size:16px; display:block; color:var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height:1.2;">
-                                            <?php echo $owner['owner_name']; ?>
-                                        </b>
-                                        <div style="display:flex; align-items:center; gap:6px; margin-top:3px;">
-                                            <i class="fas fa-envelope" style="font-size:12px; color:#94a3b8;"></i>
-                                            <small style="color:#64748b; font-size:11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                <?php echo $owner['business_email'] ?: 'No Email'; ?>
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <span style="background:<?php echo ($selected_owner == $owner['owner_name']) ? 'rgba(255,140,0,0.15)' : '#f1f5f9'; ?>; color:<?php echo ($selected_owner == $owner['owner_name']) ? 'var(--orange)' : '#64748b'; ?>; padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700; white-space:nowrap;">
-                                    <?php echo $owner['count']; ?>
-                                </span>
-                            </div>
-                        </a>
+            <div class="group-sidebar">
+                <div style="padding:15px; background:#f1f5f9; font-size:11px; font-weight:800; color:#64748b; text-transform:uppercase;">Custom Groups</div>
+                <div class="group-list">
+                    <?php while ($cg = $custom_group_res->fetch_assoc()): ?>
+                        <div class="group-item-container" style="display:flex; align-items:center; justify-content:space-between; padding-right:15px; border-bottom:1px solid #f8fafc;" class="<?php echo ($selected_group == $cg['id']) ? 'active' : ''; ?>">
+                            <a href="?group_id=<?php echo $cg['id']; ?>" class="group-item" style="flex:1; border:none;">
+                                <i class="fas fa-folder" style="color:var(--orange); margin-right:10px;"></i>
+                                <b><?php echo htmlspecialchars($cg['group_name']); ?></b>
+                            </a>
+                            <a href="delete-group.php?id=<?php echo $cg['id']; ?>"
+                                onclick="return confirm('Are you sure you want to delete this group? The clients inside will NOT be deleted.')"
+                                style="color:#fda4af; font-size:12px; transition:0.3s;"
+                                onmouseover="this.style.color='#f43f5e'" onmouseout="this.style.color='#fda4af'">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
                     <?php endwhile; ?>
                 </div>
             </div>
 
-            <div class="main-content">
-                <?php if ($selected_owner): ?>
-                    <div class="table-card">
-                        <table id="firmTable">
-    <thead>
-        <tr>
-            <th>Firm Name</th>
-            <th>Client ID</th>
-            <th>Phone Number</th> <th>Tax Info</th>
-            <th style="text-align:center">Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php
-        $biz_sql = "SELECT * FROM client_profiles WHERE owner_name = '$selected_owner'";
-        $biz_res = $conn->query($biz_sql);
-        while ($row = $biz_res->fetch_assoc()):
-            $clientJson = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
-        ?>
-            <tr class="firm-row" data-firm="<?php echo htmlspecialchars($row['company_name']); ?>">
-                <td><b><?php echo $row['company_name'] ?: 'N/A'; ?></b></td>
-                <td><span class="id-badge"><?php echo $row['client_id']; ?></span></td>
-                
-                <td style="color: var(--navy); font-weight: 500;">
-                    <i class="fas fa-phone-alt" style="font-size: 11px; color: #94a3b8; margin-right: 5px;"></i>
-                    <?php echo $row['phone'] ?: 'N/A'; ?>
-                </td>
+           <div class="main-content">
+    <?php if ($selected_group > 0):
+        $stmt = $conn->prepare("SELECT * FROM client_custom_groups WHERE id = ?");
+        $stmt->bind_param("i", $selected_group);
+        $stmt->execute();
+        $group = $stmt->get_result()->fetch_assoc();
 
-                <td><small>GST: <?php echo $row['gst_no'] ?: '-'; ?><br>PAN: <?php echo $row['pan_no'] ?: '-'; ?></small></td>
-                <td style="text-align:center;">
-                    <a href="client-profile.php?id=<?php echo $row['client_id']; ?>" class="btn-action btn-edit">
-                        <i class="fas fa-edit"></i> Edit
+        if ($group):
+            // FIX: Handle empty groups and quote string IDs
+            if (!empty($group['client_ids'])) {
+                // Convert KKA001,KKA002 into 'KKA001','KKA002'
+                $ids_array = explode(',', $group['client_ids']);
+                $quoted_ids = array_map(function($id) use ($conn) {
+                    return "'" . mysqli_real_escape_string($conn, trim($id)) . "'";
+                }, $ids_array);
+                $final_ids = implode(',', $quoted_ids);
+
+                $clients = $conn->query("SELECT * FROM client_profiles WHERE client_id IN ($final_ids)");
+            } else {
+                $clients = false; // Group exists but has no clients
+            }
+    ?>
+                
+                        <h2 style="margin-bottom:20px; color:var(--navy);"><?php echo htmlspecialchars($group['group_name']); ?></h2>
+                        <div class="table-card">
+                            <table id="clientTable">
+                                <thead>
+                                    <tr>
+                                        <th>Firm / Company</th>
+                                        <th>Client ID</th>
+                                        <th>Phone</th>
+                                        <th>Owner</th>
+                                        <th style="text-align:center">Action</th>
+                                    </tr>
+                                </thead>
+                               <tbody>
+    <?php if ($clients && $clients->num_rows > 0): ?>
+        <?php while ($row = $clients->fetch_assoc()):
+            $json = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
+        ?>
+            <tr class="client-row">
+                <td><b><?php echo htmlspecialchars($row['company_name']); ?></b></td>
+                <td><span class="id-badge"><?php echo $row['client_id']; ?></span></td>
+                <td><?php echo htmlspecialchars($row['phone']); ?></td>
+                <td><?php echo htmlspecialchars($row['owner_name']); ?></td>
+                <td style="text-align:center; display:flex; gap:8px; justify-content:center;">
+                    <button onclick='openViewModal(<?php echo $json; ?>)' class="btn-view" style="padding: 7px 12px; border-radius:7px;">View</button>
+                    
+                    <a href="remove-client-from-group.php?group_id=<?php echo $selected_group; ?>&client_id=<?php echo $row['client_id']; ?>" 
+                       onclick="return confirm('Remove this client?')"
+                       style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; width:35px; height:35px; display:flex; align-items:center; justify-content:center; text-decoration:none; border-radius:7px;">
+                        <i class="fas fa-trash-alt"></i>
                     </a>
-                    <button onclick='openViewModal(<?php echo $clientJson; ?>)' class="btn-action btn-view">
-                        <i class="fas fa-eye"></i> View
-                    </button>
                 </td>
             </tr>
         <?php endwhile; ?>
-    </tbody>
-</table>
-                    </div>
+    <?php else: ?>
+        <tr>
+            <td colspan="5" style="text-align:center; padding:50px; color:#94a3b8;">
+                <i class="fas fa-users-slash" style="font-size:40px; margin-bottom:10px; display:block;"></i>
+                No clients found in this group.
+            </td>
+        </tr>
+    <?php endif; ?>
+</tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
                 <?php else: ?>
                     <div style="text-align:center; margin-top:150px; color:#cbd5e1;">
-                        <i class="fas fa-users-cog" style="font-size:60px; margin-bottom:20px;"></i>
-                        <h2>Select an enterprise owner to view details</h2>
+                        <i class="fas fa-layer-group" style="font-size:80px;"></i>
+                        <h3>Select a group from the left to manage clients</h3>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
     </div>
 
-    <div id="viewModal" class="modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px);">
-        <div class="modal-content" style="background:white; margin:2% auto; padding:30px; width:600px; border-radius:20px; position:relative; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
-            <span onclick="closeModal()" style="position:absolute; right:25px; top:20px; font-size:28px; cursor:pointer; color:#94a3b8;">&times;</span>
-
-            <div style="text-align:center; margin-bottom:20px;">
-                <img id="v_photo" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid #ff8c00; margin-bottom:10px;">
-                <h2 id="v_company_title" style="margin:0; color:#0b3c74;"></h2>
-                <span id="v_id_badge" class="id-badge"></span>
+    <div id="viewModal" class="modal">
+        <div class="modal-content" style="background:white; margin:5vh auto; width:850px; border-radius:15px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+            <div style="background:var(--navy); padding:20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h3 id="v_title" style="margin:0;"></h3>
+                <span onclick="closeModal()" style="cursor:pointer; font-size:28px;">&times;</span>
             </div>
-
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; border-top:1px solid #f1f5f9; padding-top:20px;">
+            <div style="padding:30px; display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
                 <div>
-                    <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Owner Name</label>
-                    <p id="v_owner" style="margin:5px 0 15px 0; font-weight:600;"></p>
-                </div>
-                <div>
-                    <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Phone</label>
-                    <p id="v_phone" style="margin:5px 0 15px 0; font-weight:600;"></p>
-                </div>
-                <div>
-                    <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Nature of Business</label>
-                    <p id="v_nature" style="margin:5px 0 15px 0; font-weight:600;"></p>
+                    <h4 style="color:var(--orange); border-bottom:1px solid #eee; padding-bottom:10px;">Basic Details</h4>
+                    <p><b>Client ID:</b> <span id="v_id" class="id-badge"></span></p>
+                    <p><b>Owner:</b> <span id="v_owner"></span></p>
+                    <p><b>Phone:</b> <span id="v_phone"></span></p>
+                    <p><b>Email:</b> <span id="v_email"></span></p>
+                    <p><b>Nature:</b> <span id="v_nature"></span></p>
+                    <p><b>Address:</b> <br><small id="v_address"></small></p>
                 </div>
                 <div>
-                    <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Aadhaar No</label>
-                    <p id="v_aadhaar" style="margin:5px 0 15px 0; font-weight:600;"></p>
+                    <h4 style="color:var(--orange); border-bottom:1px solid #eee; padding-bottom:10px;">Tax & Registration</h4>
+                    <p><b>GST No:</b> <span id="v_gst"></span></p>
+                    <p><b>PAN No:</b> <span id="v_pan"></span></p>
+                    <p><b>TAN No:</b> <span id="v_tan"></span></p>
+                    <p><b>CIN No:</b> <span id="v_cin"></span></p>
+                    <p><b>Aadhaar:</b> <span id="v_aadhaar"></span></p>
+                    <div style="background:#f1f5f9; padding:10px; border-radius:8px; margin-top:15px;">
+                        <b>Last Task Asked:</b><br>
+                        <small id="v_task"></small>
+                    </div>
                 </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; background: #f1f5f9; padding: 15px; border-radius: 12px; margin-top: 5px;">
-                <div>
-                    <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">GST No</label>
-                    <p id="v_gst" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
-                </div>
-                <div>
-                    <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">PAN No</label>
-                    <p id="v_pan" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
-                </div>
-                <div>
-                    <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">TAN No</label>
-                    <p id="v_tan" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
-                </div>
-                <div style="margin-top:10px;">
-                    <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">CIN No</label>
-                    <p id="v_cin" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
-                </div>
-                <div style="margin-top:10px;">
-                    <label style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase;">TIN / VAT</label>
-                    <p id="v_tin" style="margin:2px 0 0 0; font-size:13px; font-weight:700; color:var(--navy);"></p>
-                </div>
-            </div>
-
-            <div style="margin-top:15px; padding:15px; background:#fff7ed; border-radius:12px; border:1px solid #ffedd5;">
-                <label style="font-size:10px; font-weight:800; color:var(--orange); text-transform:uppercase;">Task / Service Requested</label>
-                <p id="v_task" style="margin:5px 0 0 0; font-size:14px; color:#1e293b; line-height:1.5; font-weight:500;"></p>
-            </div>
-
-            <div style="margin-top:15px;">
-                <label style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Office Address</label>
-                <p id="v_address" style="margin:5px 0 0 0; font-size:13px; color:#475569;"></p>
             </div>
         </div>
     </div>
 
-    <script>
-        function toggleMenu(menuId, chevronId) {
-            document.getElementById(menuId).classList.toggle('show-menu');
-            document.getElementById(chevronId).classList.toggle('rotate-chevron');
+    <div id="groupModal" class="modal">
+        <div class="modal-content" style="background:white; margin:3vh auto; width:600px; border-radius:15px; overflow:hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <div style="background:var(--navy); padding:20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; font-size:18px;">Create Custom Group</h3>
+                <span onclick="closeGroupModal()" style="cursor:pointer; font-size:24px;">&times;</span>
+            </div>
+
+            <form action="save-group-logic.php" method="POST" style="padding:25px;">
+                <label style="font-size:11px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Group Name</label>
+                <input type="text" name="group_name" required placeholder="e.g. Monthly GST Group"
+                    style="width:100%; padding:12px; border:1px solid #e2e8f0; border-radius:10px; margin:8px 0 20px 0; outline:none;">
+
+                <label style="font-size:11px; font-weight:800; color:#94a3b8; text-transform:uppercase;">Search & Click to Add Clients</label>
+                <div style="position:relative; margin:8px 0;">
+                    <i class="fas fa-search" style="position:absolute; left:12px; top:13px; color:#cbd5e1;"></i>
+                    <input type="text" id="modalClientSearch" onkeyup="filterModalClients()" placeholder="Type firm name or ID..."
+                        style="width:100%; padding:10px 10px 10px 35px; border:1px solid #e2e8f0; border-radius:8px; outline:none; font-size:13px;">
+                </div>
+
+                <div id="modalClientList" style="max-height:300px; overflow-y:auto; border:1px solid #f1f5f9; border-radius:12px; background:#fcfcfc;">
+                    <?php
+                    $cl_list = $conn->query("SELECT client_id, company_name, owner_name FROM client_profiles ORDER BY company_name ASC");
+                    while ($cl = $cl_list->fetch_assoc()): ?>
+
+                        <label class="selectable-client-item" style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #f1f5f9; cursor:pointer; transition:0.2s;">
+                            <input type="checkbox" name="client_ids[]" value="<?php echo $cl['client_id']; ?>" style="display:none;" onchange="toggleSelectionUI(this)">
+
+                            <div class="check-indicator" style="width:20px; height:20px; border:2px solid #cbd5e1; border-radius:50%; display:flex; align-items:center; justify-content:center; background:white;">
+                                <i class="fas fa-check" style="font-size:10px; color:white; display:none;"></i>
+                            </div>
+
+                            <div style="flex:1;">
+                                <div class="firm-title" style="font-size:14px; font-weight:700; color:var(--navy);"><?php echo htmlspecialchars($cl['company_name']); ?></div>
+                                <div style="font-size:11px; color:#64748b;">ID: <b><?php echo $cl['client_id']; ?></b> | Owner: <?php echo htmlspecialchars($cl['owner_name']); ?></div>
+                            </div>
+
+                            <i class="fas fa-plus-circle" class="action-icon" style="color:#cbd5e1; font-size:16px;"></i>
+                        </label>
+
+                    <?php endwhile; ?>
+                </div>
+
+                <button type="submit" style="width:100%; margin-top:25px; background:var(--orange); color:white; border:none; padding:15px; border-radius:10px; font-weight:700; cursor:pointer; font-size:16px;">
+                    Create Group with Selected Clients
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        /* Styling for the selected state */
+        .selectable-client-item.selected {
+            background: #fff7ed !important;
+            border-left: 4px solid var(--orange);
         }
 
-        function filterContent() {
-            let filter = document.getElementById("groupSearch").value.toUpperCase();
+        .selectable-client-item.selected .check-indicator {
+            background: var(--orange) !important;
+            border-color: var(--orange) !important;
+        }
 
-            // Filter Owners
-            let items = document.getElementsByClassName("owner-item");
-            for (let i = 0; i < items.length; i++) {
-                let text = items[i].getAttribute('data-search').toUpperCase();
-                items[i].style.display = (text.indexOf(filter) > -1) ? "" : "none";
-            }
+        .selectable-client-item.selected .check-indicator i {
+            display: block !important;
+        }
 
-            // Filter Table Rows
-            let rows = document.querySelectorAll(".firm-row");
-            rows.forEach(row => {
-                let firm = row.getAttribute('data-firm').toUpperCase();
-                row.style.display = (firm.indexOf(filter) > -1) ? "" : "none";
+        .selectable-client-item.selected .fa-plus-circle {
+            color: var(--orange) !important;
+            transform: rotate(45deg);
+            /* Optional: turn plus into a cross or just highlight */
+        }
+    </style>
+
+    <script>
+        // 1. Logic to filter clients inside the modal search bar
+        function filterModalClients() {
+            let input = document.getElementById("modalClientSearch").value.toUpperCase();
+            let items = document.querySelectorAll(".selectable-client-item");
+
+            items.forEach(item => {
+                let text = item.innerText.toUpperCase();
+                item.style.display = text.includes(input) ? "flex" : "none";
             });
         }
 
+        // 2. Logic to handle the "Click to Add" visual change
+        function toggleSelectionUI(checkbox) {
+            let parentLabel = checkbox.closest('.selectable-client-item');
+            if (checkbox.checked) {
+                parentLabel.classList.add('selected');
+            } else {
+                parentLabel.classList.remove('selected');
+            }
+        }
+    </script>
+
+    <script>
         function openViewModal(data) {
-            document.getElementById('v_photo').src = data.profile_pic ? '../uploads/client_pics/' + data.profile_pic : '../uploads/client_pics/default-company.png';
-            document.getElementById('v_company_title').innerText = data.company_name || 'Individual Client';
-            document.getElementById('v_id_badge').innerText = 'ID: ' + (data.client_id || data.identifier);
-            document.getElementById('v_owner').innerText = data.owner_name || 'N/A';
-            document.getElementById('v_phone').innerText = data.phone || 'N/A';
-            document.getElementById('v_nature').innerText = data.business_nature || 'Not Specified';
-            document.getElementById('v_aadhaar').innerText = data.aadhaar_no || 'Not Provided';
-            document.getElementById('v_gst').innerText = data.gst_no || 'N/A';
-            document.getElementById('v_pan').innerText = data.pan_no || 'N/A';
-            document.getElementById('v_tan').innerText = data.tan_no || 'N/A';
-            document.getElementById('v_cin').innerText = data.cin_no || 'N/A';
-            document.getElementById('v_tin').innerText = data.tin_no || 'N/A';
-            document.getElementById('v_task').innerText = data.task_asked || 'No pending tasks recorded.';
-            document.getElementById('v_address').innerText = data.address || 'No address provided.';
+            document.getElementById('v_title').innerText = data.company_name;
+            document.getElementById('v_id').innerText = data.client_id;
+            document.getElementById('v_owner').innerText = data.owner_name;
+            document.getElementById('v_phone').innerText = data.phone;
+            document.getElementById('v_email').innerText = data.business_email || 'N/A';
+            document.getElementById('v_nature').innerText = data.business_nature || 'N/A';
+            document.getElementById('v_address').innerText = data.address || 'N/A';
+            document.getElementById('v_gst').innerText = data.gst_no || '-';
+            document.getElementById('v_pan').innerText = data.pan_no || '-';
+            document.getElementById('v_tan').innerText = data.tan_no || '-';
+            document.getElementById('v_cin').innerText = data.cin_no || '-';
+            document.getElementById('v_aadhaar').innerText = data.aadhaar_no || '-';
+            document.getElementById('v_task').innerText = data.task_asked || 'No specific tasks mentioned.';
             document.getElementById('viewModal').style.display = 'block';
+        }
+
+        function searchTable() {
+            let input = document.getElementById("tableSearch").value.toUpperCase();
+            let rows = document.querySelectorAll(".client-row");
+            rows.forEach(row => {
+                let text = row.innerText.toUpperCase();
+                row.style.display = text.includes(input) ? "" : "none";
+            });
         }
 
         function closeModal() {
             document.getElementById('viewModal').style.display = 'none';
         }
-        window.onclick = function(e) {
-            if (e.target == document.getElementById('viewModal')) closeModal();
+
+        function openGroupModal() {
+            document.getElementById('groupModal').style.display = 'block';
         }
+        window.onclick = function(e) {
+            if (e.target.className === 'modal') {
+                closeModal();
+                document.getElementById('groupModal').style.display = 'none';
+            }
+        }
+
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('status') === 'deleted') {
+            alert("Group deleted successfully!");
+        } else if (urlParams.get('status') === 'success') {
+            alert("Group created successfully!");
+        }
+
+        function toggleMenu(menuId, chevronId) {
+            const menu = document.getElementById(menuId);
+            const chevron = document.getElementById(chevronId);
+
+            // Toggle the specific menu clicked
+            menu.classList.toggle('show-menu');
+
+            // Rotate the specific arrow clicked
+            chevron.classList.toggle('rotate-chevron');
+
+            // Optional: Close other menus when opening a new one
+            const allMenus = document.querySelectorAll('.dropdown-content');
+            const allChevrons = document.querySelectorAll('.fa-chevron-down');
+
+            allMenus.forEach((m) => {
+                if (m.id !== menuId) m.classList.remove('show-menu');
+            });
+
+            allChevrons.forEach((c) => {
+                if (c.id !== chevronId) c.classList.remove('rotate-chevron');
+            });
+        }
+        if(status === 'client_removed') alert('Client removed from this group.');
     </script>
 </body>
 
