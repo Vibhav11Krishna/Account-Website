@@ -312,8 +312,8 @@ function getIndianCurrency(float $number)
                     <td align="right" style="color: #16a34a;">₹<?php echo number_format($paid, 2); ?></td>
                 </tr>
                 <tr class="balance-row">
-                    <td>Balance Due:</td>
-                    <td align="right">₹<?php echo number_format($balance, 2); ?></td>
+                    <td style="color: #f50c0c;">Balance Due:</td>
+                    <td align="right" style="color: #f50c0c;">₹<?php echo number_format($balance, 2); ?></td>
                 </tr>
             </table>
         </div>

@@ -195,21 +195,29 @@ if (isset($_GET['delete_inv'])) {
             color: #334155;
         }
 
-        .sidebar {
-            width: 280px;
-            background: var(--sidebar);
-            color: white;
-            height: 100vh;
-            position: fixed;
-            padding: 30px 20px;
-            box-sizing: border-box;
-            border-right: 4px solid var(--orange);
-        }
+         /* Sidebar */
+       .sidebar {
+    width: 280px;
+    background: var(--sidebar);
+    color: white;
+    height: 100vh;
+    position: fixed;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    
+    /* ADD THIS LINE */
+    border-right: 4px solid var(--orange); 
+}
+
 
         .sidebar h2 {
             font-size: 22px;
             color: var(--orange);
             margin-bottom: 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
         }
 
         .sidebar a {
@@ -221,6 +229,7 @@ if (isset($_GET['delete_inv'])) {
             padding: 14px;
             margin-bottom: 8px;
             border-radius: 12px;
+            transition: 0.3s;
         }
 
         .sidebar a:hover,
