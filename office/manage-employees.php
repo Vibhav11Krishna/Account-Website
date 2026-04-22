@@ -212,7 +212,7 @@ if (isset($_POST['process_salary'])) {
                             WHERE u.role='office' 
                             ORDER BY u.name ASC";
 $sql = "SELECT u.*, 
-        ep.aadhaar_no, ep.aadhaar_photo, ep.pan_no, ep.address, 
+        ep.is_locked, ep.aadhaar_no, ep.aadhaar_photo, ep.pan_no, ep.address, 
         ep.dob, ep.emergency_contact, ep.profile_pic, ep.date_of_joining,
         (SELECT login_time FROM attendance WHERE email = u.identifier AND log_date = '$today' LIMIT 1) as attendance_time 
         FROM users u 
@@ -265,14 +265,33 @@ $sql = "SELECT u.*,
                                     <i class="fas fa-wallet"></i> Pay
                                 </button>
                             </td>
-                            <td>
-    <div style="display:flex; gap:15px; align-items:center;">
-        <a href="javascript:void(0)" onclick="viewEmployee(<?php echo htmlspecialchars(json_encode($row)); ?>)" title="View Full Profile">
-            <i class="fas fa-eye" style="color: var(--navy); cursor:pointer;"></i>
+                     <td>
+    <div style="display:flex; gap:15px; align-items:center; justify-content:center;">
+        <a href="javascript:void(0)" onclick="viewEmployee(<?php echo htmlspecialchars(json_encode($row)); ?>)" title="View Profile">
+            <i class="fas fa-eye" style="color: #1e293b; cursor:pointer;"></i>
         </a>
+
+        <?php 
+        // Check if profile is locked (Default to 0 if record doesn't exist)
+        $locked_status = isset($row['is_locked']) ? (int)$row['is_locked'] : 0;
         
-        <a href="?delete=<?php echo $row['id']; ?>" class="delete-link" onclick="return confirm('Remove employee?')">
-            <i class="fas fa-trash-alt" style="color:var(--danger);"></i>
+        if ($locked_status === 1): ?>
+            <a href="toggle_lock.php?email=<?php echo urlencode($row['identifier']); ?>&status=0" 
+               title="Unlock Profile" 
+               onclick="return confirm('Enable editing for this employee?')">
+                <i class="fas fa-lock" style="color: #e11d48; cursor:pointer;"></i>
+            </a>
+        <?php else: ?>
+            <a href="toggle_lock.php?email=<?php echo urlencode($row['identifier']); ?>&status=1" 
+               title="Lock Profile" 
+               onclick="return confirm('Freeze this employee profile?')">
+                <i class="fas fa-lock-open" style="color: #059669; cursor:pointer;"></i>
+            </a>
+        <?php endif; ?>
+        
+        <a href="?delete=<?php echo $row['id']; ?>" 
+           onclick="return confirm('Permanently remove this employee?')">
+            <i class="fas fa-trash-alt" style="color:#ef4444;"></i>
         </a>
     </div>
 </td>

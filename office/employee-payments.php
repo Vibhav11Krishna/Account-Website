@@ -7,56 +7,60 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'office') {
     header("Location: ../Register.php"); 
     exit();
 }
-// 1. Get the email from session
-$user_email = $_SESSION['user']['identifier'];
 
-// 2. JOIN using u.id and p.user_id instead of email
-$sql = "SELECT u.name, p.profile_pic, p.first_name 
+$user_email = $_SESSION['user']['identifier'];
+$u_id = $_SESSION['user']['id'];
+
+// 2. JOIN updated to include p.is_locked
+$sql = "SELECT u.name, p.profile_pic, p.first_name, p.is_locked 
         FROM users u 
         LEFT JOIN employee_profiles p ON u.id = p.user_id 
         WHERE u.identifier = '$user_email'";
 
 $profileRes = $conn->query($sql);
+$user_data = ($profileRes) ? $profileRes->fetch_assoc() : [];
 
-if ($profileRes) {
-    $user_data = $profileRes->fetch_assoc();
-}
+// 3. Set the global lock variable
+$is_locked = (isset($user_data['is_locked']) && $user_data['is_locked'] == 1);
 
-// 3. Fallback logic
+// Fallback logic
 $display_name = !empty($user_data['name']) ? $user_data['name'] : "Employee";
 $first_name = !empty($user_data['first_name']) ? $user_data['first_name'] : $display_name;
 $profile_img = !empty($user_data['profile_pic']) ? $user_data['profile_pic'] : 'default-avatar.png';
-$email = $_SESSION['user']['identifier'];
-$u_id = $_SESSION['user']['id'];
 $message = "";
 $messageClass = "";
 
 // Logic: Update Bank Details
 if (isset($_POST['save_bank'])) {
-    $holder = $conn->real_escape_string($_POST['account_holder']);
-    $bank = $conn->real_escape_string($_POST['bank_name']);
-    $acc = $conn->real_escape_string($_POST['account_number']);
-    $ifsc = strtoupper($conn->real_escape_string($_POST['ifsc_code']));
-    $upi = $conn->real_escape_string($_POST['upi_id']);
-
-    // IFSC Validation (Standard Indian Format: 4 Alpha, 0, 6 Alphanumeric)
-    if (!preg_match("/^[A-Z]{4}0[A-Z0-9]{6}$/", $ifsc)) {
-        $message = "Invalid IFSC Code format. Please check and try again.";
+    // SECURITY: Prevent update if profile is locked
+    if ($is_locked) {
+        $message = "Error: This account is locked. Bank details cannot be modified.";
         $messageClass = "alert-error";
     } else {
-        $sql = "UPDATE users SET 
-                account_holder='$holder', bank_name='$bank', 
-                account_number='$acc', ifsc_code='$ifsc', upi_id='$upi' 
-                WHERE id='$u_id'";
-        
-        if ($conn->query($sql)) {
-            $message = "Bank details updated successfully!";
-            $messageClass = "alert-success";
+        $holder = $conn->real_escape_string($_POST['account_holder']);
+        $bank = $conn->real_escape_string($_POST['bank_name']);
+        $acc = $conn->real_escape_string($_POST['account_number']);
+        $ifsc = strtoupper($conn->real_escape_string($_POST['ifsc_code']));
+        $upi = $conn->real_escape_string($_POST['upi_id']);
+
+        if (!preg_match("/^[A-Z]{4}0[A-Z0-9]{6}$/", $ifsc)) {
+            $message = "Invalid IFSC Code format. Please check and try again.";
+            $messageClass = "alert-error";
+        } else {
+            $sql = "UPDATE users SET 
+                    account_holder='$holder', bank_name='$bank', 
+                    account_number='$acc', ifsc_code='$ifsc', upi_id='$upi' 
+                    WHERE id='$u_id'";
+            
+            if ($conn->query($sql)) {
+                $message = "Bank details updated successfully!";
+                $messageClass = "alert-success";
+            }
         }
     }
 }
 
-// Fetch current details
+// Fetch current details for the form
 $user = $conn->query("SELECT * FROM users WHERE id='$u_id'")->fetch_assoc();
 ?>
 
@@ -143,36 +147,51 @@ $user = $conn->query("SELECT * FROM users WHERE id='$u_id'")->fetch_assoc();
         <?php endif; ?>
 
         <div class="grid">
-            <div class="card" style="border-left-color: var(--orange);">
-                <h3 style="margin-top:0;"><i class="fas fa-university"></i> Bank Account Information</h3>
-                <form method="POST">
-                    <div class="form-group">
-                        <label>Account Holder Name (As per Bank)</label>
-                        <input type="text" name="account_holder" value="<?php echo $user['account_holder']; ?>" placeholder="e.g. Pulkit Krishna" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Bank Name</label>
-                        <input type="text" name="bank_name" value="<?php echo $user['bank_name']; ?>" placeholder="e.g. HDFC Bank" required>
-                    </div>
-                    <div style="display:flex; gap:15px;">
-                        <div class="form-group" style="flex:2;">
-                            <label>Account Number</label>
-                            <input type="text" name="account_number" value="<?php echo $user['account_number']; ?>" required>
-                        </div>
-                        <div class="form-group" style="flex:1;">
-                            <label>IFSC Code</label>
-                            <input type="text" name="ifsc_code" value="<?php echo $user['ifsc_code']; ?>" maxlength="11" placeholder="HDFC0001234" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>UPI ID (For Fast Payouts)</label>
-                        <input type="text" name="upi_id" value="<?php echo $user['upi_id']; ?>" placeholder="username@okaxis">
-                    </div>
-                    <button type="submit" name="save_bank" class="btn-save">
-                        Update Payout Profile
-                    </button>
-                </form>
+           <div class="card" style="border-left-color: var(--orange);">
+    <h3 style="margin-top:0;"><i class="fas fa-university"></i> Bank Account Information</h3>
+    <form method="POST">
+        <div class="form-group">
+            <label>Account Holder Name (As per Bank)</label>
+            <input type="text" name="account_holder" value="<?= $user['account_holder']; ?>" 
+                   <?= $is_locked ? 'readonly style="background:#f1f5f9; cursor:not-allowed;"' : 'required' ?>>
+        </div>
+        
+        <div class="form-group">
+            <label>Bank Name</label>
+            <input type="text" name="bank_name" value="<?= $user['bank_name']; ?>" 
+                   <?= $is_locked ? 'readonly style="background:#f1f5f9; cursor:not-allowed;"' : 'required' ?>>
+        </div>
+
+        <div style="display:flex; gap:15px;">
+            <div class="form-group" style="flex:2;">
+                <label>Account Number</label>
+                <input type="text" name="account_number" value="<?= $user['account_number']; ?>" 
+                       <?= $is_locked ? 'readonly style="background:#f1f5f9;"' : 'required' ?>>
             </div>
+            <div class="form-group" style="flex:1;">
+                <label>IFSC Code</label>
+                <input type="text" name="ifsc_code" value="<?= $user['ifsc_code']; ?>" 
+                       <?= $is_locked ? 'readonly style="background:#f1f5f9;"' : 'required' ?>>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>UPI ID (For Fast Payouts)</label>
+            <input type="text" name="upi_id" value="<?= $user['upi_id']; ?>" 
+                   <?= $is_locked ? 'readonly style="background:#f1f5f9;"' : '' ?>>
+        </div>
+
+        <?php if (!$is_locked): ?>
+            <button type="submit" name="save_bank" class="btn-save">
+                Update Payout Profile
+            </button>
+        <?php else: ?>
+            <div style="margin-top:15px; padding:12px; background:#fff1f2; color:#e11d48; border-radius:10px; border:1px solid #fda4af; text-align:center; font-size:13px; font-weight:600;">
+                <i class="fas fa-lock"></i> Bank Details Verified & Locked.
+            </div>
+        <?php endif; ?>
+    </form>
+</div>
 
             <div class="card">
                 <h3 style="margin-top:0;"><i class="fas fa-receipt"></i> Payout Notifications</h3>
