@@ -53,6 +53,23 @@ if (isset($_POST['mark_attendance'])) {
 $att_check = $conn->query("SELECT login_time FROM attendance WHERE email='$email' AND log_date='$today'");
 $is_present = ($att_check->num_rows > 0);
 $login_data = $att_check->fetch_assoc();
+// ... after your session and DB includes ...
+$today = date('Y-m-d');
+$current_time = date('H:i:s');
+
+// Handle Manual Check-out Button
+if (isset($_POST['manual_checkout'])) {
+    $sql = "UPDATE attendance SET logout_time='$current_time' 
+            WHERE email='$user_email' AND log_date='$today' AND logout_time IS NULL";
+    $conn->query($sql);
+    header("Location: staff-attendance.php");
+    exit();
+}
+
+// Fetch today's record
+$att_check = $conn->query("SELECT * FROM attendance WHERE email='$user_email' AND log_date='$today'");
+$row = $att_check->fetch_assoc();
+$is_checked_out = ($row && !empty($row['logout_time']));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -268,31 +285,35 @@ $login_data = $att_check->fetch_assoc();
 
         <div class="card">
             <h3><i class="fas fa-history" style="color:var(--orange);"></i> Attendance History (IST)</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Check-in Time</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $history = $conn->query("SELECT * FROM attendance WHERE email='$email' ORDER BY log_date DESC LIMIT 7");
-                    if ($history->num_rows > 0) {
-                        while ($row = $history->fetch_assoc()) {
-                            echo "<tr>";
-                            echo "<td><b>" . date('d M, Y', strtotime($row['log_date'])) . "</b></td>";
-                            echo "<td><span style='color:#22c55e; font-weight:bold;'><i class='fas fa-check'></i> Present</span></td>";
-                            echo "<td>" . date('h:i A', strtotime($row['login_time'])) . "</td>";
-                            echo "</tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='3' style='text-align:center; padding:30px; color:#94a3b8;'>No records found yet.</td></tr>";
-                    }
-                    ?>
-                </tbody>
-            </table>
+           <table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Check-In</th>
+            <th>Check-Out</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        $history = $conn->query("SELECT * FROM attendance WHERE email='$user_email' ORDER BY log_date DESC LIMIT 10");
+        while ($att = $history->fetch_assoc()): 
+            $status = !empty($att['logout_time']) ? "Completed" : "On-Duty";
+            $color = !empty($att['logout_time']) ? "#22c55e" : "#f59e0b";
+        ?>
+        <tr>
+            <td><?= date('d M, Y', strtotime($att['log_date'])) ?></td>
+            <td><?= date('h:i A', strtotime($att['login_time'])) ?></td>
+            <td><?= !empty($att['logout_time']) ? date('h:i A', strtotime($att['logout_time'])) : '--:--' ?></td>
+            <td>
+                <span style="color: <?= $color ?>; font-weight: bold;">
+                    <?= $status ?>
+                </span>
+            </td>
+        </tr>
+        <?php endwhile; ?>
+    </tbody>
+</table>
         </div>
     </div>
 
