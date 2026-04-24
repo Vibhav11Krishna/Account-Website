@@ -7,23 +7,29 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     exit();
 }
 
-// Fetch all clients and group them by tasks/services
+// Fetch all unique clients
 $all_clients = $conn->query("SELECT * FROM client_profiles ORDER BY company_name ASC");
-$services_map = [];
-$total_client_count = 0;
+$unique_clients = [];
+$services_map_counts = []; // For the sidebar badges
+$total_client_count = $all_clients->num_rows;
 
 while ($row = $all_clients->fetch_assoc()) {
-    $total_client_count++;
+    // Store unique client
+    $unique_clients[] = $row;
+    
+    // Process services for sidebar counts
     if (!empty($row['task_asked'])) {
         $tasks = array_map('trim', explode(',', $row['task_asked']));
+        $tasks = array_unique($tasks); // Avoid double counting if user entered same service twice
         foreach ($tasks as $t) {
             if (!empty($t)) {
-                $services_map[$t][] = $row;
+                // We just need the count and the name for the sidebar
+                $services_map_counts[$t] = ($services_map_counts[$t] ?? 0) + 1;
             }
         }
     }
 }
-ksort($services_map);
+ksort($services_map_counts);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -349,15 +355,15 @@ ksort($services_map);
                 <small style="color: var(--text-muted);">Filter clients by task</small>
             </div>
             <div class="service-item active" onclick="filterService('all', this)">
-                <span>View All Clients</span>
-                <span class="badge"><?php echo $total_client_count; ?></span>
-            </div>
-            <?php foreach ($services_map as $name => $clients): ?>
-                <div class="service-item" onclick="filterService('<?php echo md5($name); ?>', this)">
-                    <span><?php echo htmlspecialchars($name); ?></span>
-                    <span class="badge"><?php echo count($clients); ?></span>
-                </div>
-            <?php endforeach; ?>
+    <span>View All Clients</span>
+    <span class="badge"><?php echo $total_client_count; ?></span>
+</div>
+<?php foreach ($services_map_counts as $name => $count): ?>
+    <div class="service-item" onclick="filterService('<?php echo md5($name); ?>', this)">
+        <span><?php echo htmlspecialchars($name); ?></span>
+        <span class="badge"><?php echo $count; ?></span>
+    </div>
+<?php endforeach; ?>
         </div>
 
         <div class="display-panel">
@@ -381,29 +387,37 @@ ksort($services_map);
                                 <th style="text-align:right;">Profile</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php foreach ($services_map as $name => $clients):
-                                $sid = md5($name);
-                                foreach ($clients as $c): ?>
-                                    <tr class="client-row" data-sid="<?php echo $sid; ?>">
-                                        <td>
-                                            <div class="client-info">
-                                                <img src="../uploads/client_pics/<?php echo $c['profile_pic']; ?>" class="client-img" onerror="this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($c['company_name']); ?>&background=random&size=128'">
-                                                <b style="color: var(--navy);"><?php echo $c['company_name']; ?></b>
-                                            </div>
-                                        </td>
-                                        <td><span class="id-pill"><?php echo $c['client_id']; ?></span></td>
-                                        <td><?php echo $c['owner_name']; ?></td>
-                                        <td style="color: var(--text-muted);">
-                                            <i class="fas fa-phone-alt" style="font-size:11px; margin-right:5px;"></i> <?php echo $c['phone']; ?>
-                                        </td>
-                                        <td style="text-align:right;">
-                                            <a href="client-profile.php?id=<?php echo $c['client_id']; ?>" class="btn-profile">VIEW DETAILS</a>
-                                        </td>
-                                    </tr>
-                            <?php endforeach;
-                            endforeach; ?>
-                        </tbody>
+                       <tbody>
+    <?php foreach ($unique_clients as $c): 
+        // Generate MD5 hashes for all services this client has
+        $client_services = [];
+        if (!empty($c['task_asked'])) {
+            $tasks = array_map('trim', explode(',', $c['task_asked']));
+            foreach ($tasks as $t) {
+                $client_services[] = md5($t);
+            }
+        }
+        // Join hashes into a string for the data attribute
+        $service_attr = implode(' ', $client_services);
+    ?>
+        <tr class="client-row" data-sids="<?php echo $service_attr; ?>">
+            <td>
+                <div class="client-info">
+                    <img src="../uploads/client_pics/<?php echo $c['profile_pic']; ?>" class="client-img" onerror="this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($c['company_name']); ?>&background=random&size=128'">
+                    <b style="color: var(--navy);"><?php echo $c['company_name']; ?></b>
+                </div>
+            </td>
+            <td><span class="id-pill"><?php echo $c['client_id']; ?></span></td>
+            <td><?php echo $c['owner_name']; ?></td>
+            <td style="color: var(--text-muted);">
+                <i class="fas fa-phone-alt" style="font-size:11px; margin-right:5px;"></i> <?php echo $c['phone']; ?>
+            </td>
+            <td style="text-align:right;">
+                <a href="client-profile.php?id=<?php echo $c['client_id']; ?>" class="btn-profile">VIEW</a>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+</tbody>
                     </table>
                 </div>
             </div>
@@ -417,23 +431,25 @@ ksort($services_map);
         }
 
         function filterService(sid, el) {
-            // UI Updates
-            document.querySelectorAll('.service-item').forEach(i => i.classList.remove('active'));
-            el.classList.add('active');
+    // UI Updates
+    document.querySelectorAll('.service-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
 
-            const serviceName = el.querySelector('span').innerText;
-            document.getElementById('viewTitle').innerText = serviceName;
-            document.getElementById('breadcrumb-text').innerText = serviceName;
+    const serviceName = el.querySelector('span').innerText;
+    document.getElementById('viewTitle').innerText = serviceName;
+    document.getElementById('breadcrumb-text').innerText = serviceName;
 
-            // Table Filtering
-            document.querySelectorAll('.client-row').forEach(row => {
-                if (sid === 'all' || row.getAttribute('data-sid') === sid) {
-                    row.classList.remove('hidden');
-                } else {
-                    row.classList.add('hidden');
-                }
-            });
+    // Table Filtering
+    document.querySelectorAll('.client-row').forEach(row => {
+        const rowServices = row.getAttribute('data-sids').split(' '); // Get array of service hashes
+        
+        if (sid === 'all' || rowServices.includes(sid)) {
+            row.classList.remove('hidden');
+        } else {
+            row.classList.add('hidden');
         }
+    });
+}
     </script>
 
 </body>

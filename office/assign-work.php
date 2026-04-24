@@ -257,13 +257,21 @@ if (isset($_GET['delete_doc'])) {
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
                     <div>
                         <label style="font-size:12px; font-weight:bold;">Target Client</label>
-                        <select name="client_id" required>
-                            <option value="">-- Select Client --</option>
-                            <?php
-                            $clts = $conn->query("SELECT identifier, name FROM users WHERE role='client'");
-                            while ($c = $clts->fetch_assoc()) echo "<option value='{$c['identifier']}'>{$c['identifier']} - {$c['name']}</option>";
-                            ?>
-                        </select>
+                       <select name="client_id" required>
+    <option value="">-- Select Client --</option>
+    <?php
+    // JOIN with client_profiles to get the Company Name
+    $clts = $conn->query("SELECT u.identifier, cp.company_name 
+                          FROM users u 
+                          LEFT JOIN client_profiles cp ON u.identifier = cp.client_id 
+                          WHERE u.role='client'");
+    while ($c = $clts->fetch_assoc()) {
+        // Fallback to identifier if company_name is empty
+        $display = !empty($c['company_name']) ? $c['company_name'] : $c['identifier'];
+        echo "<option value='{$c['identifier']}'>$display ({$c['identifier']})</option>";
+    }
+    ?>
+</select>
                     </div>
                     <div>
                         <label style="font-size:12px; font-weight:bold;">Assign To Staff</label>
@@ -306,14 +314,17 @@ if (isset($_GET['delete_doc'])) {
 
         <h2>Incoming Client Requests</h2>
         <?php
-        $res = $conn->query("SELECT * FROM service_requests WHERE status='Pending'");
+        $res = $conn->query("SELECT t.*, cp.company_name 
+                     FROM service_requests t 
+                     LEFT JOIN client_profiles cp ON t.client_id = cp.client_id 
+                     WHERE t.status='Pending'");
         if ($res->num_rows == 0) echo "<p style='color:#64748b;'>No pending client requests.</p>";
         while ($row = $res->fetch_assoc()): ?>
             <div class="task-item">
                 <div>
                     <b><?php echo $row['service_type']; ?></b>
                     <p style="margin:5px 0; color:#64748b; font-size:13px;"><?php echo $row['description']; ?></p>
-                    <small>Client: <?php echo $row['client_id']; ?></small>
+                    <small>Client: <?php echo !empty($row['company_name']) ? $row['company_name'] : $row['client_id']; ?></small>
                 </div>
                 <form method="POST" style="display:flex; gap:10px;">
                     <input type="hidden" name="rid" value="<?php echo $row['id']; ?>">
@@ -343,7 +354,7 @@ if (isset($_GET['delete_doc'])) {
         </div>
 
         <div class="card" style="overflow-x:auto;">
-            <table style="width:100%; border-collapse:collapse;" id="assignmentTable">
+            <table style="width:115%; border-collapse:collapse;" id="assignmentTable">
                 <thead>
                     <tr style="border-bottom:2px solid #f1f5f9; text-align:left;">
                         <th style="padding:12px;">Type</th>
@@ -358,11 +369,17 @@ if (isset($_GET['delete_doc'])) {
                 </thead>
                 <tbody>
                     <?php
-                    $tasks = $conn->query("SELECT * FROM service_requests ORDER BY id DESC LIMIT 20");
+                  $tasks = $conn->query("SELECT t.*, cp.company_name 
+                       FROM service_requests t
+                       LEFT JOIN client_profiles cp ON t.client_id = cp.client_id 
+                       ORDER BY t.id DESC LIMIT 20");
                     while ($t = $tasks->fetch_assoc()): ?>
                         <tr class="table-row" style="border-bottom:1px solid #f8fafc;">
                             <td style="padding:12px;"><span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:5px; font-size:11px;">TASK</span></td>
-                            <td class="client-cell"><?php echo $t['client_id']; ?></td>
+                           <td class="client-cell">
+    <b><?php echo !empty($t['company_name']) ? $t['company_name'] : $t['client_id']; ?></b>
+    <br><small style="color:#94a3b8;"><?php echo $t['client_id']; ?></small>
+</td>
                             <td class="staff-cell"><b><?php echo $t['assigned_to']; ?></b></td>
                             <td><?php echo $t['assigned_date']; ?></td>
                             <td><?php echo $t['completed_date']; ?></td>

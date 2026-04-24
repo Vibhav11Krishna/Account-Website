@@ -282,7 +282,11 @@ $completedCount = $completedRes->fetch_assoc()['total'];
         <?php endif; ?>
 
         <?php
-        $tasks = $conn->query("SELECT * FROM service_requests WHERE assigned_to='$email' AND status='Assigned' ORDER BY created_at DESC");
+      $tasks = $conn->query("SELECT t.*, cp.company_name 
+                       FROM service_requests t 
+                       LEFT JOIN client_profiles cp ON t.client_id = cp.client_id 
+                       WHERE t.assigned_to='$email' AND t.status='Assigned' 
+                       ORDER BY t.created_at DESC");
         
         if ($tasks->num_rows > 0) {
             while ($t = $tasks->fetch_assoc()) {
@@ -292,8 +296,11 @@ $completedCount = $completedRes->fetch_assoc()['total'];
                         <div>
                             <span class="status-pill"><i class="fas fa-hourglass-half"></i> Work in Progress</span>
                             <h3 style="margin:15px 0 5px 0;"><?php echo htmlspecialchars($t['service_type']); ?></h3>
-                            <p style="color:#64748b; margin-bottom:15px;">
-    Client ID: <strong><?php echo htmlspecialchars($t['client_id']); ?></strong> 
+                     <p style="color:#64748b; margin-bottom:15px;">
+    Client: <strong style="color: var(--navy);">
+        <?php echo !empty($t['company_name']) ? htmlspecialchars($t['company_name']) : 'N/A'; ?>
+    </strong> 
+    <span style="font-size: 12px;">(ID: <?php echo htmlspecialchars($t['client_id']); ?>)</span>
     <span style="margin: 0 10px; color: #cbd5e1;">|</span>
     Assigned on: <?php echo date('d-m-Y', strtotime($t['assigned_date'])); ?>
 </p>
