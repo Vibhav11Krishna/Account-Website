@@ -18,10 +18,14 @@ $search_received = isset($_GET['search_received']) ? mysqli_real_escape_string($
 $fy_start = ($selected_year - 1) . "-04-01";
 $fy_end = $selected_year . "-03-31";
 
-// 3. FETCH TOTALS FOR COUNTER CARDS (Filtered by FY Range)
-$stats_query = $conn->query("SELECT SUM(amount - paid_amount) as total_unpaid, COUNT(id) as count_unpaid 
-                             FROM invoices 
-                             WHERE paid_amount < amount AND created_at BETWEEN '$fy_start' AND '$fy_end'");
+// Calculate Total Outstanding including all GST types
+$stats_query = $conn->query("SELECT 
+    SUM((amount + cgst_amount + sgst_amount + igst_amount) - paid_amount) as total_unpaid, 
+    COUNT(id) as count_unpaid 
+    FROM invoices 
+    WHERE (paid_amount < (amount + cgst_amount + sgst_amount + igst_amount)) 
+    AND created_at BETWEEN '$fy_start' AND '$fy_end'");
+
 $stats = $stats_query->fetch_assoc();
 
 $paid_stats_query = $conn->query("SELECT SUM(amount_paid) as total_received FROM receipts WHERE created_at BETWEEN '$fy_start' AND '$fy_end'");
@@ -342,41 +346,48 @@ $total_received = $paid_stats['total_received'] ?? 0;
                 </thead>
                 <tbody>
                     <?php
-                    $p_sql = "SELECT i.*, u.name, (i.amount - i.paid_amount) as balance_due, DATEDIFF(NOW(), i.created_at) as days_old 
-                              FROM invoices i 
-                              JOIN users u ON i.client_id = u.identifier 
-                              WHERE i.paid_amount < i.amount AND i.created_at BETWEEN '$fy_start' AND '$fy_end'";
+                 $p_sql = "SELECT i.*, cp.company_name, 
+          (i.amount + i.cgst_amount + i.sgst_amount + i.igst_amount) as grand_total,
+          ((i.amount + i.cgst_amount + i.sgst_amount + i.igst_amount) - i.paid_amount) as balance_due, 
+          DATEDIFF(NOW(), i.created_at) as days_old 
+          FROM invoices i 
+          LEFT JOIN client_profiles cp ON i.client_id = cp.client_id 
+          WHERE i.paid_amount < (i.amount + i.cgst_amount + i.sgst_amount + i.igst_amount) 
+          AND i.created_at BETWEEN '$fy_start' AND '$fy_end'";
 
-                    if ($search_pending) {
-                        $p_sql .= " AND (u.name LIKE '%$search_pending%' OR i.invoice_no LIKE '%$search_pending%')";
-                    }
+if ($search_pending) {
+    // Updated search to look through company_name instead of u.name
+    $p_sql .= " AND (cp.company_name LIKE '%$search_pending%' OR i.invoice_no LIKE '%$search_pending%')";
+}
 
                     $p_sql .= " ORDER BY days_old DESC";
                     $result = $conn->query($p_sql);
 
                     if ($result && $result->num_rows > 0) {
-                        while ($row = $result->fetch_assoc()) {
-                            $age = $row['days_old'];
-                            $class = ($age > 15) ? "aging-old" : (($age > 7) ? "aging-mid" : "aging-new");
-                            $is_partial = ($row['paid_amount'] > 0);
-                            $status_label = $is_partial ? "Partially Paid" : "Unpaid";
-                            $status_style = $is_partial ? "background:#fef9c3; color:#854d0e; border:1px solid #fde047;" : "background:#fee2e2; color:#991b1b; border:1px solid #fecaca;";
+                     while ($row = $result->fetch_assoc()) {
+    $age = $row['days_old'];
+    $class = ($age > 15) ? "aging-old" : (($age > 7) ? "aging-mid" : "aging-new");
+    
+    // Check if IGST was used or CGST/SGST
+    $tax_details = ($row['igst_amount'] > 0) ? "IGST: ₹" . $row['igst_amount'] : "CGST+SGST: ₹" . ($row['cgst_amount'] + $row['sgst_amount']);
 
-                            echo "<tr>
-                                <td>
-                                    <div style='font-weight:700;'>#{$row['invoice_no']}</div>
-                                    <span style='font-size:9px; padding:2px 5px; border-radius:4px; text-transform:uppercase; font-weight:bold; $status_style'>$status_label</span>
-                                </td>
-                                <td>{$row['name']}</td>
-                                <td>" . date('d M Y', strtotime($row['created_at'])) . "</td>
-                                <td><span class='aging-pill $class'>$age Days Old</span></td>
-                                <td>
-                                    <div style='font-weight:700; color:var(--danger);'>₹" . number_format($row['balance_due'], 2) . "</div>
-                                    <div style='font-size:10px; color:var(--text-light);'>Total: ₹" . number_format($row['amount'], 2) . "</div>
-                                </td>
-                                <td><a href='invoices.php' class='btn-remind'>Record Payment</a></td>
-                            </tr>";
-                        }
+    echo "<tr>
+            <td>
+                <div style='font-weight:700;'>#{$row['invoice_no']}</div>
+                <span style='font-size:9px; color:var(--text-light);'>{$row['tax_type']}</span>
+            </td>
+            <td>" . htmlspecialchars($row['company_name'] ?? 'N/A') . "</td> 
+            <td>" . date('d M Y', strtotime($row['created_at'])) . "</td>
+            <td><span class='aging-pill $class'>$age Days Old</span></td>
+            <td>
+                <div style='font-weight:700; color:var(--danger);'>₹" . number_format($row['balance_due'], 2) . "</div>
+                <div style='font-size:10px; color:var(--text-light);' title='$tax_details'>
+                    Total: ₹" . number_format($row['grand_total'], 2) . "
+                </div>
+            </td>
+            <td><a href='invoices.php' class='btn-remind'>Record Payment</a></td>
+        </tr>";
+}
                     } else {
                         echo "<tr><td colspan='6' style='text-align:center; padding:30px;'>No pending records found for this period.</td></tr>";
                     }
@@ -405,13 +416,15 @@ $total_received = $paid_stats['total_received'] ?? 0;
                 </thead>
                 <tbody>
                     <?php
-                    $r_sql = "SELECT r.*, u.name FROM receipts r 
-                              JOIN users u ON r.client_id = u.identifier 
-                              WHERE r.created_at BETWEEN '$fy_start' AND '$fy_end'";
+                   $r_sql = "SELECT r.*, cp.company_name 
+          FROM receipts r 
+          LEFT JOIN client_profiles cp ON r.client_id = cp.client_id 
+          WHERE r.created_at BETWEEN '$fy_start' AND '$fy_end'";
 
-                    if ($search_received) {
-                        $r_sql .= " AND (u.name LIKE '%$search_received%' OR r.receipt_no LIKE '%$search_received%' OR r.invoice_no LIKE '%$search_received%')";
-                    }
+if ($search_received) {
+    // Updated search for received payments
+    $r_sql .= " AND (cp.company_name LIKE '%$search_received%' OR r.receipt_no LIKE '%$search_received%' OR r.invoice_no LIKE '%$search_received%')";
+}
 
                     $r_sql .= " ORDER BY r.created_at DESC";
                     $paid_res = $conn->query($r_sql);
@@ -419,12 +432,12 @@ $total_received = $paid_stats['total_received'] ?? 0;
                     if ($paid_res && $paid_res->num_rows > 0) {
                         while ($p = $paid_res->fetch_assoc()) {
                             echo "<tr>
-                                <td style='font-weight:700;'>{$p['receipt_no']}</td>
-                                <td>#{$p['invoice_no']}</td>
-                                <td>{$p['name']}</td>
-                                <td>" . date('d M Y', strtotime($p['created_at'])) . "</td>
-                                <td style='font-weight:700; color:var(--success);'>₹" . number_format($p['amount_paid'], 2) . "</td>
-                            </tr>";
+            <td style='font-weight:700;'>{$p['receipt_no']}</td>
+            <td>#{$p['invoice_no']}</td>
+            <td>" . htmlspecialchars($p['company_name'] ?? 'N/A') . "</td>
+            <td>" . date('d M Y', strtotime($p['created_at'])) . "</td>
+            <td style='font-weight:700; color:var(--success);'>₹" . number_format($p['amount_paid'], 2) . "</td>
+        </tr>";
                         }
                     } else {
                         echo "<tr><td colspan='5' style='text-align:center; padding:30px;'>No payment history for this selection.</td></tr>";
