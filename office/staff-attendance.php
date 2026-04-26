@@ -2,74 +2,61 @@
 session_start();
 include('../db.php');
 
-// 1. SET THE TIMEZONE TO INDIA
+// 1. SET THE TIMEZONE
 date_default_timezone_set('Asia/Kolkata');
 
+// 2. SECURITY CHECK
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'office') {
     header("Location: ../Register.php");
     exit();
 }
-// 1. Get the email from session
+
 $user_email = $_SESSION['user']['identifier'];
-
-// 2. JOIN using u.id and p.user_id instead of email
-$sql = "SELECT u.name, p.profile_pic, p.first_name 
-        FROM users u 
-        LEFT JOIN employee_profiles p ON u.id = p.user_id 
-        WHERE u.identifier = '$user_email'";
-
-$profileRes = $conn->query($sql);
-
-if ($profileRes) {
-    $user_data = $profileRes->fetch_assoc();
-}
-
-// 3. Fallback logic
-$display_name = !empty($user_data['name']) ? $user_data['name'] : "Employee";
-$first_name = !empty($user_data['first_name']) ? $user_data['first_name'] : $display_name;
-$profile_img = !empty($user_data['profile_pic']) ? $user_data['profile_pic'] : 'default-avatar.png';
-$email = $_SESSION['user']['identifier'];
-$today = date('Y-m-d'); // Today's date in IST
-$message = "";
-
-// --- LOGIC: Handle the Check-In Button Click ---
-if (isset($_POST['mark_attendance'])) {
-    // Capture time in IST
-    $time = date('H:i:s');
-
-    // Check again to prevent double entries
-    $check = $conn->query("SELECT id FROM attendance WHERE email='$email' AND log_date='$today'");
-    if ($check->num_rows == 0) {
-        $sql = "INSERT INTO attendance (email, log_date, login_time) VALUES ('$email', '$today', '$time')";
-        if ($conn->query($sql)) {
-            // Refresh to update the UI
-            header("Location: staff-attendance.php?success=1");
-            exit();
-        }
-    }
-}
-
-// Check if user is already checked in for today
-$att_check = $conn->query("SELECT login_time FROM attendance WHERE email='$email' AND log_date='$today'");
-$is_present = ($att_check->num_rows > 0);
-$login_data = $att_check->fetch_assoc();
-// ... after your session and DB includes ...
 $today = date('Y-m-d');
 $current_time = date('H:i:s');
 
-// Handle Manual Check-out Button
-if (isset($_POST['manual_checkout'])) {
-    $sql = "UPDATE attendance SET logout_time='$current_time' 
-            WHERE email='$user_email' AND log_date='$today' AND logout_time IS NULL";
-    $conn->query($sql);
+// --- HANDLE CHECK-IN ---
+if (isset($_POST['mark_attendance'])) {
+    $check = $conn->query("SELECT id FROM attendance WHERE email='$user_email' AND log_date='$today'");
+    if ($check->num_rows == 0) {
+        $sql = "INSERT INTO attendance (email, log_date, login_time) VALUES ('$user_email', '$today', '$current_time')";
+        $conn->query($sql);
+    }
     header("Location: staff-attendance.php");
     exit();
 }
 
-// Fetch today's record
-$att_check = $conn->query("SELECT * FROM attendance WHERE email='$user_email' AND log_date='$today'");
-$row = $att_check->fetch_assoc();
+// --- HANDLE CHECK-OUT & LOGOUT ---
+if (isset($_POST['manual_checkout'])) {
+    // 1. Update the database
+    $sql = "UPDATE attendance SET logout_time='$current_time' 
+            WHERE email='$user_email' AND log_date='$today' AND logout_time IS NULL";
+    
+    if ($conn->query($sql)) {
+        // 2. Clear ALL session data
+        $_SESSION = array(); 
+        
+        // 3. Destroy the session on server
+        session_destroy();
+        
+        // 4. Redirect - Use ONE dot if Register.php is in the parent folder
+        header("Location: ../Register.php?status=shift_ended");
+        exit();
+    }
+}
+
+// --- FETCH DATA FOR UI ---
+$profileRes = $conn->query("SELECT u.name, p.profile_pic FROM users u LEFT JOIN employee_profiles p ON u.id = p.user_id WHERE u.identifier = '$user_email'");
+$user_data = $profileRes->fetch_assoc();
+
+$att_res = $conn->query("SELECT * FROM attendance WHERE email='$user_email' AND log_date='$today'");
+$row = $att_res->fetch_assoc();
+
+$is_present = ($att_res && $att_res->num_rows > 0);
 $is_checked_out = ($row && !empty($row['logout_time']));
+
+$display_name = !empty($user_data['name']) ? $user_data['name'] : "Employee";
+$profile_img = !empty($user_data['profile_pic']) ? $user_data['profile_pic'] : 'default-avatar.png';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -257,31 +244,35 @@ $is_checked_out = ($row && !empty($row['logout_time']));
             </div>
         </div>
 
-        <div class="card">
-            <?php if ($is_present): ?>
-                <div class="status-box status-present">
-                    <div style="font-size:40px;"><i class="fas fa-check-circle"></i></div>
-                    <div>
-                        <h2 style="margin:0;">Marked Present</h2>
-                        <p style="margin:5px 0; font-size:16px;">System log verified. Your shift started at: <b><?php echo date('h:i A', strtotime($login_data['login_time'])); ?></b></p>
-                    </div>
-                </div>
-            <?php else: ?>
-                <div class="status-box status-absent" style="margin-bottom:25px;">
-                    <div style="font-size:40px;"><i class="fas fa-fingerprint"></i></div>
-                    <div>
-                        <h2 style="margin:0;">Not Checked-In</h2>
-                        <p style="margin:5px 0; font-size:16px;">Your presence has not been recorded for today yet.</p>
-                    </div>
-                </div>
-
-                <form method="POST">
-                    <button type="submit" name="mark_attendance" class="btn-checkin">
-                        <i class="fas fa-sign-in-alt"></i> MARK ATTENDANCE NOW
-                    </button>
-                </form>
-            <?php endif; ?>
+       <div class="card">
+    <?php if (!$is_present): ?>
+        <div class="status-box status-absent" style="margin-bottom:20px;">
+            <i class="fas fa-fingerprint" style="font-size:30px;"></i>
+            <span>You have not checked in yet today.</span>
         </div>
+        <form method="POST">
+            <button type="submit" name="mark_attendance" class="btn-checkin">
+                <i class="fas fa-sign-in-alt"></i> MARK ATTENDANCE
+            </button>
+        </form>
+
+    <?php elseif (!$is_checked_out): ?>
+        <div class="status-box status-present" style="margin-bottom:20px; background:#fff7ed; border-left-color:#ff8c00;">
+            <i class="fas fa-clock" style="font-size:30px; color:#ff8c00;"></i>
+            <span style="color:#9a3412;">Logged in at: <b><?= date('h:i A', strtotime($row['login_time'])) ?></b></span>
+        </div>
+        <form method="POST" onsubmit="return confirm('Ready to end your shift? You will be logged out.');">
+            <button type="submit" name="manual_checkout" class="btn-checkin" style="background:#be123c;">
+                <i class="fas fa-power-off"></i> CHECK-OUT & LOGOUT
+            </button>
+        </form>
+
+    <?php else: ?>
+        <div class="status-box status-present">
+            <i class="fas fa-check-double"></i> Shift Completed.
+        </div>
+    <?php endif; ?>
+</div>
 
         <div class="card">
             <h3><i class="fas fa-history" style="color:var(--orange);"></i> Attendance History (IST)</h3>
