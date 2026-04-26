@@ -450,6 +450,35 @@ ksort($services_map_counts);
         }
     });
 }
+
+window.onload = function() {
+    // 1. Get the 'target' service from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetService = urlParams.get('target');
+
+    if (targetService) {
+        // 2. Look through all sidebar items for a match
+        const items = document.querySelectorAll('.service-item span');
+        let found = false;
+
+        items.forEach(span => {
+            if (span.innerText.trim() === targetService) {
+                // 3. Trigger the click event on the parent .service-item
+                span.parentElement.click();
+                found = true;
+                
+                // 4. Scroll the sidebar to that item if it's a long list
+                span.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+
+        // 5. If specific service isn't found, ensure 'All' is selected
+        if (!found) {
+            console.log("Service not found in sidebar list.");
+        }
+    }
+};
+
     </script>
 
 </body>

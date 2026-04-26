@@ -167,6 +167,90 @@ $js_data = json_encode($counts);
             border-radius: 20px;
             font-weight: 700;
         }
+        /* Search Bar Styling */
+.search-container {
+    position: relative;
+    width: 300px; /* Controlled width for left alignment */
+}
+
+.search-container i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+#serviceSearch {
+    width: 100%;
+    padding: 10px 15px 10px 38px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+    background-color: white;
+}
+
+#serviceSearch:focus {
+    border-color: var(--navy);
+    box-shadow: 0 0 0 4px rgba(11, 60, 116, 0.05);
+}
+
+/* Ensure hidden rows don't take up space */
+.hidden-row {
+    display: none !important;
+}
+
+/* No results styling */
+.no-results-msg {
+    text-align: center;
+    padding: 40px !important;
+    color: #64748b;
+    font-style: italic;
+}
+.btn-view-service {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--navy);
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1.5px solid var(--navy);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.btn-view-service i {
+    font-size: 10px;
+    transition: transform 0.3s ease;
+}
+
+.btn-view-service:hover {
+    background: var(--navy);
+    color: white;
+    box-shadow: 0 4px 12px rgba(11, 60, 116, 0.2);
+    transform: translateY(-1px);
+}
+
+.btn-view-service:hover i {
+    transform: translateX(3px);
+}
+
+.btn-view-service:active {
+    transform: translateY(0);
+}
+#serviceChart {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
     </style>
 </head>
 
@@ -240,26 +324,38 @@ $js_data = json_encode($counts);
         <div class="report-container">
             <div class="card">
                 <h3 style="margin-top:0; color:var(--navy);"><i class="fas fa-list-ul" style="color:var(--orange);"></i> Service Breakdown</h3>
+                <div style="display: flex; justify-content: flex-start; margin-bottom: 20px;">
+    <div class="search-container">
+        <i class="fas fa-search"></i>
+        <input type="text" id="serviceSearch" placeholder="Search service name..." onkeyup="filterServices()">
+    </div>
+</div>
                 <table>
-                    <thead>
-                        <tr>
-                            <th>Sr. No</th>
-                            <th>Service Description</th>
-                            <th style="text-align:center;">No. of Clients</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php $sr_no = 1;
-                        foreach ($service_counts as $service_name => $client_count): ?>
-                            <tr>
-                                <td><?php echo $sr_no++; ?></td>
-                                <td><?php echo htmlspecialchars($service_name); ?></td>
-                                <td style="text-align:center;">
-                                    <span class="badge-count"><?php echo $client_count; ?></span>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
+                 <thead>
+    <tr>
+        <th>Sr. No</th>
+        <th>Service Description</th>
+        <th style="text-align:center;">No. of Clients</th>
+        <th style="text-align:right;">Action</th> </tr>
+</thead>
+
+<tbody>
+    <?php $sr_no = 1;
+    foreach ($service_counts as $service_name => $client_count): ?>
+        <tr>
+            <td><?php echo $sr_no++; ?></td>
+            <td><?php echo htmlspecialchars($service_name); ?></td>
+            <td style="text-align:center;">
+                <span class="badge-count"><?php echo $client_count; ?></span>
+            </td>
+            <td style="text-align:right;">
+                <a href="client-services.php?target=<?php echo urlencode($service_name); ?>" class="btn-view-service">
+                    View Clients <i class="fas fa-external-link-alt"></i>
+                </a>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+</tbody>
                 </table>
             </div>
 
@@ -293,39 +389,94 @@ $js_data = json_encode($counts);
             });
         }
 
-        // CHART LOGIC
         const ctx = document.getElementById('serviceChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: <?php echo $js_labels; ?>,
-                datasets: [{
-                    data: <?php echo $js_data; ?>,
-                    backgroundColor: ['#818cf8', '#fbbf24', '#34d399', '#f87171', '#60a5fa', '#f472b6', '#fb923c', '#a78bfa'],
-                    hoverOffset: 15,
-                    borderWidth: 5,
-                    borderColor: '#ffffff'
-                }]
+const serviceData = <?php echo $js_data; ?>;
+const totalClients = serviceData.reduce((a, b) => a + b, 0);
+
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: <?php echo $js_labels; ?>,
+        datasets: [{
+            data: serviceData,
+            backgroundColor: ['#818cf8', '#fbbf24', '#34d399', '#f87171', '#60a5fa', '#f472b6', '#fb923c', '#a78bfa'],
+            hoverOffset: 20, // Increased for a better "pop" effect
+            borderWidth: 5,
+            borderColor: '#ffffff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    usePointStyle: true,
+                    font: { size: 12, weight: '600' }
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true,
-                            font: {
-                                size: 12,
-                                weight: '600'
-                            }
-                        }
+            tooltip: {
+                backgroundColor: '#082d56', // Matches your sidebar --navy
+                titleFont: { size: 14, weight: 'bold' },
+                bodyFont: { size: 13 },
+                padding: 12,
+                cornerRadius: 10,
+                displayColors: false, // Removes the color box for a cleaner look
+                callbacks: {
+                    label: function(context) {
+                        const value = context.raw;
+                        // Calculate percentage
+                        const percentage = ((value / totalClients) * 100).toFixed(1) + "%";
+                        return ` Clients: ${value} (${percentage})`;
                     }
-                },
-                cutout: '70%'
+                }
             }
-        });
+        },
+        cutout: '70%'
+    }
+});
+        function filterServices() {
+    const input = document.getElementById('serviceSearch');
+    const filter = input.value.toLowerCase().trim();
+    const tableBody = document.querySelector("table tbody");
+    const rows = tableBody.getElementsByTagName("tr");
+    let matchFound = false;
+
+    // Remove existing "No Results" row if it exists
+    const existingMsg = document.getElementById('no-results-row');
+    if (existingMsg) existingMsg.remove();
+
+    for (let i = 0; i < rows.length; i++) {
+        // Index [1] is the Service Description column
+        const serviceName = rows[i].getElementsByTagName("td")[1];
+        
+        if (serviceName) {
+            const textValue = serviceName.textContent || serviceName.innerText;
+            
+            // Check if search term exists in the service name
+            if (textValue.toLowerCase().indexOf(filter) > -1) {
+                rows[i].classList.remove('hidden-row');
+                matchFound = true;
+            } else {
+                rows[i].classList.add('hidden-row');
+            }
+        }
+    }
+
+    // If no services match, show a friendly message
+    if (!matchFound) {
+        const noResultRow = document.createElement('tr');
+        noResultRow.id = 'no-results-row';
+        noResultRow.innerHTML = `
+            <td colspan="4" class="no-results-msg">
+                <i class="fas fa-info-circle" style="margin-right:8px;"></i>
+                No services match your search "${input.value}"
+            </td>`;
+        tableBody.appendChild(noResultRow);
+    }
+}
     </script>
 
 </body>
