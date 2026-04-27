@@ -4,7 +4,6 @@ include('../db.php');
 
 // 1. SET THE TIMEZONE
 date_default_timezone_set('Asia/Kolkata');
-
 // 2. SECURITY CHECK
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'office') {
     header("Location: ../Register.php");

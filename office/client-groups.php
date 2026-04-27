@@ -16,7 +16,6 @@ $selected_group = isset($_GET['group_id']) ? intval($_GET['group_id']) : 0;
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>Client Groups | KKA Admin</title>
@@ -378,8 +377,34 @@ $selected_group = isset($_GET['group_id']) ? intval($_GET['group_id']) : 0;
                 $clients = false; // Group exists but has no clients
             }
     ?>
-                
-                        <h2 style="margin-bottom:20px; color:var(--navy);"><?php echo htmlspecialchars($group['group_name']); ?></h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 25px;">
+    
+    <h2 style="margin: 0; color: var(--navy); font-size: 24px;">
+        <?php echo htmlspecialchars($group['group_name']); ?>
+    </h2>
+
+    <div style="display: flex; gap: 12px;">
+        <button onclick='openUpdateSpecific(<?php echo json_encode($group); ?>, "name")' 
+                style="background: #f8fafc; 
+                       color: #64748b; 
+                       border: 1px solid #e2e8f0; 
+                       padding: 10px 18px; 
+                       border-radius: 10px; 
+                       cursor: pointer; 
+                       font-weight: 600; 
+                       font-size: 13px; 
+                       display: flex; 
+                       align-items: center; 
+                       gap: 8px; 
+                       transition: all 0.2s;"
+                onmouseover="this.style.background='#f1f5f9'; this.style.color='#1e293b';"
+                onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b';">
+            <i class="fas fa-edit"></i> 
+            Edit Group
+        </button>
+
+    </div>
+</div>
                         <div class="table-card">
                             <table id="clientTable">
                                 <thead>
@@ -514,7 +539,64 @@ $selected_group = isset($_GET['group_id']) ? intval($_GET['group_id']) : 0;
             </form>
         </div>
     </div>
+<div id="updateGroupModal" class="modal" style="display:none; position:fixed; z-index:1001; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(3px);">
+    <div class="modal-content" style="background:#fff; width:480px; margin:5% auto; border-radius:15px; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
+        
+        <div style="background:var(--navy); padding:18px 22px; color:white; display:flex; justify-content:space-between; align-items:center;">
+            <h3 id="updateModalTitle" style="margin:0; font-size:17px; font-weight:600; letter-spacing:0.5px;">Update Group</h3>
+            <span onclick="closeUpdateModal()" style="cursor:pointer; font-size:22px; opacity:0.8; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">&times;</span>
+        </div>
 
+        <form action="group-update.php" method="POST" style="padding:25px;">
+            <input type="hidden" name="group_id" id="update_group_id">
+
+            <label style="font-size:11px; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Group Name</label>
+            <input type="text" name="group_name" id="update_group_name" required 
+                   style="width:90%; padding:12px; border:1px solid #e2e8f0; border-radius:10px; margin:8px 0 22px 0; outline:none; font-size:15px; color:var(--navy);"
+                   onfocus="this.style.borderColor='var(--orange)'">
+
+            <label style="font-size:11px; color:#94a3b8; font-weight:800; text-transform:uppercase; letter-spacing:1px;">Members Selection</label>
+            <div style="max-height:280px; overflow-y:auto; border:1px solid #f1f5f9; padding:8px; border-radius:12px; margin-top:8px; background:#f8fafc;">
+                <?php 
+                // Fetching Company Name, Owner Name, and Client ID as requested
+                $clients = $conn->query("SELECT client_id, company_name, owner_name FROM client_profiles ORDER BY company_name ASC");
+                while($c = $clients->fetch_assoc()): ?>
+                    <label class="update-client-item" style="display:flex; align-items:center; padding:12px; margin-bottom:6px; cursor:pointer; background:white; border-radius:8px; border:1px solid transparent; transition:0.2s;">
+                        <input type="checkbox" name="client_ids[]" value="<?php echo $c['client_id']; ?>" class="update-cb" 
+                               style="width:18px; height:18px; accent-color:var(--orange);">
+                        
+                        <div style="margin-left:15px;">
+                            <div style="font-size:14px; font-weight:700; color:var(--navy); line-height:1.2;">
+                                <?php echo htmlspecialchars($c['company_name']); ?>
+                            </div>
+                            <div style="font-size:11px; color:#64748b; margin-top:2px;">
+                                <span style="color:var(--orange); font-weight:600;"><?php echo $c['client_id']; ?></span> 
+                                <span style="margin:0 5px;">•</span> 
+                                <?php echo htmlspecialchars($c['owner_name']); ?>
+                            </div>
+                        </div>
+                    </label>
+                <?php endwhile; ?>
+            </div>
+
+            <button type="submit" style="width:100%; margin-top:25px; background:var(--orange); color:white; border:none; padding:15px; border-radius:12px; font-weight:700; cursor:pointer; font-size:15px; box-shadow:0 10px 15px -3px rgba(251, 146, 60, 0.3); transition:0.3s;"
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.opacity='0.95';"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.opacity='1';">
+                Save Changes
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Subtle hover effect for client items */
+    .update-client-item:hover {
+        border-color: #e2e8f0 !important;
+        background: #f1f5f9 !important;
+    }
+    /* When checkbox is checked via JS logic */
+    
+</style>
     <style>
         /* Styling for the selected state */
         .selectable-client-item.selected {
@@ -633,7 +715,32 @@ $selected_group = isset($_GET['group_id']) ? intval($_GET['group_id']) : 0;
             });
         }
         if(status === 'client_removed') alert('Client removed from this group.');
+        function openUpdateSpecific(data, focusMode) {
+    // 1. Show the specific update modal
+    document.getElementById('updateGroupModal').style.display = 'block';
+    
+    // 2. Fill the hidden ID and the name input
+    document.getElementById('update_group_id').value = data.id;
+    document.getElementById('update_group_name').value = data.group_name;
+
+    // 3. Set the Title based on button clicked
+    document.getElementById('updateModalTitle').innerText = (focusMode === 'name') ? "Rename Group" : "Add Clients to Group";
+
+    // 4. Pre-check clients already in this group
+    let existingIds = data.client_ids ? data.client_ids.split(',') : [];
+    document.querySelectorAll('.update-cb').forEach(cb => {
+        cb.checked = existingIds.includes(cb.value);
+    });
+
+    // 5. Auto-focus
+    if(focusMode === 'name') {
+        document.getElementById('update_group_name').focus();
+    }
+}
+
+function closeUpdateModal() {
+    document.getElementById('updateGroupModal').style.display = 'none';
+}
     </script>
 </body>
-
 </html>
