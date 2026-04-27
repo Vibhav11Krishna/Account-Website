@@ -43,13 +43,12 @@ $profile_img = !empty($userData['profile_pic']) ? $userData['profile_pic'] : 'de
 // 4. HANDLE FORM SUBMISSION (UPDATE/INSERT)
 if (isset($_POST['update_profile'])) {
     
-    // SECURITY GATE: Even if HTML 'readonly' is bypassed, PHP will block the save if locked
     if ($is_locked) {
-        echo "<script>alert('Your profile is locked. Contact Admin to change credentials.'); window.location.href='Employee_profiles.php';</script>";
+        echo "<script>alert('Your profile is locked.'); window.location.href='Employee_profiles.php';</script>";
         exit();
     }
 
-    // Sanitize user inputs
+    // Sanitize basic inputs
     $fname   = $conn->real_escape_string($_POST['first_name']);
     $lname   = $conn->real_escape_string($_POST['last_name']);
     $phone   = $conn->real_escape_string($_POST['phone']);
@@ -60,11 +59,40 @@ if (isset($_POST['update_profile'])) {
     $emg     = $conn->real_escape_string($_POST['emergency_contact']);
     $address = $conn->real_escape_string($_POST['address']);
 
-    // Ensure directories exist for file uploads
-    if (!is_dir("../uploads/profile_pics/")) mkdir("../uploads/profile_pics/", 0777, true);
-    if (!is_dir("../uploads/documents/")) mkdir("../uploads/documents/", 0777, true);
+    $doc_path = "../uploads/documents/";
+    if (!is_dir($doc_path)) mkdir($doc_path, 0777, true);
 
-    // Profile Picture Upload Logic
+    // Document Logic (Aadhaar, PAN, Marksheets)
+    $aadhaar_photo = $userData['aadhaar_photo'] ?? '';
+    $pan_photo     = $userData['pan_photo'] ?? '';
+    $m10_photo     = $userData['marksheet_10'] ?? '';
+    $m12_photo     = $userData['marksheet_12'] ?? '';
+
+    // File processing loop
+    $file_map = [
+        'aadhaar_img' => ['prefix' => 'aadhaar_', 'target' => &$aadhaar_photo],
+        'pan_img'     => ['prefix' => 'pan_doc_', 'target' => &$pan_photo],
+        'm10_img'     => ['prefix' => 'm10_',      'target' => &$m10_photo],
+        'm12_img'     => ['prefix' => 'm12_',      'target' => &$m12_photo]
+    ];
+
+  foreach ($file_map as $input => $info) {
+    if (!empty($_FILES[$input]['name'])) {
+        // --- ADD THIS: Delete old file if it exists ---
+        if (!empty($info['target'])) {
+            $old_file = $doc_path . $info['target'];
+            if (file_exists($old_file)) unlink($old_file);
+        }
+        // --- END OF ADDITION ---
+
+        $ext = pathinfo($_FILES[$input]['name'], PATHINFO_EXTENSION);
+        $filename = $info['prefix'] . $current_user_id . "_" . time() . "." . $ext;
+        if (move_uploaded_file($_FILES[$input]['tmp_name'], $doc_path . $filename)) {
+            $info['target'] = $filename;
+        }
+    }
+}
+    // Profile Pic logic (Same as yours)
     $profile_pic = !empty($userData['profile_pic']) ? $userData['profile_pic'] : 'default-avatar.png';
     if (!empty($_FILES['profile_img']['name'])) {
         $ext = pathinfo($_FILES['profile_img']['name'], PATHINFO_EXTENSION);
@@ -72,38 +100,45 @@ if (isset($_POST['update_profile'])) {
         move_uploaded_file($_FILES['profile_img']['tmp_name'], "../uploads/profile_pics/" . $profile_pic);
     }
 
-    // Aadhaar Photo Upload Logic
-    $aadhaar_photo = $userData['aadhaar_photo'] ?? ''; 
-    if (!empty($_FILES['aadhaar_img']['name'])) {
-        $a_ext = pathinfo($_FILES['aadhaar_img']['name'], PATHINFO_EXTENSION);
-        $aadhaar_photo = "aadhaar_" . $current_user_id . "_" . time() . "." . $a_ext;
-        move_uploaded_file($_FILES['aadhaar_img']['tmp_name'], "../uploads/documents/" . $aadhaar_photo);
-    }
-
-    // Check if record already exists to determine whether to UPDATE or INSERT
-    $check = $conn->query("SELECT id FROM employee_profiles WHERE user_id = '$current_user_id'");
-
-    if ($check && $check->num_rows > 0) {
-        // Update existing profile
-        $sql = "UPDATE employee_profiles SET 
-                first_name='$fname', last_name='$lname', phone='$phone', 
-                dob='$dob', aadhaar_no='$aadhaar', pan_no='$pan', 
-                date_of_joining='$doj', emergency_contact='$emg', 
-                profile_pic='$profile_pic', aadhaar_photo='$aadhaar_photo', address='$address' 
-                WHERE user_id='$current_user_id'";
-    } else {
-        // Create new profile record
-        $sql = "INSERT INTO employee_profiles (user_id, first_name, last_name, phone, dob, aadhaar_no, pan_no, date_of_joining, emergency_contact, profile_pic, aadhaar_photo, address, is_locked) 
-                VALUES ('$current_user_id', '$fname', '$lname', '$phone', '$dob', '$aadhaar', '$pan', '$doj', '$emg', '$profile_pic', '$aadhaar_photo', '$address', 0)";
-    }
+    // UPDATE Query including new columns
+    $sql = "UPDATE employee_profiles SET 
+            first_name='$fname', last_name='$lname', phone='$phone', 
+            dob='$dob', aadhaar_no='$aadhaar', pan_no='$pan', 
+            pan_photo='$pan_photo', marksheet_10='$m10_photo', marksheet_12='$m12_photo',
+            date_of_joining='$doj', emergency_contact='$emg', 
+            profile_pic='$profile_pic', aadhaar_photo='$aadhaar_photo', address='$address' 
+            WHERE user_id='$current_user_id'";
 
     if ($conn->query($sql)) {
-        $status_msg = "success";
-        // Refresh the page after 1 second to show the success state
-        header("Refresh:1");
-    } else {
-        $status_msg = "error";
-        echo "Error updating record: " . $conn->error;
+        header("Location: Employee_profiles.php?status=success");
+        exit();
+    }
+}
+// --- DELETE DOCUMENT LOGIC ---
+if (isset($_GET['delete_doc']) && !$is_locked) {
+    $column_to_delete = $_GET['delete_doc'];
+    
+    // Whitelist columns to prevent SQL injection or accidental deletion of profile_pic
+    $allowed_docs = ['aadhaar_photo', 'pan_photo', 'marksheet_10', 'marksheet_12'];
+    
+    if (in_array($column_to_delete, $allowed_docs)) {
+        // 1. Get the filename first to delete it from storage
+        $get_file = $conn->query("SELECT $column_to_delete FROM employee_profiles WHERE user_id = '$current_user_id'");
+        $file_data = $get_file->fetch_assoc();
+        $filename = $file_data[$column_to_delete];
+
+        if (!empty($filename)) {
+            $full_path = "../uploads/documents/" . $filename;
+            if (file_exists($full_path)) {
+                unlink($full_path); // Physically delete the file
+            }
+        }
+
+        // 2. Update database to clear the field
+        $conn->query("UPDATE employee_profiles SET $column_to_delete = NULL WHERE user_id = '$current_user_id'");
+        
+        header("Location: Employee_profiles.php?status=doc_deleted");
+        exit();
     }
 }
 ?>
@@ -331,22 +366,93 @@ if (isset($_POST['update_profile'])) {
             </div>
 
             <div class="form-group">
-                <label>Upload Aadhaar (Photo/Scan)</label>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <input type="file" name="aadhaar_img" accept="image/*,application/pdf" style="flex:1;" <?= $is_locked ? 'disabled' : '' ?>>
-                    <?php if(!empty($userData['aadhaar_photo'])): ?>
-                        <a href="../uploads/documents/<?= $userData['aadhaar_photo'] ?>" target="_blank" style="font-size:12px; color:var(--orange); font-weight:bold; text-decoration:none;">
-                            <i class="fas fa-external-link-alt"></i> View
-                        </a>
-                    <?php endif; ?>
-                </div>
+    <label>Aadhaar Card (Photo/PDF)</label>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <input type="file" name="aadhaar_img" accept="image/*,application/pdf" style="flex:1;" <?= $is_locked ? 'disabled' : '' ?>>
+        <?php if(!empty($userData['aadhaar_photo'])): ?>
+            <div style="display:flex; gap:5px;">
+                <a href="../uploads/documents/<?= $userData['aadhaar_photo'] ?>" target="_blank" 
+                   style="background:#f1f5f9; padding:8px 12px; border-radius:8px; color:var(--navy); text-decoration:none; font-size:12px; font-weight:700; border:1px solid #e2e8f0;">
+                    <i class="fas fa-eye"></i> View
+                </a>
+                <?php if(!$is_locked): ?>
+                    <a href="?delete_doc=aadhaar_photo" onclick="return confirm('Delete this document?')" 
+                       style="background:#fee2e2; padding:8px 12px; border-radius:8px; color:#ef4444; border:1px solid #fecaca; text-decoration:none; font-size:12px;">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                <?php endif; ?>
             </div>
+        <?php endif; ?>
+    </div>
+</div>
 
             <div class="form-group">
                 <label>PAN No</label>
                 <input type="text" name="pan_no" value="<?= htmlspecialchars($userData['pan_no'] ?? '') ?>" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?>>
             </div>
 
+            <div class="form-group">
+    <label>PAN Card (Photo/PDF)</label>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <input type="file" name="pan_img" accept="image/*,application/pdf" style="flex:1;" <?= $is_locked ? 'disabled' : '' ?>>
+        <?php if(!empty($userData['pan_photo'])): ?>
+            <div style="display:flex; gap:5px;">
+                <a href="../uploads/documents/<?= $userData['pan_photo'] ?>" target="_blank" 
+                   style="background:#f1f5f9; padding:8px 12px; border-radius:8px; color:var(--navy); text-decoration:none; font-size:12px; font-weight:700; border:1px solid #e2e8f0;">
+                    <i class="fas fa-eye"></i> View
+                </a>
+                <?php if(!$is_locked): ?>
+                    <a href="?delete_doc=pan_photo" onclick="return confirm('Delete this document?')" 
+                       style="background:#fee2e2; padding:8px 12px; border-radius:8px; color:#ef4444; border:1px solid #fecaca; text-decoration:none; font-size:12px;">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="form-group">
+    <label>10th Marksheet (Photo/PDF)</label>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <input type="file" name="m10_img" accept="image/*,application/pdf" style="flex:1;" <?= $is_locked ? 'disabled' : '' ?>>
+        <?php if(!empty($userData['marksheet_10'])): ?>
+            <div style="display:flex; gap:5px;">
+                <a href="../uploads/documents/<?= $userData['marksheet_10'] ?>" target="_blank" 
+                   style="background:#f1f5f9; padding:8px 12px; border-radius:8px; color:var(--navy); text-decoration:none; font-size:12px; font-weight:700; border:1px solid #e2e8f0;">
+                    <i class="fas fa-graduation-cap"></i> View
+                </a>
+                <?php if(!$is_locked): ?>
+                    <a href="?delete_doc=marksheet_10" onclick="return confirm('Delete this document?')" 
+                       style="background:#fee2e2; padding:8px 12px; border-radius:8px; color:#ef4444; border:1px solid #fecaca; text-decoration:none; font-size:12px;">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="form-group">
+    <label>12th Marksheet (Photo/PDF)</label>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <input type="file" name="m12_img" accept="image/*,application/pdf" style="flex:1;" <?= $is_locked ? 'disabled' : '' ?>>
+        <?php if(!empty($userData['marksheet_12'])): ?>
+            <div style="display:flex; gap:5px;">
+                <a href="../uploads/documents/<?= $userData['marksheet_12'] ?>" target="_blank" 
+                   style="background:#f1f5f9; padding:8px 12px; border-radius:8px; color:var(--navy); text-decoration:none; font-size:12px; font-weight:700; border:1px solid #e2e8f0;">
+                    <i class="fas fa-graduation-cap"></i> View
+                </a>
+                <?php if(!$is_locked): ?>
+                    <a href="?delete_doc=marksheet_12" onclick="return confirm('Delete this document?')" 
+                       style="background:#fee2e2; padding:8px 12px; border-radius:8px; color:#ef4444; border:1px solid #fecaca; text-decoration:none; font-size:12px;">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
             <div class="form-group">
                 <label>Phone</label>
                 <input type="text" name="phone" value="<?= htmlspecialchars($userData['phone'] ?? '') ?>" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?>>
@@ -383,27 +489,72 @@ if (isset($_POST['update_profile'])) {
     </form>
 </div>
 
-    <!-- SAVED INFORMATION BOX (READ ONLY) -->
-    <div class="card" style="border-left-color: var(--orange);">
-        <h3 style="margin-top:0; color:var(--orange);"><i class="fas fa-database"></i> Currently Saved Data</h3>
-        <div class="info-display-box">
-            <div class="info-item"><span class="info-label">Full Name</span><span class="info-value"><?= ($userData['first_name'] ?? '-') . ' ' . ($userData['last_name'] ?? '') ?></span></div>
-            <div class="info-item"><span class="info-label">Phone</span><span class="info-value"><?= $userData['phone'] ?? 'Not Set' ?></span></div>
-            <div class="info-item"><span class="info-label">Joining Date</span><span class="info-value"><?= $userData['date_of_joining'] ?? 'Not Set' ?></span></div>
-            <div class="info-item"><span class="info-label">Aadhaar</span><span class="info-value"><?= $userData['aadhaar_no'] ?? 'Not Set' ?></span></div>
-            <div class="info-item">
-    <span class="info-label">Aadhaar Doc</span>
-    <span class="info-value">
-        <?= !empty($userData['aadhaar_photo']) 
-            ? '<i class="fas fa-check-circle" style="color:green;"></i> Uploaded' 
-            : '<i class="fas fa-times-circle" style="color:red;"></i> Not Uploaded' ?>
-    </span>
-</div>
-            <div class="info-item"><span class="info-label">PAN</span><span class="info-value"><?= $userData['pan_no'] ?? 'Not Set' ?></span></div>
-            <div class="info-item"><span class="info-label">Emergency</span><span class="info-value"><?= $userData['emergency_contact'] ?? 'Not Set' ?></span></div>
-            <div class="info-item" style="grid-column: span 3;"><span class="info-label">Residential Address</span><span class="info-value"><?= $userData['address'] ?? 'No address provided' ?></span></div>
+    <div class="card" style="border-left-color: var(--orange); margin-top: 30px;">
+    <h3 style="margin-top:0; color:var(--orange); border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;">
+        <i class="fas fa-database"></i> Currently Saved Profile Data
+    </h3>
+    
+    <div class="info-display-box" style="margin-bottom: 25px;">
+        <div class="info-item">
+            <span class="info-label">Full Name</span>
+            <span class="info-value"><?= htmlspecialchars(($userData['first_name'] ?? '-') . ' ' . ($userData['last_name'] ?? '')) ?></span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Phone</span>
+            <span class="info-value"><?= htmlspecialchars($userData['phone'] ?? 'Not Set') ?></span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Joining Date</span>
+            <span class="info-value"><?= htmlspecialchars($userData['date_of_joining'] ?? 'Not Set') ?></span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Aadhaar No</span>
+            <span class="info-value"><?= htmlspecialchars($userData['aadhaar_no'] ?? 'Not Set') ?></span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">PAN No</span>
+            <span class="info-value"><?= htmlspecialchars($userData['pan_no'] ?? 'Not Set') ?></span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Emergency Contact</span>
+            <span class="info-value"><?= htmlspecialchars($userData['emergency_contact'] ?? 'Not Set') ?></span>
+        </div>
+        <div class="info-item" style="grid-column: span 3;">
+            <span class="info-label">Residential Address</span>
+            <span class="info-value"><?= htmlspecialchars($userData['address'] ?? 'No address provided') ?></span>
         </div>
     </div>
+
+    <h4 style="font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">
+        <i class="fas fa-file-shield"></i> Verification & Documents
+    </h4>
+    <div class="info-display-box" style="background: #f8fafc; border-style: solid; grid-template-columns: repeat(4, 1fr);">
+        <div class="info-item">
+            <span class="info-label">Aadhaar Doc</span>
+            <span class="info-value">
+                <?= !empty($userData['aadhaar_photo']) ? '<span style="color:green;">✅ Uploaded</span>' : '<span style="color:red;">❌ Missing</span>' ?>
+            </span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">PAN Photo</span>
+            <span class="info-value">
+                <?= !empty($userData['pan_photo']) ? '<span style="color:green;">✅ Uploaded</span>' : '<span style="color:red;">❌ Missing</span>' ?>
+            </span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">10th Marksheet</span>
+            <span class="info-value">
+                <?= !empty($userData['marksheet_10']) ? '<span style="color:green;">✅ Uploaded</span>' : '<span style="color:red;">❌ Missing</span>' ?>
+            </span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">12th Marksheet</span>
+            <span class="info-value">
+                <?= !empty($userData['marksheet_12']) ? '<span style="color:green;">✅ Uploaded</span>' : '<span style="color:red;">❌ Missing</span>' ?>
+            </span>
+        </div>
+    </div>
+</div>
 </div>
 
 </body>

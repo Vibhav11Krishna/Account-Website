@@ -212,8 +212,11 @@ if (isset($_POST['process_salary'])) {
                             WHERE u.role='office' 
                             ORDER BY u.name ASC";
 $sql = "SELECT u.*, 
-        ep.is_locked, ep.aadhaar_no, ep.aadhaar_photo, ep.pan_no, ep.address, 
-        ep.dob, ep.emergency_contact, ep.profile_pic, ep.date_of_joining,
+        ep.is_locked, ep.aadhaar_no, ep.aadhaar_photo, 
+        ep.pan_no, ep.pan_photo,             -- Added pan_photo
+        ep.marksheet_10, ep.marksheet_12,    -- Added marksheets
+        ep.address, ep.dob, ep.emergency_contact, 
+        ep.profile_pic, ep.date_of_joining,
         (SELECT login_time FROM attendance WHERE email = u.identifier AND log_date = '$today' LIMIT 1) as attendance_time 
         FROM users u 
         LEFT JOIN employee_profiles ep ON u.id = ep.user_id
@@ -353,13 +356,39 @@ $sql = "SELECT u.*,
                 <span id="v_addr" style="font-size:13px; line-height:1.5; color:#475569;"></span>
             </div>
 
-            <div style="margin-top:20px;">
-                <span class="d-lbl">Aadhaar Document Preview</span>
-                <div style="margin-top:10px; text-align:center; background:#f8fafc; padding:15px; border-radius:12px; border:1px dashed #cbd5e1;">
-                    <img id="v_aadhaar_img" src="" style="max-width:100%; border-radius:8px; display:none; border:1px solid #e2e8f0; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
-                    <span id="v_no_photo" style="font-size:12px; color:#94a3b8; font-style:italic;">No Aadhaar document uploaded by staff.</span>
-                </div>
-            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+    <div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0;">
+        <span class="d-lbl">Aadhaar Card</span>
+        <div style="margin-top:10px;">
+            <img id="v_aadhaar_img" src="" style="display:none;">
+            <div id="v_no_photo"></div>
+        </div>
+    </div>
+
+    <div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0;">
+        <span class="d-lbl">PAN Card</span>
+        <div style="margin-top:10px;">
+            <img id="v_pan_img" src="" style="display:none;">
+            <div id="v_pan_txt"></div>
+        </div>
+    </div>
+
+    <div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0;">
+        <span class="d-lbl">10th Marksheet</span>
+        <div style="margin-top:10px;">
+            <img id="v_m10_img" src="" style="display:none;">
+            <div id="v_m10_txt"></div>
+        </div>
+    </div>
+
+    <div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0;">
+        <span class="d-lbl">12th Marksheet</span>
+        <div style="margin-top:10px;">
+            <img id="v_m12_img" src="" style="display:none;">
+            <div id="v_m12_txt"></div>
+        </div>
+    </div>
+</div>
 
             <button onclick="closeViewModal()" style="width:100%; margin-top:25px; padding:14px; border:none; background:#f1f5f9; color:var(--navy); border-radius:12px; font-weight:bold; cursor:pointer; transition:0.2s;">Close Profile View</button>
         </div>
@@ -431,14 +460,12 @@ $sql = "SELECT u.*,
         function closeSalaryModal() {
             document.getElementById('salaryModal').style.display = 'none';
         }
-       function viewEmployee(data) {
+   function viewEmployee(data) {
     document.getElementById('viewModal').style.display = 'flex';
     
-    // Basic Info
+    // 1. Basic Info & Profile Fields
     document.getElementById('v_name').innerText = data.name;
     document.getElementById('v_email').innerText = data.identifier;
-    
-    // Profile Fields
     document.getElementById('v_join').innerText = data.date_of_joining || 'Not Set';
     document.getElementById('v_dob').innerText = data.dob || 'Not Set';
     document.getElementById('v_aadhaar').innerText = data.aadhaar_no || 'Not Set';
@@ -446,45 +473,59 @@ $sql = "SELECT u.*,
     document.getElementById('v_emg').innerText = data.emergency_contact || 'Not Set';
     document.getElementById('v_addr').innerText = data.address || 'Address not provided';
     
-    // Profile Picture Logic
-    const profileImg = document.getElementById('v_img');
-    profileImg.src = data.profile_pic ? "../uploads/profile_pics/" + data.profile_pic : "../uploads/profile_pics/default-avatar.png";
+    // 2. Profile Picture
+    document.getElementById('v_img').src = data.profile_pic ? "../uploads/profile_pics/" + data.profile_pic : "../uploads/profile_pics/default-avatar.png";
 
-    // --- SMART AADHAAR LOGIC (HANDLES BOTH JPG & PDF) ---
-    const aImg = document.getElementById('v_aadhaar_img');
-    const aText = document.getElementById('v_no_photo');
-    
-    if(data.aadhaar_photo && data.aadhaar_photo !== "") {
-        const fileName = data.aadhaar_photo;
-        const filePath = "../uploads/documents/" + fileName;
-        
-        // Get the extension (pdf, jpg, png, etc.)
-        const fileExt = fileName.split('.').pop().toLowerCase();
+    // 3. Document Processing Helper
+    const processDoc = (fileName, imgId, textId, label) => {
+        const imgTag = document.getElementById(imgId);
+        const textDiv = document.getElementById(textId);
 
-        if (fileExt === 'pdf') {
-            // HIDE the image tag, and put a PDF Link/Icon in the aText div
-            aImg.style.display = "none";
-            aText.style.display = "block";
-            aText.innerHTML = `
-                <div style="background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px;">
-                    <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 32px; margin-bottom: 10px;"></i>
-                    <p style="font-size: 13px; font-weight: bold; color: var(--navy);">Aadhaar Document (PDF)</p>
-                    <a href="${filePath}" target="_blank" style="background: var(--navy); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 12px; display: inline-block; margin-top: 5px;">
-                        <i class="fas fa-eye"></i> View PDF in New Tab
-                    </a>
-                </div>`;
+        if (fileName && fileName !== "") {
+            const filePath = "../uploads/documents/" + fileName;
+            const fileExt = fileName.split('.').pop().toLowerCase();
+
+            if (fileExt === 'pdf') {
+                // PDF Layout
+                imgTag.style.display = "none";
+                textDiv.style.display = "block";
+                textDiv.innerHTML = `
+                    <div style="background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 12px; text-align:center;">
+                        <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 24px; margin-bottom: 5px;"></i>
+                        <p style="font-size: 11px; font-weight: bold; color: var(--navy); margin:0;">${label} (PDF)</p>
+                        <a href="${filePath}" target="_blank" style="background: var(--navy); color: white; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-size: 10px; display: inline-block; margin-top: 8px;">
+                            <i class="fas fa-eye"></i> View PDF
+                        </a>
+                    </div>`;
+            } else {
+                // Image Layout with Click-to-Enlarge
+                imgTag.src = filePath;
+                imgTag.style.display = "block";
+                imgTag.style.width = "100%";
+                imgTag.style.height = "100px"; // Fixed height for consistent grid
+                imgTag.style.objectFit = "cover"; // Crops image to fit the box nicely
+                imgTag.style.borderRadius = "8px";
+                imgTag.style.cursor = "zoom-in";
+                
+                // Clicking opens the full image in a new tab
+                imgTag.onclick = function() { window.open(filePath, '_blank'); };
+                
+                textDiv.style.display = "block";
+                textDiv.innerHTML = `<p style="font-size:10px; color:#64748b; text-align:center; margin-top:5px; font-style:italic;">Click to enlarge</p>`;
+            }
         } else {
-            // It's an image: SHOW the image tag and HIDE the text div
-            aImg.src = filePath;
-            aImg.style.display = "block";
-            aText.style.display = "none";
+            // Not Uploaded State
+            imgTag.style.display = "none";
+            textDiv.style.display = "block";
+            textDiv.innerHTML = `<div style="text-align:center; padding:10px; color:#94a3b8; font-size:12px;">No ${label}</div>`;
         }
-    } else {
-        // No file uploaded at all
-        aImg.style.display = "none";
-        aText.style.display = "block";
-        aText.innerHTML = "No Aadhaar document uploaded by staff.";
-    }
+    };
+
+    // 4. Execute for all four documents
+    processDoc(data.aadhaar_photo, 'v_aadhaar_img', 'v_no_photo', 'Aadhaar');
+    processDoc(data.pan_photo,     'v_pan_img',     'v_pan_txt',  'PAN Card');
+    processDoc(data.marksheet_10,  'v_m10_img',     'v_m10_txt',  '10th Marksheet');
+    processDoc(data.marksheet_12,  'v_m12_img',     'v_m12_txt',  '12th Marksheet');
 }
 function closeViewModal() {
     document.getElementById('viewModal').style.display = 'none';
