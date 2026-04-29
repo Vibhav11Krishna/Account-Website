@@ -41,11 +41,11 @@ while ($r = $daily_res->fetch_assoc()) {
     $revenue_days[$r['day']] = $r['total'];
 }
 
-// --- 4. TABLE DATA ---
-$table_query = "SELECT r.*, u.name as client_name 
+// --- 4. TABLE DATA UPDATED (FETCHING FROM CLIENT_PROFILES) ---
+$table_query = "SELECT r.*, cp.company_name 
                 FROM receipts r 
-                JOIN users u ON r.client_id = u.identifier 
-                ORDER BY r.created_at DESC LIMIT 10";
+                LEFT JOIN client_profiles cp ON r.client_id = cp.client_id 
+                ORDER BY r.created_at DESC LIMIT 50"; 
 $table_res = $conn->query($table_query);
 ?>
 
@@ -350,33 +350,43 @@ $table_res = $conn->query($table_query);
                 </div>
             </div>
 
-            <div class="table-card">
-                <h3 style="margin:0 0 15px 0; font-size:16px;">Detailed Revenue Ledger</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>TRANSACTION DATE</th>
-                            <th>RECEIPT NUMBER</th>
-                            <th>CLIENT NAME</th>
-                            <th style="text-align:right;">NET AMOUNT PAID</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if ($table_res->num_rows > 0): ?>
-                            <?php while ($row = $table_res->fetch_assoc()): ?>
-                                <tr>
-                                    <td><?= date('d M, Y', strtotime($row['created_at'])) ?></td>
-                                    <td style="font-weight:700; color:var(--orange);"><?= $row['receipt_no'] ?></td>
-                                    <td><?= $row['client_name'] ?></td>
-                                    <td style="text-align:right;" class="amt-tag">₹<?= number_format($row['amount_paid'], 2) ?></td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr><td colspan="4" style="text-align:center;">No recent transactions found.</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+          <div class="table-card" style="background: white; padding: 30px; border-radius: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-top: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="margin:0; font-size:16px;">Detailed Revenue Ledger</h3>
+        
+        <!-- Search Bar -->
+        <div style="position: relative; width: 300px;">
+            <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+            <input type="text" id="receiptSearch" onkeyup="filterTable()" placeholder="Search Company or Receipt..." 
+                style="width: 90%; padding: 10px 10px 10px 35px; border-radius: 10px; border: 1px solid #e2e8f0; outline: none; font-size: 14px;">
+        </div>
+    </div>
+
+    <table id="receiptTable">
+        <thead>
+            <tr>
+                <th>TRANSACTION DATE</th>
+                <th>RECEIPT NUMBER</th>
+                <th>COMPANY NAME</th> <!-- Updated Header -->
+                <th style="text-align:right;">NET AMOUNT PAID</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if ($table_res->num_rows > 0): ?>
+                <?php while ($row = $table_res->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= date('d M, Y', strtotime($row['created_at'])) ?></td>
+                        <td style="font-weight:700; color:var(--orange);"><?= $row['receipt_no'] ?></td>
+                        <td><?= htmlspecialchars($row['company_name'] ?? 'N/A') ?></td> <!-- Fetched from client_profiles -->
+                        <td style="text-align:right;" class="amt-tag">₹<?= number_format($row['amount_paid'], 2) ?></td>
+                    </tr>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <tr><td colspan="4" style="text-align:center;">No recent transactions found.</td></tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>
         </div>
     </div>
 
@@ -470,6 +480,30 @@ options: {
     }
 }
         });
+        function filterTable() {
+    let input = document.getElementById("receiptSearch");
+    let filter = input.value.toUpperCase();
+    let table = document.getElementById("receiptTable");
+    let tr = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < tr.length; i++) {
+        // Index 1 is Receipt No, Index 2 is Company Name
+        let receiptCol = tr[i].getElementsByTagName("td")[1];
+        let companyCol = tr[i].getElementsByTagName("td")[2];
+        
+        if (receiptCol || companyCol) {
+            let txtValue1 = receiptCol.textContent || receiptCol.innerText;
+            let txtValue2 = companyCol.textContent || companyCol.innerText;
+            
+            if (txtValue1.toUpperCase().indexOf(filter) > -1 || 
+                txtValue2.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+}
     </script>
 </body>
 </html>

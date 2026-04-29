@@ -5,9 +5,10 @@ include('../db.php');
 $date = isset($_GET['date']) ? $conn->real_escape_string($_GET['date']) : date('Y-m-d');
 $display_date = date('d M, Y', strtotime($date));
 
-$sql = "SELECT r.receipt_no, r.amount_paid, u.name 
+// UPDATED QUERY: Joining client_profiles to get company_name
+$sql = "SELECT r.receipt_no, r.amount_paid, cp.company_name 
         FROM receipts r 
-        JOIN users u ON r.client_id = u.identifier 
+        LEFT JOIN client_profiles cp ON r.client_id = cp.client_id 
         WHERE DATE(r.created_at) = '$date'";
 $res = $conn->query($sql);
 
@@ -17,16 +18,19 @@ echo "<div style='margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding
         <span style='font-size: 13px; color: #64748b;'><i class='fas fa-calendar-alt'></i> $display_date</span>
       </div>";
 
-if($res->num_rows > 0) {
+if($res && $res->num_rows > 0) {
     echo "<div style='max-height: 300px; overflow-y: auto;'>";
     echo "<table style='width:100%; border-collapse: collapse; font-family: sans-serif;'>";
     
     $total_day = 0;
     while($row = $res->fetch_assoc()) {
         $total_day += $row['amount_paid'];
+        // Use company_name; fallback to 'Individual' if NULL
+        $display_name = !empty($row['company_name']) ? $row['company_name'] : "Individual/Other";
+        
         echo "<tr style='border-bottom: 1px solid #f8fafc;'>
                 <td style='padding: 12px 0;'>
-                    <span style='display:block; font-weight: 700; color: #334155; font-size: 14px;'>{$row['name']}</span>
+                    <span style='display:block; font-weight: 700; color: #334155; font-size: 14px;'>{$display_name}</span>
                     <small style='color: #ff8c00; font-weight: 600;'>#{$row['receipt_no']}</small>
                 </td>
                 <td style='text-align: right; padding: 12px 0; font-weight: 800; color: #0b3c74; font-size: 14px;'>

@@ -21,23 +21,33 @@ if (isset($_POST['master_dispatch'])) {
                  VALUES ('$client_id', '$service_name', '$instruction', '$staff_email', 'Assigned', CURDATE(), NOW())";
     $conn->query($sql_task);
 
-    // 2. IF FILE IS UPLOADED
-    if (!empty($_FILES["doc_file"]["name"])) {
-        $file_name = time() . "_" . basename($_FILES["doc_file"]["name"]);
+   // 2. IF FILES ARE UPLOADED
+    if (!empty($_FILES["doc_file"]["name"][0])) {
         $target_dir = "../uploads/center/";
-
         if (!file_exists($target_dir)) { mkdir($target_dir, 0777, true); }
 
-        if (move_uploaded_file($_FILES["doc_file"]["tmp_name"], $target_dir . $file_name)) {
-            $sql_doc = "INSERT INTO client_documents 
-                        (client_id, file_name, assigned_to, status, doc_category, category, instruction, created_at) 
-                        VALUES 
-                        ('$client_id', '$file_name', '$staff_email', 'In-Progress', '$doc_type', '$service_name', '$instruction', NOW())";
-            $conn->query($sql_doc);
+        $total_files = count($_FILES["doc_file"]["name"]);
+        $success_count = 0;
+
+        for ($i = 0; $i < $total_files; $i++) {
+            $original_name = $_FILES["doc_file"]["name"][$i];
+            $file_tmp = $_FILES["doc_file"]["tmp_name"][$i];
+            
+            // Unique filename: time + index + name
+            $file_name = time() . "_" . $i . "_" . basename($original_name);
+
+            if (move_uploaded_file($file_tmp, $target_dir . $file_name)) {
+                $sql_doc = "INSERT INTO client_documents 
+                            (client_id, file_name, assigned_to, status, doc_category, category, instruction, created_at) 
+                            VALUES 
+                            ('$client_id', '$file_name', '$staff_email', 'In-Progress', '$doc_type', '$service_name', '$instruction', NOW())";
+                $conn->query($sql_doc);
+                $success_count++;
+            }
         }
-        echo "<script>alert('Task & Document dispatched successfully!'); window.location='assign-work.php';</script>";
+        echo "<script>alert('$success_count Documents & Task dispatched successfully!'); window.location='assign-work.php';</script>";
     } else {
-        echo "<script>alert('Manual Task assigned (No document attached)'); window.location='assign-work.php';</script>";
+        echo "<script>alert('Manual Task assigned (No documents attached)'); window.location='assign-work.php';</script>";
     }
 }
 
@@ -63,7 +73,25 @@ if (isset($_GET['delete_doc'])) {
     echo "<script>window.location='assign-work.php';</script>";
 }
 ?>
-
+<?php
+// Fetch clients grouped by service
+$map_query = $conn->query("SELECT u.identifier, cp.company_name, cp.task_asked 
+                           FROM users u 
+                           JOIN client_profiles cp ON u.identifier = cp.client_id 
+                           WHERE u.role='client'");
+$serviceMap = [];
+while ($row = $map_query->fetch_assoc()) {
+    $displayName = !empty($row['company_name']) ? $row['company_name'] : $row['identifier'];
+    $services = explode(', ', $row['task_asked']);
+    foreach ($services as $s) {
+        $s = trim($s);
+        if ($s != "") {
+            $serviceMap[$s][] = ['id' => $row['identifier'], 'name' => $displayName];
+        }
+    }
+}
+?>
+<script>const serviceMap = <?php echo json_encode($serviceMap); ?>;</script>
 <!DOCTYPE html>
 <html>
 <head>
@@ -255,24 +283,23 @@ if (isset($_GET['delete_doc'])) {
             <h3 style="margin:0 0 20px 0; color:var(--navy);"><i class="fas fa-paper-plane"></i> Master Work Dispatch</h3>
             <form method="POST" enctype="multipart/form-data">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                    <div>
-                        <label style="font-size:12px; font-weight:bold;">Target Client</label>
-                       <select name="client_id" required>
-    <option value="">-- Select Client --</option>
-    <?php
-    // JOIN with client_profiles to get the Company Name
-    $clts = $conn->query("SELECT u.identifier, cp.company_name 
-                          FROM users u 
-                          LEFT JOIN client_profiles cp ON u.identifier = cp.client_id 
-                          WHERE u.role='client'");
-    while ($c = $clts->fetch_assoc()) {
-        // Fallback to identifier if company_name is empty
-        $display = !empty($c['company_name']) ? $c['company_name'] : $c['identifier'];
-        echo "<option value='{$c['identifier']}'>$display ({$c['identifier']})</option>";
-    }
-    ?>
-</select>
-                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+    <div>
+        <label style="font-size:12px; font-weight:bold;">Services</label>
+        <select name="service_name" id="service_selector" onchange="filterClients()" required>
+            <option value="">-- Select Service --</option>
+            <?php foreach (array_keys($serviceMap) as $sName): ?>
+                <option value="<?php echo htmlspecialchars($sName); ?>"><?php echo htmlspecialchars($sName); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div>
+        <label style="font-size:12px; font-weight:bold;">Target Client</label>
+        <select name="client_id" id="client_selector" required>
+            <option value="">-- Select Service First --</option>
+        </select>
+    </div>
+</div>
                     <div>
                         <label style="font-size:12px; font-weight:bold;">Assign To Staff</label>
                         <select name="staff_email" required>
@@ -297,9 +324,9 @@ if (isset($_GET['delete_doc'])) {
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; background: #f1f5f9; padding: 15px; border-radius: 12px; margin-top:10px;">
                     <div>
-                        <label style="font-size:12px; font-weight:bold;">Upload Document (Optional)</label>
-                        <input type="file" name="doc_file">
-                    </div>
+    <label style="font-size:12px; font-weight:bold;">Upload Document (Optional)</label>
+    <input type="file" name="doc_file[]" multiple>
+</div>
                     <div>
                         <label style="font-size:12px; font-weight:bold;">Type</label>
                         <select name="doc_type">
@@ -436,6 +463,27 @@ if (isset($_GET['delete_doc'])) {
             document.getElementById('assignmentSearch').value = "";
             filterAssignments();
         }
+        function filterClients() {
+    const service = document.getElementById('service_selector').value;
+    const clientDropdown = document.getElementById('client_selector');
+    
+    // Clear existing options
+    clientDropdown.innerHTML = '<option value="">-- Select Client --</option>';
+    
+    if (service && serviceMap[service]) {
+        serviceMap[service].forEach(client => {
+            const opt = document.createElement('option');
+            opt.value = client.id;
+            opt.textContent = `${client.name} (${client.id})`;
+            clientDropdown.appendChild(opt);
+        });
+    } else {
+        const opt = document.createElement('option');
+        opt.textContent = "No clients for this service";
+        opt.disabled = true;
+        clientDropdown.appendChild(opt);
+    }
+}
     </script>
 </body>
 </html>
