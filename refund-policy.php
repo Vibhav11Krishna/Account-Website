@@ -994,8 +994,7 @@
                     <p>2nd Floor, Shyam Market, Pillar No: 75, Bailey Road, Patna - 800014</p>
                 </div>
                 <div class="loc-item">
-                    <h6><i class="fas fa-building"></i> West Bengal</h6>
-                    <p>Regional Branch: Kolkata</p>
+            <p>Our Branches: Sitamarhi , Sheohar</p>
                 </div>
             </div>
         </div>
