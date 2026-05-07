@@ -62,13 +62,12 @@ if (isset($_POST['update_profile'])) {
     $doc_path = "../uploads/documents/";
     if (!is_dir($doc_path)) mkdir($doc_path, 0777, true);
 
-    // Document Logic (Aadhaar, PAN, Marksheets)
+    // Document Logic
     $aadhaar_photo = $userData['aadhaar_photo'] ?? '';
     $pan_photo     = $userData['pan_photo'] ?? '';
     $m10_photo     = $userData['marksheet_10'] ?? '';
     $m12_photo     = $userData['marksheet_12'] ?? '';
 
-    // File processing loop
     $file_map = [
         'aadhaar_img' => ['prefix' => 'aadhaar_', 'target' => &$aadhaar_photo],
         'pan_img'     => ['prefix' => 'pan_doc_', 'target' => &$pan_photo],
@@ -76,23 +75,22 @@ if (isset($_POST['update_profile'])) {
         'm12_img'     => ['prefix' => 'm12_',      'target' => &$m12_photo]
     ];
 
-  foreach ($file_map as $input => $info) {
-    if (!empty($_FILES[$input]['name'])) {
-        // --- ADD THIS: Delete old file if it exists ---
-        if (!empty($info['target'])) {
-            $old_file = $doc_path . $info['target'];
-            if (file_exists($old_file)) unlink($old_file);
-        }
-        // --- END OF ADDITION ---
+    foreach ($file_map as $input => &$info) {
+        if (!empty($_FILES[$input]['name'])) {
+            if (!empty($info['target'])) {
+                $old_file = $doc_path . $info['target'];
+                if (file_exists($old_file)) unlink($old_file);
+            }
 
-        $ext = pathinfo($_FILES[$input]['name'], PATHINFO_EXTENSION);
-        $filename = $info['prefix'] . $current_user_id . "_" . time() . "." . $ext;
-        if (move_uploaded_file($_FILES[$input]['tmp_name'], $doc_path . $filename)) {
-            $info['target'] = $filename;
+            $ext = pathinfo($_FILES[$input]['name'], PATHINFO_EXTENSION);
+            $filename = $info['prefix'] . $current_user_id . "_" . time() . "." . $ext;
+            if (move_uploaded_file($_FILES[$input]['tmp_name'], $doc_path . $filename)) {
+                $info['target'] = $filename;
+            }
         }
     }
-}
-    // Profile Pic logic (Same as yours)
+
+    // Profile Pic logic
     $profile_pic = !empty($userData['profile_pic']) ? $userData['profile_pic'] : 'default-avatar.png';
     if (!empty($_FILES['profile_img']['name'])) {
         $ext = pathinfo($_FILES['profile_img']['name'], PATHINFO_EXTENSION);
@@ -100,45 +98,29 @@ if (isset($_POST['update_profile'])) {
         move_uploaded_file($_FILES['profile_img']['tmp_name'], "../uploads/profile_pics/" . $profile_pic);
     }
 
-    // UPDATE Query including new columns
-    $sql = "UPDATE employee_profiles SET 
-            first_name='$fname', last_name='$lname', phone='$phone', 
-            dob='$dob', aadhaar_no='$aadhaar', pan_no='$pan', 
-            pan_photo='$pan_photo', marksheet_10='$m10_photo', marksheet_12='$m12_photo',
-            date_of_joining='$doj', emergency_contact='$emg', 
-            profile_pic='$profile_pic', aadhaar_photo='$aadhaar_photo', address='$address' 
-            WHERE user_id='$current_user_id'";
+    // --- UPSERT LOGIC ---
+    $check_exists = $conn->query("SELECT user_id FROM employee_profiles WHERE user_id = '$current_user_id'");
+
+    if ($check_exists->num_rows > 0) {
+        // UPDATE existing record
+        $sql = "UPDATE employee_profiles SET 
+                first_name='$fname', last_name='$lname', phone='$phone', 
+                dob='$dob', aadhaar_no='$aadhaar', pan_no='$pan', 
+                pan_photo='$pan_photo', marksheet_10='$m10_photo', marksheet_12='$m12_photo',
+                date_of_joining='$doj', emergency_contact='$emg', 
+                profile_pic='$profile_pic', aadhaar_photo='$aadhaar_photo', address='$address' 
+                WHERE user_id='$current_user_id'";
+    } else {
+        // INSERT new record
+        $sql = "INSERT INTO employee_profiles (user_id, first_name, last_name, phone, dob, aadhaar_no, pan_no, pan_photo, marksheet_10, marksheet_12, date_of_joining, emergency_contact, profile_pic, aadhaar_photo, address) 
+                VALUES ('$current_user_id', '$fname', '$lname', '$phone', '$dob', '$aadhaar', '$pan', '$pan_photo', '$m10_photo', '$m12_photo', '$doj', '$emg', '$profile_pic', '$aadhaar_photo', '$address')";
+    }
 
     if ($conn->query($sql)) {
         header("Location: Employee_profiles.php?status=success");
         exit();
-    }
-}
-// --- DELETE DOCUMENT LOGIC ---
-if (isset($_GET['delete_doc']) && !$is_locked) {
-    $column_to_delete = $_GET['delete_doc'];
-    
-    // Whitelist columns to prevent SQL injection or accidental deletion of profile_pic
-    $allowed_docs = ['aadhaar_photo', 'pan_photo', 'marksheet_10', 'marksheet_12'];
-    
-    if (in_array($column_to_delete, $allowed_docs)) {
-        // 1. Get the filename first to delete it from storage
-        $get_file = $conn->query("SELECT $column_to_delete FROM employee_profiles WHERE user_id = '$current_user_id'");
-        $file_data = $get_file->fetch_assoc();
-        $filename = $file_data[$column_to_delete];
-
-        if (!empty($filename)) {
-            $full_path = "../uploads/documents/" . $filename;
-            if (file_exists($full_path)) {
-                unlink($full_path); // Physically delete the file
-            }
-        }
-
-        // 2. Update database to clear the field
-        $conn->query("UPDATE employee_profiles SET $column_to_delete = NULL WHERE user_id = '$current_user_id'");
-        
-        header("Location: Employee_profiles.php?status=doc_deleted");
-        exit();
+    } else {
+        echo "Error updating record: " . $conn->error;
     }
 }
 ?>
