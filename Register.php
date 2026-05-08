@@ -177,16 +177,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         @media (max-width: 1024px) { .image-side { flex: 0.8; padding: 0 5%; } .image-side h1 { font-size: 38px; } }
         @media (max-width: 850px) { .image-side { display: none; } }
+        .image-side {
+    position: relative;
+    overflow: hidden;
+    background-color: #0b3c74; /* Fallback color */
+}
+
+/* The overlay gradient stays constant, the image fades behind it */
+.image-side::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, rgba(11, 60, 116, 0.9), rgba(22, 78, 141, 0.7));
+    z-index: 1;
+}
+
+.fade-in-out {
+    animation: smoothFade 5s infinite;
+}
+
+@keyframes smoothFade {
+    0%, 20% { opacity: 1; }
+    40%, 60% { opacity: 0.5; }
+    80%, 100% { opacity: 1; }
+}
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div class="image-side">
-            <img src="assets/CMA.jpg" alt="CMA Logo" class="brand-img">
-            <h1>Expert Finance,<br>Excellence Delivered.</h1>
-            <p>Welcome to the Karunesh Kumar & Associates Digital Portal. Access your financial reports and consultancy tools in one secure environment.</p>
-        </div>
+       <div class="image-side" id="hero-side">
+    <div id="bg-layer" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:1; transition: opacity 1.5s ease-in-out; background-size:cover; background-position:center;"></div>
+    
+    <div style="position:relative; z-index:2; width:100%;">
+        <img src="assets/CMA.jpg" alt="CMA Logo" class="brand-img">
+        <h1 id="hero-title">Expert Finance,<br>Excellence Delivered.</h1>
+        <p id="hero-desc">Welcome to the Karunesh Kumar & Associates Digital Portal.</p>
+    </div>
+</div>
 
         <div class="form-side">
             <a href="index.php" class="back-home">
@@ -247,6 +275,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 
     <script>
+        const heroData = [
+    { image: "assets/Startup7.jpg", title: "Expert Finance,<br>Excellence Delivered.", desc: "Welcome to the Karunesh Kumar & Associates Digital Portal." },
+    { image: "assets/Project.jpg", title: "Strategic Growth,<br>Simplified.", desc: "Empowering your business with precision accounting." },
+    { image: "assets/Registration.jpg", title: "Secure Access,<br>Global Standards.", desc: "Your financial data protected and accessible 24/7." }
+];
+
+let currentIndex = 0;
+const bgLayer = document.getElementById('bg-layer');
+const heroTitle = document.getElementById('hero-title');
+const heroDesc = document.getElementById('hero-desc');
+
+// Set initial background
+bgLayer.style.backgroundImage = `url('${heroData[0].image}')`;
+
+function updateHero() {
+    // 1. Fade Out
+    bgLayer.style.opacity = 0;
+    heroTitle.style.opacity = 0;
+    heroDesc.style.opacity = 0;
+    heroTitle.style.transform = "translateY(10px)";
+
+    setTimeout(() => {
+        currentIndex = (currentIndex + 1) % heroData.length;
+        const data = heroData[currentIndex];
+
+        // 2. Change Content while invisible
+        bgLayer.style.backgroundImage = `url('${data.image}')`;
+        heroTitle.innerHTML = data.title;
+        heroDesc.innerText = data.desc;
+
+        // 3. Fade In
+        bgLayer.style.opacity = 1;
+        heroTitle.style.opacity = 1;
+        heroDesc.style.opacity = 0.85;
+        heroTitle.style.transform = "translateY(0)";
+    }, 1500); // This matches the 1.5s transition in CSS
+}
+
+// Ensure smooth transitions for text too
+heroTitle.style.transition = "all 1s ease-in-out";
+heroDesc.style.transition = "all 1s ease-in-out";
+
+setInterval(updateHero, 6000); // Total cycle time
         function switchMode(mode, btn) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');

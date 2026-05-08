@@ -92,7 +92,7 @@ if (isset($_POST['update_profile'])) {
 
     // Profile Pic logic
     $profile_pic = !empty($userData['profile_pic']) ? $userData['profile_pic'] : 'default-avatar.png';
-    if (!empty($_FILES['profile_img']['name'])) {
+    if (!empty($_FILES['profile_img']['name'])) {       
         $ext = pathinfo($_FILES['profile_img']['name'], PATHINFO_EXTENSION);
         $profile_pic = "avatar_" . $current_user_id . "_" . time() . "." . $ext;
         move_uploaded_file($_FILES['profile_img']['tmp_name'], "../uploads/profile_pics/" . $profile_pic);
