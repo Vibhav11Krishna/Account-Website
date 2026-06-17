@@ -553,6 +553,29 @@
                 </div>
             </div>
 
+             <div class="blog-card-v2" data-category="audit">
+                <div class="card-image-v2">
+                    <img src="assets/blog19.jpg" alt="Audit Assurance">
+                    <div class="category-badge green">Audit</div>
+                </div>
+                <div class="blog-content-v2">
+                    <div class="meta-row">
+                        <span><i class="far fa-calendar-alt"></i> June 16, 2026</span>
+                        <span><i class="far fa-clock"></i> 9 min read</span>
+                    </div>
+                    <h3 class="blog-title-v2">Aryan Energy Pvt. Ltd. vs Union of India </h3>
+                    <p>A Significant Judicial Perspective on Cost Audit Applicability</p>
+                    <div class="card-footer-v2">
+                        <a href="./blog-details/blog-details19.php" class="read-more-btn">Read Analysis <i class="fas fa-chevron-right"></i></a>
+                        <div class="blog-social-share">
+       <a href="https://www.linkedin.com/in/karunesh-kumar-05a142173?utm_source=share_via&utm_content=profile&utm_medium=member_android" title="Share on LinkedIn" class="share-icon lnk"><i class="fab fa-linkedin-in"></i></a>
+        <a href="https://x.com/Karunesh_CMA" title="Share on Twitter" class="share-icon twt"><i class="fa-brands fa-x-twitter"></i></a>
+       
+    </div>
+                    </div>
+                </div>
+            </div>
+
               <div class="blog-card-v2" data-category="startups">
                 <div class="card-image-v2">
                     <img src="assets/blog10.jpg" alt="Audit Assurance">

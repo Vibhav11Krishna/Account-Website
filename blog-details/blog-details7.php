@@ -721,6 +721,10 @@
             <img src="../assets/blog9.jpg">
             <span>Audit Readiness: Preparing Your Business</span>
           </a>
+          <a href="../blog-details/blog-details19.php" class="related-card">
+            <img src="../assets/blog19.jpg">
+            <span>Aryan Energy Pvt. Ltd. vs Union of India</span>
+          </a>
         </section>
 
         <section class="sidebar-widget newsletter" style="background: var(--navy); color: white;">

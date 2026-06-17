@@ -697,12 +697,18 @@ if (isset($_POST['apply'])) {
     </div>
     <div class="strip-content">
       <div class="strip-track">
-        <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
-        <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
-        <span class="update-item"><i class="fas fa-circle"></i> GST: New advisory issued on GSTR-1 matching protocols.</span>
-        <span class="update-item"><i class="fas fa-circle"></i> MSME: Udyam registration now mandatory for tenders.</span>
-        <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
-        <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
+  <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
+  <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
+  <span class="update-item"><i class="fas fa-circle"></i> GST: New advisory issued on GSTR-1 matching protocols.</span>
+  <span class="update-item"><i class="fas fa-circle"></i> MSME: Udyam registration now mandatory for tenders.</span>
+  <span class="update-item"><i class="fas fa-circle"></i> ITR Filing for AY 2026-27 (FY 2025-26) has commenced.</span>
+  
+  <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
+  <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
+  <span class="update-item"><i class="fas fa-circle"></i> GST: New advisory issued on GSTR-1 matching protocols.</span>
+  <span class="update-item"><i class="fas fa-circle"></i> MSME: Udyam registration now mandatory for tenders.</span>
+  <span class="update-item"><i class="fas fa-circle"></i> ITR Filing for AY 2026-27 (FY 2025-26) has commenced.</span>
+</div>
       </div>
     </div>
   </div>
@@ -3103,10 +3109,9 @@ if (isset($_POST['apply'])) {
       </div>
 
       <div class="team-grid-v5">
-
         <div class="team-card-v5">
           <div class="team-img-box">
-            <img src="assets/team1.jpg" alt="Neha Verma">
+            <img src="assets/team1.jpg" alt="Kritika Singh">
             <div class="team-info-overlay">
               <div class="social-links-v5">
                 <a href="#"><i class="fab fa-linkedin-in"></i></a>
@@ -3123,7 +3128,7 @@ if (isset($_POST['apply'])) {
 
         <div class="team-card-v5">
           <div class="team-img-box">
-            <img src="assets/team.jpeg" alt="Amit Gupta">
+            <img src="assets/team.jpeg" alt="Avinish Kumar">
             <div class="team-info-overlay">
               <div class="social-links-v5">
                 <a href="#"><i class="fab fa-linkedin-in"></i></a>
@@ -3140,7 +3145,7 @@ if (isset($_POST['apply'])) {
 
         <div class="team-card-v5">
           <div class="team-img-box">
-            <img src="assets/men.jpg" alt="Pooja Sharma">
+            <img src="assets/men.jpg" alt="Vicky Mishra">
             <div class="team-info-overlay">
               <div class="social-links-v5">
                 <a href="#"><i class="fab fa-linkedin-in"></i></a>
@@ -3155,9 +3160,9 @@ if (isset($_POST['apply'])) {
           </div>
         </div>
 
-        <div class="team-card-v5 centered-card">
+        <div class="team-card-v5">
           <div class="team-img-box">
-            <img src="assets/team3.jpeg" alt="New Member">
+            <img src="assets/team3.jpeg" alt="Chandan Kumar Jha">
             <div class="team-info-overlay">
               <div class="social-links-v5">
                 <a href="#"><i class="fab fa-linkedin-in"></i></a>
@@ -3171,31 +3176,60 @@ if (isset($_POST['apply'])) {
             <p>CMA</p>
           </div>
         </div>
+
+        <div class="team-card-v5">
+          <div class="team-img-box">
+            <img src="assets/Tanabi.jpeg" alt="Member 5">
+            <div class="team-info-overlay">
+              <div class="social-links-v5">
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+              </div>
+            </div>
+          </div>
+          <div class="team-meta">
+            <h4>Tanabi</h4>
+            <p>Audit Executive</p>
+          </div>
+        </div>
+
+        <div class="team-card-v5">
+          <div class="team-img-box">
+            <img src="assets/bhola.jpeg" alt="Member 6">
+            <div class="team-info-overlay">
+              <div class="social-links-v5">
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+              </div>
+            </div>
+          </div>
+          <div class="team-meta">
+            <h4>Bhola Kumar</h4>
+            <p>Audit Executive</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
   <style>
-    /* --- TEAM SECTION STYLES --- */
     .team-section {
       padding: 100px 0;
       background: #f7f9fc;
     }
 
-    /* 1. INCREASED CONTAINER WIDTH */
     .container-premium {
       max-width: 1320px;
-      /* Made wider to let cards expand */
       margin: 0 auto;
       padding: 0 20px;
     }
 
-    /* 2. ADJUSTED GRID GAP */
     .team-grid-v5 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 30px;
-      /* Slightly smaller gap gives more width to the cards */
       margin-top: 50px;
     }
 
@@ -3204,17 +3238,12 @@ if (isset($_POST['apply'])) {
       border-radius: 25px;
       overflow: hidden;
       text-align: center;
-      transition: 0.4s ease;
       border: 1px solid #f1f5f9;
-      width: 100%;
-      /* Ensures card fills the grid fractional unit */
     }
 
-    /* 3. INCREASED IMAGE HEIGHT */
     .team-img-box {
       position: relative;
       height: 480px;
-      /* Increased from 380px to match the new width */
       overflow: hidden;
       background: #e2e8f0;
     }
@@ -3226,12 +3255,7 @@ if (isset($_POST['apply'])) {
       transition: 0.5s ease;
     }
 
-    /* Center the 4th card on the second row */
-    .centered-card {
-      grid-column: 2;
-    }
-
-    /* Hover Overlay */
+    /* Overlay */
     .team-info-overlay {
       position: absolute;
       top: 0;
@@ -3282,7 +3306,6 @@ if (isset($_POST['apply'])) {
     .social-links-v5 a:hover {
       background: #fff;
       color: #0b3c74;
-      transform: rotate(360deg);
     }
 
     .team-meta {
@@ -3291,10 +3314,8 @@ if (isset($_POST['apply'])) {
 
     .team-meta h4 {
       font-size: 24px;
-      /* Slightly larger text for larger cards */
       color: #0b3c74;
       margin-bottom: 5px;
-      font-weight: 700;
     }
 
     .team-meta p {
@@ -3305,25 +3326,16 @@ if (isset($_POST['apply'])) {
       letter-spacing: 1.5px;
     }
 
-    /* RESPONSIVE */
+    /* Responsive Design */
     @media (max-width: 992px) {
       .team-grid-v5 {
         grid-template-columns: repeat(2, 1fr);
-      }
-
-      .centered-card {
-        grid-column: auto;
-        /* Resets to normal flow on 2-column layout */
       }
     }
 
     @media (max-width: 600px) {
       .team-grid-v5 {
         grid-template-columns: 1fr;
-      }
-
-      .team-img-box {
-        height: 400px;
       }
     }
   </style>
@@ -4660,9 +4672,9 @@ if (isset($_POST['apply'])) {
             <h6><i class="fas fa-map-marker-alt"></i> Patna (HQ)</h6>
             <p>2nd Floor, Shyam Market, Pillar No: 75, Bailey Road, Patna - 800014</p>
           </div>
-           <div class="loc-item">
+          <div class="loc-item">
             <p>Our Branches: Sitamarhi , Sheohar</p>
-                </div>
+          </div>
         </div>
       </div>
 
@@ -4677,8 +4689,8 @@ if (isset($_POST['apply'])) {
           <a href="terms-of-service.php">Terms of Service</a>
           <span class="sep">|</span>
           <a href="cookies.php">Cookies Policy</a>
-           <span class="sep">|</span>
-                <a href="refund-policy.php">Refund & Cancellation Policy</a>
+          <span class="sep">|</span>
+          <a href="refund-policy.php">Refund & Cancellation Policy</a>
         </div>
       </div>
     </div>
