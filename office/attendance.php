@@ -318,10 +318,13 @@ $today = date('Y-m-d');
 
 <div id="attModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter: blur(5px);">
     <div style="background:white; margin: 5% auto; padding: 30px; width: 60%; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
-            <h2 id="modalTitle" style="margin:0; color: var(--navy);">Employee History</h2>
-            <button onclick="closeModal()" style="background:none; border:none; font-size: 24px; cursor:pointer;">&times;</button>
-        </div>
+       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+    <h2 id="modalTitle" style="margin:0; color: var(--navy);">Employee History</h2>
+    <button id="exportIndividualBtn" style="background: #22c55e; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">
+        <i class="fas fa-file-excel"></i> Export CSV
+    </button>
+    <button onclick="closeModal()" style="background:none; border:none; font-size: 24px; cursor:pointer;">&times;</button>
+</div>
         <div id="modalBody" style="margin-top:20px; max-height: 400px; overflow-y: auto;">
             </div>
     </div>
@@ -397,112 +400,118 @@ $today = date('Y-m-d');
     </table>
 </div>
     </div>
-    <script>
-       function toggleMenu(menuId, chevronId) {
-    const menu = document.getElementById(menuId);
-    const chevron = document.getElementById(chevronId);
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+   <script>
+    // 1. GLOBAL VARIABLE - Declared once at the top
+    let currentEmployeeEmail = '';
 
-    // Toggle the specific menu clicked
-    menu.classList.toggle('show-menu');
+    // 2. MODAL LOGIC
+    function openAttendanceModal(email, name) {
+        currentEmployeeEmail = email; // Set the global variable
+        document.getElementById('attModal').style.display = 'block';
+        document.getElementById('modalTitle').innerText = name + "'s Attendance History";
+        document.getElementById('modalBody').innerHTML = '<p style="text-align:center;">Loading history...</p>';
 
-    // Rotate the specific arrow clicked
-    chevron.classList.toggle('rotate-chevron');
+        fetch('fetch_employee_history.php?email=' + encodeURIComponent(email))
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('modalBody').innerHTML = data;
+            });
+    }
 
-    // Optional: Close other menus when opening a new one
-    const allMenus = document.querySelectorAll('.dropdown-content');
-    const allChevrons = document.querySelectorAll('.fa-chevron-down');
+    function closeModal() {
+        document.getElementById('attModal').style.display = 'none';
+    }
 
-    allMenus.forEach((m) => {
-        if (m.id !== menuId) m.classList.remove('show-menu');
-    });
-    
-    allChevrons.forEach((c) => {
-        if (c.id !== chevronId) c.classList.remove('rotate-chevron');
-    });
-}
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-// --- PIE CHART LOGIC ---
-const ctx = document.getElementById('attendanceChart').getContext('2d');
-new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-        labels: ['Present', 'Absent'],
-        datasets: [{
-            data: [
-                <?php 
-                    $presentCount = $conn->query("SELECT count(*) as total FROM attendance WHERE log_date='$today'")->fetch_assoc()['total'];
-                    $totalStaff = $conn->query("SELECT count(*) as total FROM users WHERE role='office'")->fetch_assoc()['total'];
-                    $absentCount = $totalStaff - $presentCount;
-                    echo "$presentCount, $absentCount";
-                ?>
-            ],
-            backgroundColor: ['#22c55e', '#e2e8f0'],
-            borderWidth: 0
-        }]
-    },
-    options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
-});
-
-// --- MODAL & AJAX LOGIC ---
-function openAttendanceModal(email, name) {
-    document.getElementById('attModal').style.display = 'block';
-    document.getElementById('modalTitle').innerText = name + "'s Attendance History";
-    document.getElementById('modalBody').innerHTML = '<p style="text-align:center;">Loading history...</p>';
-
-    // Fetch history from a small helper file
-    fetch('fetch_employee_history.php?email=' + email)
-        .then(response => response.text())
-        .then(data => {
-            document.getElementById('modalBody').innerHTML = data;
-        });
-}
-
-function closeModal() {
-    document.getElementById('attModal').style.display = 'none';
-}
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<script>
-async function exportFullHistory() {
-    // 1. Show a simple loading state (optional)
-    const btn = event.currentTarget;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
-    btn.disabled = true;
-
-    try {
-        // 2. Fetch the data from the PHP file we made in Step 1
-        const response = await fetch('fetch_all_attendance.php');
-        const data = await response.json();
-
-        if (data.length === 0) {
-            alert("No records found to export.");
+    // 3. INDIVIDUAL EXPORT LOGIC
+    document.getElementById('exportIndividualBtn').addEventListener('click', async () => {
+        if (!currentEmployeeEmail) {
+            alert("No employee selected.");
             return;
         }
 
-        // 3. Create a Worksheet from the JSON data
-        const ws = XLSX.utils.json_to_sheet(data);
+        try {
+            console.log("Requesting for email:", currentEmployeeEmail);
+            const response = await fetch('fetch_individual_attendance.php?email=' + encodeURIComponent(currentEmployeeEmail));
+            const data = await response.json();
+            
+            console.log("Response received:", data);
+            
+            if (data.length > 0) {
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+                XLSX.writeFile(wb, `Attendance_${currentEmployeeEmail}.xlsx`);
+            } else {
+                alert("No records found for this user in the database.");
+            }
+        } catch (err) {
+            console.error("Error:", err);
+            alert("An error occurred during export. Check console.");
+        }
+    });
 
-        // 4. Create a Workbook and add the worksheet
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Attendance History");
-
-        // 5. Download the file as a true .xlsx
-        XLSX.writeFile(wb, `Attendance_Master_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
-
-    } catch (error) {
-        console.error("Export failed:", error);
-        alert("Failed to generate Excel file.");
-    } finally {
-        // 6. Reset button
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+    // 4. NAVIGATION / UI LOGIC
+    function toggleMenu(menuId, chevronId) {
+        const menu = document.getElementById(menuId);
+        const chevron = document.getElementById(chevronId);
+        menu.classList.toggle('show-menu');
+        chevron.classList.toggle('rotate-chevron');
     }
-}
+
+    // 5. MASTER EXPORT LOGIC
+    async function exportFullHistory() {
+        const btn = event.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('fetch_all_attendance.php');
+            const data = await response.json();
+
+            if (data.length === 0) {
+                alert("No records found to export.");
+                return;
+            }
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Attendance History");
+            XLSX.writeFile(wb, `Attendance_Master_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+        } catch (error) {
+            console.error("Export failed:", error);
+            alert("Failed to generate Excel file.");
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+    // 2. Chart Initialization
+    const ctx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Present', 'Absent'],
+            datasets: [{
+                data: [
+                    <?php 
+                        $presentCount = $conn->query("SELECT count(*) as total FROM attendance WHERE log_date='$today'")->fetch_assoc()['total'];
+                        $totalStaff = $conn->query("SELECT count(*) as total FROM users WHERE role='office'")->fetch_assoc()['total'];
+                        $absentCount = ($totalStaff - $presentCount) > 0 ? ($totalStaff - $presentCount) : 0;
+                        echo "$presentCount, $absentCount";
+                    ?>
+                ],
+                backgroundColor: ['#22c55e', '#e2e8f0'],
+                borderWidth: 0
+            }]
+        },
+        options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+    });
 </script>
 </body>
 
