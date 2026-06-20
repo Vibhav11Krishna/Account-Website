@@ -645,7 +645,7 @@
           <span class="sep">›</span>
           <a href="../blogs.php">Insights</a>
           <span class="sep">›</span>
-          <span class="current">The Role of Statutory Audit</span>
+          <span class="current">Aryan Energy Pvt. Ltd. vs Union of India</span>
         </nav>
       </div>
 

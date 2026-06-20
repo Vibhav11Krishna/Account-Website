@@ -2647,45 +2647,45 @@ if (isset($_POST['apply'])) {
 
         <div class="insight-card-v4">
           <div class="insight-img-wrap">
-            <img src="assets/blog1.jpg" alt="Income Tax Update">
-            <div class="insight-date"><span>22</span> Dec</div>
-            <span class="category-tag tag-orange">Compliance</span>
-          </div>
-          <div class="insight-body">
-            <h3>GST Compliance Checklist for Growing Businesses</h3>
-            <p>Key GST obligations every business must follow to avoid penalties, check and ensure smooth operations.</p>
-            <div class="insight-footer">
-              <a href="blog-details/blog-details1.php" class="read-link">Read Full Article <i class="fas fa-chevron-right"></i></a>
-            </div>
-          </div>
-        </div>
-
-        <div class="insight-card-v4">
-          <div class="insight-img-wrap">
-            <img src="assets/blog4.jpg" alt="GST Compliance">
-            <div class="insight-date"><span>12</span> Dec</div>
-            <span class="category-tag tag-navy">Taxation</span>
-          </div>
-          <div class="insight-body">
-            <h3>Optimizing Tax Liability Under the New Income Tax Regime</h3>
-            <p>A practical overview of deductions, optimize, exemptions, and planning strategies to reduce tax outflow</p>
-            <div class="insight-footer">
-              <a href="blog-details/blog-details4.php" class="read-link">Read Full Article <i class="fas fa-chevron-right"></i></a>
-            </div>
-          </div>
-        </div>
-
-        <div class="insight-card-v4">
-          <div class="insight-img-wrap">
-            <img src="assets/blog8.jpg" alt="Business Accounting">
-            <div class="insight-date"><span>14</span> Jan</div>
+            <img src="assets/blog19.jpg" alt="Income Tax Update">
+            <div class="insight-date"><span>16</span>June</div>
             <span class="category-tag tag-green">Audit</span>
           </div>
           <div class="insight-body">
-            <h3>Internal Audit as a Tool for Risk Management</h3>
-            <p>Exploring the importance of internal audit in identifying risks and strengthening internal controls</p>
+            <h3>Aryan Energy Pvt. Ltd. vs Union of India</h3>
+            <p>A Significant Judicial Perspective on Cost Audit Applicability</p>
             <div class="insight-footer">
-              <a href="blog-details/blog-details8.php" class="read-link">Read Full Article <i class="fas fa-chevron-right"></i></a>
+              <a href="blog-details/blog-details19.php" class="read-link">Read Full Article <i class="fas fa-chevron-right"></i></a>
+            </div>
+          </div>
+        </div>
+
+        <div class="insight-card-v4">
+          <div class="insight-img-wrap">
+            <img src="assets/blog18.jpg" alt="GST Compliance">
+            <div class="insight-date"><span>14</span> Feb</div>
+            <span class="category-tag tag-red">Legal Updates</span>
+          </div>
+          <div class="insight-body">
+            <h3>Regulatory Updates Every Business Should Watch This Year</h3>
+            <p>A curated roundup of important legal and regulatory developments affecting businesses</p>
+            <div class="insight-footer">
+              <a href="blog-details/blog-details18.php" class="read-link">Read Full Article <i class="fas fa-chevron-right"></i></a>
+            </div>
+          </div>
+        </div>
+
+        <div class="insight-card-v4">
+          <div class="insight-img-wrap">
+            <img src="assets/blog2.jpg" alt="Business Accounting">
+            <div class="insight-date"><span>20</span>June</div>
+            <span class="category-tag tag-orange">Compliance</span>
+          </div>
+          <div class="insight-body">
+            <h3>Understanding ROC Filings and Annual Compliance Requirements</h3>
+            <p>An overview of mandatory MCA filings applicable to companies and LLPs.</p>
+            <div class="insight-footer">
+              <a href="blog-details/blog-details2.php" class="read-link">Read Full Article <i class="fas fa-chevron-right"></i></a>
             </div>
           </div>
         </div>
@@ -2787,8 +2787,8 @@ if (isset($_POST['apply'])) {
       background: #ff8c00;
     }
 
-    .tag-navy {
-      background: #0b3c74;
+    .tag-red {
+      background: #df0d0d;
     }
 
     .tag-green {
