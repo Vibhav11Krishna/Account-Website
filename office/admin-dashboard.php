@@ -391,21 +391,28 @@ $r = 'office'; // Hardcode the role to office/staff
                 </div>
             </div>
         </header>
-        <?php
-        $resets = $conn->query("SELECT id FROM users WHERE reset_requested = 1");
-        if ($resets->num_rows > 0):
-        ?>
-            <div class="alert-card">
-                <div style="display:flex; align-items:center; gap:15px;">
-                    <i class="fas fa-exclamation-triangle" style="color:var(--danger); font-size:24px;"></i>
-                    <div>
-                        <strong style="color:#991b1b;">Action Required</strong>
-                        <p style="margin:2px 0 0; color:#7f1d1d; font-size:14px;">There are <b><?php echo $resets->num_rows; ?></b> staff password reset requests pending.</p>
-                    </div>
-                </div>
-                <a href="manage-employees.php" style="color:white; background:var(--danger); padding:8px 16px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:bold;">Handle Now</a>
+       <?php
+// Query to find pending requests
+$resets = $conn->query("SELECT id, identifier FROM users WHERE reset_requested = 1");
+if ($resets->num_rows > 0):
+    $request = $resets->fetch_assoc(); // Get the first pending request
+?>
+    <div class="alert-card">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <i class="fas fa-exclamation-triangle" style="color:var(--danger); font-size:24px;"></i>
+            <div>
+                <strong style="color:#991b1b;">Action Required</strong>
+                <p style="margin:2px 0 0; color:#7f1d1d; font-size:14px;">
+                    Staff member <b><?php echo $request['identifier']; ?></b> requested a password reset.
+                </p>
             </div>
-        <?php endif; ?>
+        </div>
+        <a href="manage-employees.php?reset_email=<?php echo urlencode($request['identifier']); ?>" 
+           style="color:white; background:var(--danger); padding:8px 16px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:bold;">
+           Handle Now
+        </a>
+    </div>
+<?php endif; ?>
         <div class="stat-grid" style="grid-template-columns: repeat(4, 1fr);">
             <a href="manage-clients.php" style="text-decoration: none; color: inherit;">
                 <div class="stat" style="cursor: pointer; transition: 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
