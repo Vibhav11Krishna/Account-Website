@@ -32,6 +32,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 }
 
 $filter_date = isset($_GET['view_date']) ? mysqli_real_escape_string($conn, $_GET['view_date']) : '';
+$auto_cid = isset($_GET['client_id']) ? mysqli_real_escape_string($conn, $_GET['client_id']) : '';
 
 // Handle Multi-Service Quotation Submission
 if (isset($_POST['add_quote'])) {
@@ -418,6 +419,11 @@ if (isset($_POST['add_quote'])) {
                     <h3 style="margin:0;"><i class="fas fa-history"></i> History Ledger</h3>
 
                     <form method="GET" style="display:flex; align-items:center; gap:10px; background: #f8fafc; padding: 8px 15px; border-radius: 50px; border: 1px solid #e2e8f0;">
+                        <div style="display:flex; align-items:center; gap:8px; border-left: 1px solid #e2e8f0; padding-left:10px;">
+    <label style="font-size:10px; font-weight:800; color:var(--text-light);">CLIENT</label>
+    <input type="text" name="client_name" value="<?php echo htmlspecialchars($_GET['client_name'] ?? ''); ?>" 
+           placeholder="Search Client..." style="margin:0; width:130px; padding:5px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px;">
+</div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <label style="font-size:10px; font-weight:800; color:var(--text-light);">FROM</label>
                             <input type="date" name="from_date" value="<?php echo $from_date; ?>" style="margin:0; width:135px; padding:5px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px;">
@@ -454,25 +460,41 @@ if (isset($_POST['add_quote'])) {
                         </thead>
                       <tbody>
     <?php
-    // The query is already correctly joining cp (client_profiles)
-    $query = "SELECT q.*, cp.company_name 
-              FROM quotations q 
-              JOIN client_profiles cp ON q.client_id = cp.client_id";
+// Capture the new filter
+$client_search = isset($_GET['client_name']) ? mysqli_real_escape_string($conn, $_GET['client_name']) : '';
 
-    if ($from_date && $to_date) {
-        $query .= " WHERE DATE(q.created_at) BETWEEN '$from_date' AND '$to_date'";
-    } elseif ($from_date) {
-        $query .= " WHERE DATE(q.created_at) >= '$from_date'";
-    } elseif ($to_date) {
-        $query .= " WHERE DATE(q.created_at) <= '$to_date'";
-    }
+// Start building the query
+$query = "SELECT q.*, cp.company_name 
+          FROM quotations q 
+          JOIN client_profiles cp ON q.client_id = cp.client_id";
 
-    $query .= " ORDER BY q.id DESC";
-    $res = $conn->query($query);
+$where_clauses = [];
 
-    if ($res && $res->num_rows > 0) {
-        while ($q = $res->fetch_assoc()) {
-    ?>
+// Add Date Filters
+if ($from_date && $to_date) {
+    $where_clauses[] = "DATE(q.created_at) BETWEEN '$from_date' AND '$to_date'";
+} elseif ($from_date) {
+    $where_clauses[] = "DATE(q.created_at) >= '$from_date'";
+} elseif ($to_date) {
+    $where_clauses[] = "DATE(q.created_at) <= '$to_date'";
+}
+
+// Add Client Name Filter
+if ($client_search) {
+    $where_clauses[] = "cp.company_name LIKE '%$client_search%'";
+}
+
+// Append WHERE clauses if any exist
+if (count($where_clauses) > 0) {
+    $query .= " WHERE " . implode(" AND ", $where_clauses);
+}
+
+$query .= " ORDER BY q.id DESC";
+$res = $conn->query($query);
+
+if ($res && $res->num_rows > 0) {
+    while ($q = $res->fetch_assoc()) {
+?>
             <tr>
                 <td style="padding:15px 25px;">
                     <span style="font-weight:600; color:#1e293b;"><?php echo date('d M, Y', strtotime($q['created_at'])); ?></span><br>
@@ -506,14 +528,14 @@ if (isset($_POST['add_quote'])) {
                 </td>
             </tr>
     <?php
-        }
-    } else {
-        echo "<tr><td colspan='6' style='text-align:center; padding:50px; color:var(--text-light);'>
-                <i class='fas fa-search' style='font-size:30px; opacity:0.3; margin-bottom:10px; display:block;'></i>
-                No quotations found for the selected range.
-              </td></tr>";
     }
-    ?>
+} else {
+    echo "<tr><td colspan='6' style='text-align:center; padding:50px; color:var(--text-light);'>
+            <i class='fas fa-search' style='font-size:30px; opacity:0.3; margin-bottom:10px; display:block;'></i>
+            No quotations found for the selected range.
+          </td></tr>";
+}
+?>
 </tbody>
                     </table>
                 </div>

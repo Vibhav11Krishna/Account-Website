@@ -51,15 +51,16 @@ if (isset($_GET['quote_id'])) {
         $igst = ($tax_type == 'IGST') ? $tax_total : 0;
 
         // 2. Insert into 'invoices' Master Table
-        $sql_master = "INSERT INTO invoices (
-            invoice_no, client_id, service_name, amount, 
-            cgst_amount, sgst_amount, igst_amount, 
-            tax_type, due_date, status, created_at
-        ) VALUES (
-            '$inv_no', '$client_id', 'Multiple Services', '$base_amt', 
-            '$cgst', '$sgst', '$igst', 
-            '$tax_type', '$due_date', 'Unpaid', '$today'
-        )";
+// ADD 'invoice_date' to the columns list and '$today' to the values list
+$sql_master = "INSERT INTO invoices (
+    invoice_no, client_id, service_name, amount, 
+    cgst_amount, sgst_amount, igst_amount, 
+    tax_type, due_date, status, created_at, invoice_date
+) VALUES (
+    '$inv_no', '$client_id', 'Multiple Services', '$base_amt', 
+    '$cgst', '$sgst', '$igst', 
+    '$tax_type', '$due_date', 'Unpaid', '$today', '$today'
+)";
 
         if ($conn->query($sql_master)) {
             $new_invoice_id = $conn->insert_id;

@@ -195,21 +195,21 @@ if (isset($_GET['delete_inv'])) {
             color: #334155;
         }
 
-         /* Sidebar */
-       .sidebar {
-    width: 280px;
-    background: var(--sidebar);
-    color: white;
-    height: 100vh;
-    position: fixed;
-    padding: 30px 20px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    
-    /* ADD THIS LINE */
-    border-right: 4px solid var(--orange); 
-}
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding: 30px 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+
+            /* ADD THIS LINE */
+            border-right: 4px solid var(--orange);
+        }
 
 
         .sidebar h2 {
@@ -262,39 +262,49 @@ if (isset($_GET['delete_inv'])) {
         }
 
         /* Change from 2-column grid to a single vertical stack */
-.grid { 
-    display: flex; 
-    flex-direction: column; /* Stack children vertically */
-    gap: 5px; 
-}
+        .grid {
+            display: flex;
+            flex-direction: column;
+            /* Stack children vertically */
+            gap: 5px;
+        }
 
-/* Ensure cards take full width now that they are stacked */
-.card { 
-    background: white; 
-    padding: 20px; 
-    border-radius: 24px; 
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02); 
-    
-    /* Centering Logic */
-    width: 95%;            /* Occupy most of the width on small screens */
-    max-width: 1050px;     /* Prevents it from getting too wide on desktop */
-    margin: 0 auto;        /* Centers the card horizontally */
-    
-    display: block;        /* Ensures margin: auto works correctly */
-    box-sizing: border-box;
-}
+        /* Ensure cards take full width now that they are stacked */
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
 
-/* Optional: Make the form more compact since it's now full-width */
-#invoiceForm {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* Two columns for form fields */
-    gap: 20px;
-}
+            /* Centering Logic */
+            width: 95%;
+            /* Occupy most of the width on small screens */
+            max-width: 1050px;
+            /* Prevents it from getting too wide on desktop */
+            margin: 0 auto;
+            /* Centers the card horizontally */
 
-/* Ensure the items container and button span both columns */
-#itemsContainer, .add-item-btn, .btn-main, hr, h3 {
-    grid-column: span 2;
-}
+            display: block;
+            /* Ensures margin: auto works correctly */
+            box-sizing: border-box;
+        }
+
+        /* Optional: Make the form more compact since it's now full-width */
+        #invoiceForm {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            /* Two columns for form fields */
+            gap: 20px;
+        }
+
+        /* Ensure the items container and button span both columns */
+        #itemsContainer,
+        .add-item-btn,
+        .btn-main,
+        hr,
+        h3 {
+            grid-column: span 2;
+        }
 
         input,
         select,
@@ -490,13 +500,13 @@ if (isset($_GET['delete_inv'])) {
                     <select name="client_id" required>
                         <option value="">-- Choose Client (Name + ID) --</option>
                         <?php
-                       
+
                         $client_query = "SELECT client_id, company_name FROM client_profiles ORDER BY company_name ASC";
                         $client_result = $conn->query($client_query);
 
                         if ($client_result && $client_result->num_rows > 0) {
                             while ($row = $client_result->fetch_assoc()) {
-                                
+
                                 $selected = ($auto_cid == $row['client_id']) ? 'selected' : '';
 
                                 // Format the display string: Company Name [ID]
@@ -559,21 +569,30 @@ if (isset($_GET['delete_inv'])) {
                     <h3 style="margin:0;"><i class="fas fa-history"></i> Invoice History</h3>
 
                     <form method="GET" style="display:flex; align-items:center; gap:10px; background: #f8fafc; padding: 8px 15px; border-radius: 50px; border: 1px solid #e2e8f0;">
+
                         <div style="display:flex; align-items:center; gap:8px;">
+                            <input type="text" name="company_search" placeholder="Search Company..."
+                                value="<?php echo htmlspecialchars($_GET['company_search'] ?? ''); ?>"
+                                style="margin:0; width:120px; padding:5px; border-radius:6px; border:1px solid #cbd5e1; font-size:11px;">
+                        </div>
+
+                        <div style="display:flex; align-items:center; gap:8px; border-left: 1px solid #e2e8f0; padding-left:10px;">
                             <label style="font-size:10px; font-weight:800; color:var(--text-light);">FROM</label>
-                            <input type="date" name="from_date" value="<?php echo $from_date; ?>" style="margin:0; width:135px; padding:5px; border-radius:6px; border:1px solid #cbd5e1; font-size:11px;">
+                            <input type="date" name="from_date" value="<?php echo htmlspecialchars($_GET['from_date'] ?? ''); ?>"
+                                style="margin:0; width:120px; padding:5px; border-radius:6px; border:1px solid #cbd5e1; font-size:11px;">
                         </div>
 
                         <div style="display:flex; align-items:center; gap:8px; border-left: 1px solid #e2e8f0; padding-left:10px;">
                             <label style="font-size:10px; font-weight:800; color:var(--text-light);">TO</label>
-                            <input type="date" name="to_date" value="<?php echo $to_date; ?>" style="margin:0; width:135px; padding:5px; border-radius:6px; border:1px solid #cbd5e1; font-size:11px;">
+                            <input type="date" name="to_date" value="<?php echo htmlspecialchars($_GET['to_date'] ?? ''); ?>"
+                                style="margin:0; width:120px; padding:5px; border-radius:6px; border:1px solid #cbd5e1; font-size:11px;">
                         </div>
 
                         <button type="submit" class="btn-main" style="width:auto; padding:6px 15px; margin:0; font-size:11px; border-radius:20px;">
                             <i class="fas fa-search"></i>
                         </button>
 
-                        <?php if ($from_date || $to_date): ?>
+                        <?php if (!empty($_GET['from_date']) || !empty($_GET['to_date']) || !empty($_GET['company_search'])): ?>
                             <a href="invoices.php" style="font-size:18px; color:#ef4444; text-decoration:none;" title="Reset Filter">
                                 <i class="fas fa-times-circle"></i>
                             </a>
@@ -596,26 +615,41 @@ if (isset($_GET['delete_inv'])) {
                             <?php
                             // 1. BUILD FILTERED QUERY - Updated to JOIN with client_profiles instead of users
                             // We link i.client_id to cp.client_id to get the company_name
+                            // 1. BUILD FILTERED QUERY
                             $query = "SELECT i.*, cp.company_name 
-              FROM invoices i 
-              JOIN client_profiles cp ON i.client_id = cp.client_id";
+          FROM invoices i 
+          JOIN client_profiles cp ON i.client_id = cp.client_id";
 
                             $conditions = [];
-                            if ($from_date) {
-                                $conditions[] = "i.invoice_date >= '$from_date'";
-                            }
-                            if ($to_date) {
-                                $conditions[] = "i.invoice_date <= '$to_date'";
+
+                            // Company Search
+                            if (!empty($_GET['company_search'])) {
+                                $search = mysqli_real_escape_string($conn, $_GET['company_search']);
+                                $conditions[] = "cp.company_name LIKE '%$search%'";
                             }
 
+                            // From Date
+                            if (!empty($_GET['from_date'])) {
+                                $from = mysqli_real_escape_string($conn, $_GET['from_date']);
+                                $conditions[] = "i.invoice_date >= '$from'";
+                            }
+
+                            // To Date
+                            if (!empty($_GET['to_date'])) {
+                                $to = mysqli_real_escape_string($conn, $_GET['to_date']);
+                                $conditions[] = "i.invoice_date <= '$to'";
+                            }
+
+                            // Apply conditions
                             if (count($conditions) > 0) {
                                 $query .= " WHERE " . implode(" AND ", $conditions);
                             }
+                            // Replace your existing else block with this:
+ 
 
-                            // 2. SORT BY INVOICE DATE
+                            // 2. SORTING
                             $query .= " ORDER BY i.invoice_date DESC, i.id DESC";
                             $invoices = $conn->query($query);
-
                             if ($invoices && $invoices->num_rows > 0) {
                                 while ($inv = $invoices->fetch_assoc()) {
                                     $base = (float)$inv['amount'];

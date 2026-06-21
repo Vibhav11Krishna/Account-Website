@@ -64,10 +64,10 @@ $tax_type = $is_interstate ? 'IGST' : 'CGST+SGST';
 // --- Currency Function ---
 function getIndianCurrency(float $number)
 {
-    $no = floor($number);
-    $point = round($number - $no, 2) * 100;
+    $no = (int) floor($number);
+    $point = (int) round(($number - $no) * 100);
     $hundred = null;
-    $digits_length = strlen($no);
+    $digits_length = strlen((string) $no);
     $i = 0;
     $str = array();
     $words = array(
@@ -78,17 +78,17 @@ function getIndianCurrency(float $number)
     $digits = array('', 'Hundred', 'Thousand', 'Lakh', 'Crore');
     while ($i < $digits_length) {
         $divider = ($i == 2) ? 10 : 100;
-        $num = floor($no % $divider);
-        $no = floor($no / $divider);
+        $num = (int) floor($no % $divider);
+        $no = (int) floor($no / $divider);
         $i += ($divider == 10) ? 1 : 2;
         if ($num) {
             $plural = (($counter = count($str)) && $num > 9) ? 's' : null;
             $hundred = ($counter == 1 && $str[0]) ? ' and ' : null;
-            $str[] = ($num < 21) ? $words[$num] . ' ' . $digits[$counter] . $plural . ' ' . $hundred : $words[floor($num / 10) * 10] . ' ' . $words[$num % 10] . ' ' . $digits[$counter] . $plural . ' ' . $hundred;
+            $str[] = ($num < 21) ? $words[$num] . ' ' . $digits[$counter] . $plural . ' ' . $hundred : $words[(int) (floor($num / 10) * 10)] . ' ' . $words[(int)(floor($num / 10) * 10)] . ' ' . $digits[$counter] . $plural . ' ' . $hundred;
         } else $str[] = null;
     }
     $main_string = implode('', array_reverse($str));
-    $paise_string = ($point > 0) ? " and " . ($words[floor($point / 10) * 10] . " " . $words[$point % 10]) . " Paise" : "";
+    $paise_string = ($point > 0) ? " and " . ($words[(int) (floor($point / 10) * 10)] . " " . $words[$point % 10]) . " Paise" : "";
     return ($main_string ? $main_string . 'Rupees' : '') . $paise_string . ' Only';
 }
 ?>
@@ -239,11 +239,29 @@ function getIndianCurrency(float $number)
             <span style="text-transform: uppercase;"><?php echo getIndianCurrency($grand_total); ?></span>
         </div>
 
-        <div class="terms-section">
-            <strong>Terms & Conditions:</strong><br>
-            1. Validity: This quotation is valid for 30 days from the date of issue.<br>
-            2. Payment: All Invoices are payable within 7 days from the date of the invoice.<br>
-            3. Jurisdiction: Any dispute shall be subject to the jurisdiction of the Patna Courts only.
+          <div style="display: flex; gap: 20px; margin-top: 30px; border-top: 2px solid #333; padding-top: 15px;">
+            <div style="flex: 1.2; font-size: 11px; line-height: 1.6; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; background: #f8fafc;">
+                <strong style="color: #0b3c74; font-size: 12px; text-transform: uppercase;">Bank Account Details</strong>
+                <div style="margin-top: 8px;">
+                    <span class="label" style="width: 110px;">Account Holder:</span> <strong>KARUNESH KUMAR & ASSOCIATES</strong><br>
+                    <span class="label" style="width: 110px;">Account Number:</span> <strong>7046022942</strong><br>
+                    <span class="label" style="width: 110px;">Account Type:</span> Current Account<br>
+                    <span class="label" style="width: 110px;">IFSC Code:</span> <strong>KKBK0005656</strong><br>
+                    <span class="label" style="width: 110px;">Bank Name:</span> Kotak Mahindra Bank<br>
+                    <span class="label" style="width: 110px;">Branch:</span> PATNA - ASHIYANA<br>
+                    <span class="label" style="width: 110px;">UPI ID:</span> <span style="color: #ff8c00; font-weight: bold;">karunesh.kumar45@kotak</span>
+                </div>
+            </div>
+
+            <div style="flex: 0.8; font-size: 10px; color: #475569; line-height: 1.5;">
+                <strong style="color: #1e293b;">TERMS & CONDITIONS:</strong>
+                <ul style="padding-left: 15px; margin-top: 8px; list-style-type: square;">
+                    <li>Payment is due within 7 days of the invoice date.</li>
+                    <li>Interest @18% p.a. will be charged for delayed payments beyond 15 days.</li>
+                    <li>All disputes are subject to Patna Jurisdiction only.</li>
+                    <li>This is a system-generated Tax Invoice.</li>
+                </ul>
+            </div>
         </div>
 
         <div class="footer-container">
