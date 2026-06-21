@@ -251,6 +251,15 @@ $js_data = json_encode($counts);
     transition: all 0.3s ease;
     cursor: pointer;
 }
+.chart-container {
+    position: relative; 
+    margin: auto; 
+    width: 100%; 
+    min-height: 400px;
+    display: flex; /* Helps center the chart */
+    align-items: center;
+    justify-content: center;
+}
     </style>
 </head>
 
@@ -360,14 +369,15 @@ $js_data = json_encode($counts);
             </div>
 
             <div class="card">
-                <div class="chart-header" style="text-align: center; margin-bottom: 20px;">
-                    <h3 style="margin:0; color:var(--navy);">Service Share</h3>
-                    <p style="font-size:12px; color:#94a3b8;">Percentage distribution</p>
-                </div>
-                <div style="position: relative; margin: auto; height:300px; width:300px;">
-                    <canvas id="serviceChart"></canvas>
-                </div>
-            </div>
+    <div class="chart-header" style="text-align: center; margin-bottom: 20px;">
+        <h3 style="margin:0; color:var(--navy);">Service Share</h3>
+        <p style="font-size:12px; color:#94a3b8;">Percentage distribution</p>
+    </div>
+
+    <div class="chart-container" style="position: relative; margin: auto; width: 100%; min-height: 400px;">
+        <canvas id="serviceChart"></canvas>
+    </div>
+</div>
         </div>
     </div>
 
@@ -407,14 +417,14 @@ new Chart(ctx, {
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: true, // Let it scale naturally
         plugins: {
             legend: {
                 position: 'bottom',
                 labels: {
                     padding: 20,
                     usePointStyle: true,
-                    font: { size: 12, weight: '600' }
+                    font: { size: 11 } // Slightly smaller font for more labels
                 }
             },
             tooltip: {
@@ -434,7 +444,10 @@ new Chart(ctx, {
                 }
             }
         },
-        cutout: '70%'
+        layout: {
+            padding: 20 // Add padding so labels don't touch the card edge
+        },
+        cutout: '70%' // Slightly smaller cutout to make room for more text
     }
 });
         function filterServices() {
