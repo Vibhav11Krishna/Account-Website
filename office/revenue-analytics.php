@@ -71,18 +71,40 @@ $table_res = $conn->query($table_query);
             color: #334155;
         }
 
-        .sidebar {
-            width: 280px;
-            background: var(--sidebar);
-            color: white;
-            height: 100vh;
-            position: fixed;
-            padding: 30px 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            border-right: 4px solid var(--orange);
-        }
+      .sidebar {
+    width: 280px;
+    background: var(--sidebar);
+    color: white;
+    height: 100vh; /* Keeps the sidebar full height */
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    border-right: 4px solid var(--orange);
+    
+    /* This makes the scrollbar behave correctly */
+    overflow-y: auto;
+    scrollbar-width: thin; /* Firefox: makes the scrollbar thin */
+    scrollbar-color: var(--orange) var(--sidebar); /* Thumb and track color */
+}
+
+/* Chrome, Safari, Edge: Custom Scrollbar Line */
+.sidebar::-webkit-scrollbar {
+    width: 8px; /* Thickness of the side line */
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: #082d56; /* Darker track */
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background-color: var(--orange); /* The "line" you can grab */
+    border-radius: 10px;
+    border: 2px solid #082d56;
+}
 
         .sidebar h2 {
             font-size: 22px;
@@ -257,6 +279,7 @@ $table_res = $conn->query($table_query);
             <div class="dropdown-content" id="vaultMenu">
                 <a href="admin-review.php"></i> Quality Control</a>
                 <a href="Master-Vault.php"></i> Services</a>
+                <a href ="client-documents.php">Client Documents</a>
             </div>
         </div>
 

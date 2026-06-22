@@ -30,10 +30,10 @@ if (isset($_POST['process_salary'])) {
     $uid = $_POST['user_id'];
     $amount = mysqli_real_escape_string($conn, $_POST['amount']);
     $month = mysqli_real_escape_string($conn, $_POST['month_year']);
-    
+
     // Check if bank details exist
     $check = $conn->query("SELECT bank_name, account_number, upi_id FROM users WHERE id='$uid'")->fetch_assoc();
-    
+
     if (empty($check['bank_name']) && empty($check['upi_id'])) {
         echo "<script>alert('Error: This employee has not added any payment details!'); window.location='manage-employees.php';</script>";
     } else {
@@ -42,7 +42,7 @@ if (isset($_POST['process_salary'])) {
 
         $sql = "INSERT INTO salaries (user_id, month_year, amount, status, transaction_id, paid_at) 
                 VALUES ('$uid', '$month', '$amount', 'Paid', '$trans_id', '$now')";
-        
+
         if ($conn->query($sql)) {
             echo "<script>alert('Payment Recorded! Transaction ID: $trans_id'); window.location='manage-employees.php';</script>";
         }
@@ -51,6 +51,7 @@ if (isset($_POST['process_salary'])) {
 ?>
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Manage Staff | KKA Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -64,15 +65,81 @@ if (isset($_POST['process_salary'])) {
             --success: #22c55e;
         }
 
-        body { display: flex; margin: 0; background: var(--bg); font-family: 'Inter', sans-serif; }
+        body {
+            display: flex;
+            margin: 0;
+            background: var(--bg);
+            font-family: 'Inter', sans-serif;
+        }
 
-        .sidebar { width: 280px; background: var(--sidebar); color: white; height: 100vh; position: fixed; padding: 30px 20px; box-sizing: border-box; display: flex; flex-direction: column; border-right: 4px solid var(--orange); }
-        .sidebar h2 { color: var(--orange); margin-bottom: 40px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 20px; font-size: 22px; }
-        .sidebar a { color: rgba(255, 255, 255, 0.7); text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px; margin-bottom: 8px; border-radius: 12px; transition: 0.3s; }
-        .sidebar a:hover, .sidebar a.active { background: rgba(255, 255, 255, 0.1); color: white; border-left: 4px solid var(--orange); }
+     .sidebar {
+    width: 280px;
+    background: var(--sidebar);
+    color: white;
+    height: 100vh; /* Keeps the sidebar full height */
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    border-right: 4px solid var(--orange);
+    
+    /* This makes the scrollbar behave correctly */
+    overflow-y: auto;
+    scrollbar-width: thin; /* Firefox: makes the scrollbar thin */
+    scrollbar-color: var(--orange) var(--sidebar); /* Thumb and track color */
+}
 
-        .main { margin-left: 280px; padding: 50px; width: calc(100% - 280px); }
-        
+/* Chrome, Safari, Edge: Custom Scrollbar Line */
+.sidebar::-webkit-scrollbar {
+    width: 8px; /* Thickness of the side line */
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: #082d56; /* Darker track */
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background-color: var(--orange); /* The "line" you can grab */
+    border-radius: 10px;
+    border: 2px solid #082d56;
+}
+
+        .sidebar h2 {
+            color: var(--orange);
+            margin-bottom: 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .sidebar a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left: 4px solid var(--orange);
+        }
+
+        .main {
+            margin-left: 280px;
+            padding: 50px;
+            width: calc(100% - 280px);
+        }
+
         /* Search Bar Styling */
         .search-container {
             margin-bottom: 25px;
@@ -84,7 +151,12 @@ if (isset($_POST['process_salary'])) {
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             border: 1px solid #e2e8f0;
         }
-        .search-container i { color: #94a3b8; margin-right: 15px; }
+
+        .search-container i {
+            color: #94a3b8;
+            margin-right: 15px;
+        }
+
         .search-container input {
             border: none;
             outline: none;
@@ -93,15 +165,70 @@ if (isset($_POST['process_salary'])) {
             color: var(--navy);
         }
 
-        .table-card { background: white; padding: 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03); border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 18px; background: #f8fafc; color: var(--navy); font-weight: 700; text-transform: uppercase; font-size: 11px; }
-        td { padding: 18px; border-bottom: 1px solid #f1f5f9; color: #475569; font-size: 13px; }
+        .table-card {
+            background: white;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+            border: 1px solid #e2e8f0;
+        }
 
-        .btn-update { background: var(--navy); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 11px; display: inline-flex; align-items: center; gap: 5px; }
-        .badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; }
-        .badge-active { background: #dcfce7; color: #166534; }
-        .badge-absent { background: #f1f5f9; color: #64748b; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            text-align: left;
+            padding: 18px;
+            background: #f8fafc;
+            color: var(--navy);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        td {
+            padding: 18px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #475569;
+            font-size: 13px;
+        }
+
+        .btn-update {
+            background: var(--navy);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .badge-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-absent {
+            background: #f1f5f9;
+            color: #64748b;
+        }
 
         /* Dropdown Styles */
         .dropdown-content {
@@ -119,70 +246,70 @@ if (isset($_POST['process_salary'])) {
         .rotate-chevron {
             transform: rotate(180deg);
         }
-
     </style>
 </head>
 
 <body>
-    
- <div class="sidebar">
-    <h2>Karunesh Kumar & Associates Admin</h2>
-    <a href="admin-dashboard.php" ><i class="fas fa-chart-pie"></i> Dashboard</a>
 
-    <div class="dropdown-container">
-        <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('billingMenu', 'billChev')">
-            <i class="fas fa-file-invoice-dollar"></i> Billing
-            <i class="fas fa-chevron-down" id="billChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
-        </a>
-        <div class="dropdown-content" id="billingMenu">
-            <a href="quotations.php">Quotations</a>
-            <a href="invoices.php">Invoices</a>
-            <a href="receipts.php">Receipts</a>
-            <a href="outstanding.php">Outstanding</a>
+    <div class="sidebar">
+        <h2>Karunesh Kumar & Associates Admin</h2>
+        <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i> Dashboard</a>
+
+        <div class="dropdown-container">
+            <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('billingMenu', 'billChev')">
+                <i class="fas fa-file-invoice-dollar"></i> Billing
+                <i class="fas fa-chevron-down" id="billChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+            </a>
+            <div class="dropdown-content" id="billingMenu">
+                <a href="quotations.php">Quotations</a>
+                <a href="invoices.php">Invoices</a>
+                <a href="receipts.php">Receipts</a>
+                <a href="outstanding.php">Outstanding</a>
+            </div>
         </div>
-    </div>
 
-    <div class="dropdown-container">
-        <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('vaultMenu', 'vaultChev')">
-            <i class="fas fa-folder-open"></i> Documents
-            <i class="fas fa-chevron-down" id="vaultChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
-        </a>
-        <div class="dropdown-content" id="vaultMenu">
-            <a href="admin-review.php"></i> Quality Control</a>
-            <a href="Master-Vault.php"></i> Services</a>
+        <div class="dropdown-container">
+            <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('vaultMenu', 'vaultChev')">
+                <i class="fas fa-folder-open"></i> Documents
+                <i class="fas fa-chevron-down" id="vaultChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+            </a>
+            <div class="dropdown-content" id="vaultMenu">
+                <a href="admin-review.php"></i> Quality Control</a>
+                <a href="Master-Vault.php"></i> Services</a>
+                <a href ="client-documents.php">Client Documents</a>
+            </div>
         </div>
-    </div>
 
-    <div class="dropdown-container">
-        <a href="javascript:void(0)" class="dropdown-btn"class="active" onclick="toggleMenu('reportsMenu', 'repChev')">
-            <i class="fas fa-file-contract"></i> Reports
-            <i class="fas fa-chevron-down" id="repChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
-        </a>
-        <div class="dropdown-content" id="reportsMenu">
-           <a href="dsc-register.php"></i> DSC Register</a>
-           <a href="service-report.php"></i> Service Report</a>
-           <a href="revenue-analytics.php"></i> Revenue Analytics</a>
-           <a href="Client-Revenue.php"></i>Client Revenue</a>
-            <a href="attendance.php"></i> Attendance</a>
+        <div class="dropdown-container">
+            <a href="javascript:void(0)" class="dropdown-btn" class="active" onclick="toggleMenu('reportsMenu', 'repChev')">
+                <i class="fas fa-file-contract"></i> Reports
+                <i class="fas fa-chevron-down" id="repChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+            </a>
+            <div class="dropdown-content" id="reportsMenu">
+                <a href="dsc-register.php"></i> DSC Register</a>
+                <a href="service-report.php"></i> Service Report</a>
+                <a href="revenue-analytics.php"></i> Revenue Analytics</a>
+                <a href="Client-Revenue.php"></i>Client Revenue</a>
+                <a href="attendance.php"></i> Attendance</a>
+            </div>
         </div>
-    </div>
 
-    <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
- <div class="dropdown-container">
-    <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('clientMenu', 'clientChev')">
-        <i class="fas fa-users"></i> Manage Clients
-        <i class="fas fa-chevron-down" id="clientChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
-    </a>
-    <div class="dropdown-content" id="clientMenu">
-        <a href="manage-clients.php">Clients</a>
-        <a href="client-groups.php">Client Groups</a>
-        <a href="client-services.php">Services</a>
+        <a href="assign-work.php"><i class="fas fa-tasks"></i> Assign Work</a>
+        <div class="dropdown-container">
+            <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('clientMenu', 'clientChev')">
+                <i class="fas fa-users"></i> Manage Clients
+                <i class="fas fa-chevron-down" id="clientChev" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+            </a>
+            <div class="dropdown-content" id="clientMenu">
+                <a href="manage-clients.php">Clients</a>
+                <a href="client-groups.php">Client Groups</a>
+                <a href="client-services.php">Services</a>
+            </div>
+        </div>
+        <a href="manage-employees.php" class="active"><i class="fas fa-user-tie"></i> Manage Employees</a>
+        <a href="all-messages.php"><i class="fas fa-inbox"></i> Web Inbox</a>
+        <a href="../logout.php" style="margin-top:auto; color:#fda4af;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
-</div>
-    <a href="manage-employees.php" class="active"><i class="fas fa-user-tie"></i> Manage Employees</a>
-     <a href="all-messages.php"><i class="fas fa-inbox"></i> Web Inbox</a>
-    <a href="../logout.php" style="margin-top:auto; color:#fda4af;"><i class="fas fa-sign-out-alt"></i> Logout</a>
-</div>
     <div class="main">
         <h1 style="color: var(--navy); margin-bottom: 10px;">Employee Management</h1>
         <p style="color: #64748b; margin-bottom: 30px;">Manage staff details, verify bank info, and process payroll.</p>
@@ -211,7 +338,7 @@ if (isset($_POST['process_salary'])) {
                             FROM users u 
                             WHERE u.role='office' 
                             ORDER BY u.name ASC";
-$sql = "SELECT u.*, 
+                    $sql = "SELECT u.*, 
         ep.is_locked, ep.aadhaar_no, ep.aadhaar_photo, 
         ep.pan_no, ep.pan_photo,             -- Added pan_photo
         ep.marksheet_10, ep.marksheet_12,    -- Added marksheets
@@ -225,13 +352,13 @@ $sql = "SELECT u.*,
                     $res = $conn->query($sql);
                     while ($row = $res->fetch_assoc()) {
                         $is_present = !empty($row['attendance_time']);
-                        
+
                         // Bank Preview logic
                         $bank_preview = "---";
-                        if(!empty($row['bank_name'])) {
-                            $bank_preview = "<b>".$row['bank_name']."</b><br><small>".$row['account_number']."</small>";
-                        } elseif(!empty($row['upi_id'])) {
-                            $bank_preview = "<small>UPI: ".$row['upi_id']."</small>";
+                        if (!empty($row['bank_name'])) {
+                            $bank_preview = "<b>" . $row['bank_name'] . "</b><br><small>" . $row['account_number'] . "</small>";
+                        } elseif (!empty($row['upi_id'])) {
+                            $bank_preview = "<small>UPI: " . $row['upi_id'] . "</small>";
                         }
                     ?>
                         <tr>
@@ -255,7 +382,7 @@ $sql = "SELECT u.*,
                                 </form>
                             </td>
                             <td>
-                                <button class="btn-update" style="background:var(--success);" 
+                                <button class="btn-update" style="background:var(--success);"
                                     onclick="openSalaryModal(
                                         '<?php echo $row['id']; ?>', 
                                         '<?php echo addslashes($row['name']); ?>', 
@@ -268,36 +395,36 @@ $sql = "SELECT u.*,
                                     <i class="fas fa-wallet"></i> Pay
                                 </button>
                             </td>
-                     <td>
-    <div style="display:flex; gap:15px; align-items:center; justify-content:center;">
-        <a href="javascript:void(0)" onclick="viewEmployee(<?php echo htmlspecialchars(json_encode($row)); ?>)" title="View Profile">
-            <i class="fas fa-eye" style="color: #1e293b; cursor:pointer;"></i>
-        </a>
+                            <td>
+                                <div style="display:flex; gap:15px; align-items:center; justify-content:center;">
+                                    <a href="javascript:void(0)" onclick="viewEmployee(<?php echo htmlspecialchars(json_encode($row)); ?>)" title="View Profile">
+                                        <i class="fas fa-eye" style="color: #1e293b; cursor:pointer;"></i>
+                                    </a>
 
-        <?php 
-        // Check if profile is locked (Default to 0 if record doesn't exist)
-        $locked_status = isset($row['is_locked']) ? (int)$row['is_locked'] : 0;
-        
-        if ($locked_status === 1): ?>
-            <a href="toggle_lock.php?email=<?php echo urlencode($row['identifier']); ?>&status=0" 
-               title="Unlock Profile" 
-               onclick="return confirm('Enable editing for this employee?')">
-                <i class="fas fa-lock" style="color: #e11d48; cursor:pointer;"></i>
-            </a>
-        <?php else: ?>
-            <a href="toggle_lock.php?email=<?php echo urlencode($row['identifier']); ?>&status=1" 
-               title="Lock Profile" 
-               onclick="return confirm('Freeze this employee profile?')">
-                <i class="fas fa-lock-open" style="color: #059669; cursor:pointer;"></i>
-            </a>
-        <?php endif; ?>
-        
-        <a href="?delete=<?php echo $row['id']; ?>" 
-           onclick="return confirm('Permanently remove this employee?')">
-            <i class="fas fa-trash-alt" style="color:#ef4444;"></i>
-        </a>
-    </div>
-</td>
+                                    <?php
+                                    // Check if profile is locked (Default to 0 if record doesn't exist)
+                                    $locked_status = isset($row['is_locked']) ? (int)$row['is_locked'] : 0;
+
+                                    if ($locked_status === 1): ?>
+                                        <a href="toggle_lock.php?email=<?php echo urlencode($row['identifier']); ?>&status=0"
+                                            title="Unlock Profile"
+                                            onclick="return confirm('Enable editing for this employee?')">
+                                            <i class="fas fa-lock" style="color: #e11d48; cursor:pointer;"></i>
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="toggle_lock.php?email=<?php echo urlencode($row['identifier']); ?>&status=1"
+                                            title="Lock Profile"
+                                            onclick="return confirm('Freeze this employee profile?')">
+                                            <i class="fas fa-lock-open" style="color: #059669; cursor:pointer;"></i>
+                                        </a>
+                                    <?php endif; ?>
+
+                                    <a href="?delete=<?php echo $row['id']; ?>"
+                                        onclick="return confirm('Permanently remove this employee?')">
+                                        <i class="fas fa-trash-alt" style="color:#ef4444;"></i>
+                                    </a>
+                                </div>
+                            </td>
                         </tr>
                     <?php } ?>
                 </tbody>
@@ -327,96 +454,115 @@ $sql = "SELECT u.*,
             </form>
         </div>
     </div>
-<div id="viewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
-    <div style="background:white; width:550px; border-radius:20px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.3);">
-        <div style="background:var(--navy); color:white; padding:20px; display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="margin:0;"><i class="fas fa-user-shield"></i> Detailed Staff Profile</h3>
-            <i class="fas fa-times" onclick="closeViewModal()" style="cursor:pointer;"></i>
-        </div>
-        <div style="padding:25px; max-height: 85vh; overflow-y: auto;">
-            <div style="text-align:center; margin-bottom:20px;">
-                <img id="v_img" src="../uploads/profile_pics/default-avatar.png" style="width:90px; height:90px; border-radius:50%; object-fit:cover; border:3px solid var(--orange); padding:2px; background:white;">
-                <h2 id="v_name" style="margin:10px 0 5px 0; color:var(--navy);"></h2>
-                <span id="v_email" style="color:#64748b; font-size:14px;"></span>
+    <div id="viewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+        <div style="background:white; width:550px; border-radius:20px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+            <div style="background:var(--navy); color:white; padding:20px; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;"><i class="fas fa-user-shield"></i> Detailed Staff Profile</h3>
+                <i class="fas fa-times" onclick="closeViewModal()" style="cursor:pointer;"></i>
             </div>
-            
-            <style>
-                .d-row{display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f1f5f9; align-items: center;} 
-                .d-lbl{color:#64748b; font-weight:bold; font-size:11px; text-transform:uppercase; letter-spacing:0.5px;}
-                .d-val{font-weight:600; color:var(--navy); font-size:13px; text-align:right;}
-            </style>
-            
-            <div class="d-row"><span class="d-lbl">Joining Date</span><span id="v_join" class="d-val"></span></div>
-            <div class="d-row"><span class="d-lbl">Date of Birth</span><span id="v_dob" class="d-val"></span></div>
-            <div class="d-row"><span class="d-lbl">Aadhaar No</span><span id="v_aadhaar" class="d-val"></span></div>
-            <div class="d-row"><span class="d-lbl">PAN No</span><span id="v_pan" class="d-val"></span></div>
-            <div class="d-row"><span class="d-lbl">Emergency Contact</span><span id="v_emg" class="d-val"></span></div>
-            <div class="d-row" style="flex-direction:column; align-items:flex-start;">
-                <span class="d-lbl" style="margin-bottom:5px;">Residential Address</span>
-                <span id="v_addr" style="font-size:13px; line-height:1.5; color:#475569;"></span>
+            <div style="padding:25px; max-height: 85vh; overflow-y: auto;">
+                <div style="text-align:center; margin-bottom:20px;">
+                    <img id="v_img" src="../uploads/profile_pics/default-avatar.png" style="width:90px; height:90px; border-radius:50%; object-fit:cover; border:3px solid var(--orange); padding:2px; background:white;">
+                    <h2 id="v_name" style="margin:10px 0 5px 0; color:var(--navy);"></h2>
+                    <span id="v_email" style="color:#64748b; font-size:14px;"></span>
+                </div>
+
+                <style>
+                    .d-row {
+                        display: flex;
+                        justify-content: space-between;
+                        padding: 12px 0;
+                        border-bottom: 1px solid #f1f5f9;
+                        align-items: center;
+                    }
+
+                    .d-lbl {
+                        color: #64748b;
+                        font-weight: bold;
+                        font-size: 11px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+
+                    .d-val {
+                        font-weight: 600;
+                        color: var(--navy);
+                        font-size: 13px;
+                        text-align: right;
+                    }
+                </style>
+
+                <div class="d-row"><span class="d-lbl">Joining Date</span><span id="v_join" class="d-val"></span></div>
+                <div class="d-row"><span class="d-lbl">Date of Birth</span><span id="v_dob" class="d-val"></span></div>
+                <div class="d-row"><span class="d-lbl">Aadhaar No</span><span id="v_aadhaar" class="d-val"></span></div>
+                <div class="d-row"><span class="d-lbl">PAN No</span><span id="v_pan" class="d-val"></span></div>
+                <div class="d-row"><span class="d-lbl">Emergency Contact</span><span id="v_emg" class="d-val"></span></div>
+                <div class="d-row" style="flex-direction:column; align-items:flex-start;">
+                    <span class="d-lbl" style="margin-bottom:5px;">Residential Address</span>
+                    <span id="v_addr" style="font-size:13px; line-height:1.5; color:#475569;"></span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                    <div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0;">
+                        <span class="d-lbl">Aadhaar Card</span>
+                        <div style="margin-top:10px;">
+                            <img id="v_aadhaar_img" src="" style="display:none;">
+                            <div id="v_no_photo"></div>
+                        </div>
+                    </div>
+
+                    <div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0;">
+                        <span class="d-lbl">PAN Card</span>
+                        <div style="margin-top:10px;">
+                            <img id="v_pan_img" src="" style="display:none;">
+                            <div id="v_pan_txt"></div>
+                        </div>
+                    </div>
+
+                    <div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0;">
+                        <span class="d-lbl">10th Marksheet</span>
+                        <div style="margin-top:10px;">
+                            <img id="v_m10_img" src="" style="display:none;">
+                            <div id="v_m10_txt"></div>
+                        </div>
+                    </div>
+
+                    <div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0;">
+                        <span class="d-lbl">12th Marksheet</span>
+                        <div style="margin-top:10px;">
+                            <img id="v_m12_img" src="" style="display:none;">
+                            <div id="v_m12_txt"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="closeViewModal()" style="width:100%; margin-top:25px; padding:14px; border:none; background:#f1f5f9; color:var(--navy); border-radius:12px; font-weight:bold; cursor:pointer; transition:0.2s;">Close Profile View</button>
             </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
-    <div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0;">
-        <span class="d-lbl">Aadhaar Card</span>
-        <div style="margin-top:10px;">
-            <img id="v_aadhaar_img" src="" style="display:none;">
-            <div id="v_no_photo"></div>
         </div>
     </div>
-
-    <div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0;">
-        <span class="d-lbl">PAN Card</span>
-        <div style="margin-top:10px;">
-            <img id="v_pan_img" src="" style="display:none;">
-            <div id="v_pan_txt"></div>
-        </div>
-    </div>
-
-    <div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0;">
-        <span class="d-lbl">10th Marksheet</span>
-        <div style="margin-top:10px;">
-            <img id="v_m10_img" src="" style="display:none;">
-            <div id="v_m10_txt"></div>
-        </div>
-    </div>
-
-    <div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0;">
-        <span class="d-lbl">12th Marksheet</span>
-        <div style="margin-top:10px;">
-            <img id="v_m12_img" src="" style="display:none;">
-            <div id="v_m12_txt"></div>
-        </div>
-    </div>
-</div>
-
-            <button onclick="closeViewModal()" style="width:100%; margin-top:25px; padding:14px; border:none; background:#f1f5f9; color:var(--navy); border-radius:12px; font-weight:bold; cursor:pointer; transition:0.2s;">Close Profile View</button>
-        </div>
-    </div>
-</div>
     <script>
         function toggleMenu(menuId, chevronId) {
-    const menu = document.getElementById(menuId);
-    const chevron = document.getElementById(chevronId);
+            const menu = document.getElementById(menuId);
+            const chevron = document.getElementById(chevronId);
 
-    // Toggle the specific menu clicked
-    menu.classList.toggle('show-menu');
+            // Toggle the specific menu clicked
+            menu.classList.toggle('show-menu');
 
-    // Rotate the specific arrow clicked
-    chevron.classList.toggle('rotate-chevron');
+            // Rotate the specific arrow clicked
+            chevron.classList.toggle('rotate-chevron');
 
-    // Optional: Close other menus when opening a new one
-    const allMenus = document.querySelectorAll('.dropdown-content');
-    const allChevrons = document.querySelectorAll('.fa-chevron-down');
+            // Optional: Close other menus when opening a new one
+            const allMenus = document.querySelectorAll('.dropdown-content');
+            const allChevrons = document.querySelectorAll('.fa-chevron-down');
 
-    allMenus.forEach((m) => {
-        if (m.id !== menuId) m.classList.remove('show-menu');
-    });
-    
-    allChevrons.forEach((c) => {
-        if (c.id !== chevronId) c.classList.remove('rotate-chevron');
-    });
-}
+            allMenus.forEach((m) => {
+                if (m.id !== menuId) m.classList.remove('show-menu');
+            });
+
+            allChevrons.forEach((c) => {
+                if (c.id !== chevronId) c.classList.remove('rotate-chevron');
+            });
+        }
 
         // Search Filter Logic
         function filterEmployees() {
@@ -442,9 +588,9 @@ $sql = "SELECT u.*,
             document.getElementById('salaryModal').style.display = 'flex';
             document.getElementById('modalUserId').value = id;
             document.getElementById('modalStaffName').innerText = "Pay: " + name;
-            
+
             let html = "";
-            if(bank && acc) {
+            if (bank && acc) {
                 html = `<div style="margin-bottom:8px;"><b>Holder:</b> ${holder || 'N/A'}</div>
                         <div style="margin-bottom:4px;"><i class="fas fa-university"></i> <b>${bank}</b></div>
                         <div style="margin-bottom:4px;"><i class="fas fa-credit-card"></i> ${acc}</div>
@@ -460,36 +606,37 @@ $sql = "SELECT u.*,
         function closeSalaryModal() {
             document.getElementById('salaryModal').style.display = 'none';
         }
-   function viewEmployee(data) {
-    document.getElementById('viewModal').style.display = 'flex';
-    
-    // 1. Basic Info & Profile Fields
-    document.getElementById('v_name').innerText = data.name;
-    document.getElementById('v_email').innerText = data.identifier;
-    document.getElementById('v_join').innerText = data.date_of_joining || 'Not Set';
-    document.getElementById('v_dob').innerText = data.dob || 'Not Set';
-    document.getElementById('v_aadhaar').innerText = data.aadhaar_no || 'Not Set';
-    document.getElementById('v_pan').innerText = data.pan_no || 'Not Set';
-    document.getElementById('v_emg').innerText = data.emergency_contact || 'Not Set';
-    document.getElementById('v_addr').innerText = data.address || 'Address not provided';
-    
-    // 2. Profile Picture
-    document.getElementById('v_img').src = data.profile_pic ? "../uploads/profile_pics/" + data.profile_pic : "../uploads/profile_pics/default-avatar.png";
 
-    // 3. Document Processing Helper
-    const processDoc = (fileName, imgId, textId, label) => {
-        const imgTag = document.getElementById(imgId);
-        const textDiv = document.getElementById(textId);
+        function viewEmployee(data) {
+            document.getElementById('viewModal').style.display = 'flex';
 
-        if (fileName && fileName !== "") {
-            const filePath = "../uploads/documents/" + fileName;
-            const fileExt = fileName.split('.').pop().toLowerCase();
+            // 1. Basic Info & Profile Fields
+            document.getElementById('v_name').innerText = data.name;
+            document.getElementById('v_email').innerText = data.identifier;
+            document.getElementById('v_join').innerText = data.date_of_joining || 'Not Set';
+            document.getElementById('v_dob').innerText = data.dob || 'Not Set';
+            document.getElementById('v_aadhaar').innerText = data.aadhaar_no || 'Not Set';
+            document.getElementById('v_pan').innerText = data.pan_no || 'Not Set';
+            document.getElementById('v_emg').innerText = data.emergency_contact || 'Not Set';
+            document.getElementById('v_addr').innerText = data.address || 'Address not provided';
 
-            if (fileExt === 'pdf') {
-                // PDF Layout
-                imgTag.style.display = "none";
-                textDiv.style.display = "block";
-                textDiv.innerHTML = `
+            // 2. Profile Picture
+            document.getElementById('v_img').src = data.profile_pic ? "../uploads/profile_pics/" + data.profile_pic : "../uploads/profile_pics/default-avatar.png";
+
+            // 3. Document Processing Helper
+            const processDoc = (fileName, imgId, textId, label) => {
+                const imgTag = document.getElementById(imgId);
+                const textDiv = document.getElementById(textId);
+
+                if (fileName && fileName !== "") {
+                    const filePath = "../uploads/documents/" + fileName;
+                    const fileExt = fileName.split('.').pop().toLowerCase();
+
+                    if (fileExt === 'pdf') {
+                        // PDF Layout
+                        imgTag.style.display = "none";
+                        textDiv.style.display = "block";
+                        textDiv.innerHTML = `
                     <div style="background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 12px; text-align:center;">
                         <i class="fas fa-file-pdf" style="color: #ef4444; font-size: 24px; margin-bottom: 5px;"></i>
                         <p style="font-size: 11px; font-weight: bold; color: var(--navy); margin:0;">${label} (PDF)</p>
@@ -497,39 +644,43 @@ $sql = "SELECT u.*,
                             <i class="fas fa-eye"></i> View PDF
                         </a>
                     </div>`;
-            } else {
-                // Image Layout with Click-to-Enlarge
-                imgTag.src = filePath;
-                imgTag.style.display = "block";
-                imgTag.style.width = "100%";
-                imgTag.style.height = "100px"; // Fixed height for consistent grid
-                imgTag.style.objectFit = "cover"; // Crops image to fit the box nicely
-                imgTag.style.borderRadius = "8px";
-                imgTag.style.cursor = "zoom-in";
-                
-                // Clicking opens the full image in a new tab
-                imgTag.onclick = function() { window.open(filePath, '_blank'); };
-                
-                textDiv.style.display = "block";
-                textDiv.innerHTML = `<p style="font-size:10px; color:#64748b; text-align:center; margin-top:5px; font-style:italic;">Click to enlarge</p>`;
-            }
-        } else {
-            // Not Uploaded State
-            imgTag.style.display = "none";
-            textDiv.style.display = "block";
-            textDiv.innerHTML = `<div style="text-align:center; padding:10px; color:#94a3b8; font-size:12px;">No ${label}</div>`;
-        }
-    };
+                    } else {
+                        // Image Layout with Click-to-Enlarge
+                        imgTag.src = filePath;
+                        imgTag.style.display = "block";
+                        imgTag.style.width = "100%";
+                        imgTag.style.height = "100px"; // Fixed height for consistent grid
+                        imgTag.style.objectFit = "cover"; // Crops image to fit the box nicely
+                        imgTag.style.borderRadius = "8px";
+                        imgTag.style.cursor = "zoom-in";
 
-    // 4. Execute for all four documents
-    processDoc(data.aadhaar_photo, 'v_aadhaar_img', 'v_no_photo', 'Aadhaar');
-    processDoc(data.pan_photo,     'v_pan_img',     'v_pan_txt',  'PAN Card');
-    processDoc(data.marksheet_10,  'v_m10_img',     'v_m10_txt',  '10th Marksheet');
-    processDoc(data.marksheet_12,  'v_m12_img',     'v_m12_txt',  '12th Marksheet');
-}
-function closeViewModal() {
-    document.getElementById('viewModal').style.display = 'none';
-}
+                        // Clicking opens the full image in a new tab
+                        imgTag.onclick = function() {
+                            window.open(filePath, '_blank');
+                        };
+
+                        textDiv.style.display = "block";
+                        textDiv.innerHTML = `<p style="font-size:10px; color:#64748b; text-align:center; margin-top:5px; font-style:italic;">Click to enlarge</p>`;
+                    }
+                } else {
+                    // Not Uploaded State
+                    imgTag.style.display = "none";
+                    textDiv.style.display = "block";
+                    textDiv.innerHTML = `<div style="text-align:center; padding:10px; color:#94a3b8; font-size:12px;">No ${label}</div>`;
+                }
+            };
+
+            // 4. Execute for all four documents
+            processDoc(data.aadhaar_photo, 'v_aadhaar_img', 'v_no_photo', 'Aadhaar');
+            processDoc(data.pan_photo, 'v_pan_img', 'v_pan_txt', 'PAN Card');
+            processDoc(data.marksheet_10, 'v_m10_img', 'v_m10_txt', '10th Marksheet');
+            processDoc(data.marksheet_12, 'v_m12_img', 'v_m12_txt', '12th Marksheet');
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').style.display = 'none';
+        }
     </script>
 </body>
+
 </html>

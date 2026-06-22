@@ -38,13 +38,13 @@ function getIndianCurrency(float $number) {
     $digits = array('', 'hundred', 'thousand', 'lakh', 'crore');
     while ($i < $digits_1) {
         $divider = ($i == 2) ? 10 : 100;
-        $num = floor($no % $divider);
-        $no = floor($no / $divider);
+        $num = (int) floor($no % $divider);
+        $no = (int) floor($no / $divider);
         $i += ($divider == 10) ? 1 : 2;
         if ($num) {
             $plural = (($counter = count($str)) && $num > 9) ? 's' : null;
             $hundred = ($counter == 1 && $str[0]) ? ' and ' : null;
-            $str [] = ($num < 21) ? $words[$num] . " " . $digits[$counter] . $plural . " " . $hundred : $words[floor($num / 10) * 10] . " " . $words[$num % 10] . " " . $digits[$counter] . $plural . " " . $hundred;
+            $str [] = ($num < 21) ? $words[$num] . " " . $digits[$counter] . $plural . " " . $hundred : $words[(int)(floor($num / 10) * 10)] . " " . $words[$num % 10] . " " . $digits[$counter] . $plural . " " . $hundred;
         } else $str[] = null;
     }
     $str = array_reverse($str);
