@@ -7,6 +7,7 @@ if (!isset($_SESSION['user'])) {
     exit();
 }
 
+
 if (!isset($_GET['inv_no'])) {
     die("Error: Invoice Number is missing.");
 }

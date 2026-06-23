@@ -12,7 +12,12 @@ $cid = $_SESSION['user']['identifier'];
 // Handle Search Query
 $search = "";
 if (isset($_GET['search'])) {
-    $search = mysqli_real_escape_string($conn, $_GET['search']);
+    // Use mysqli_real_escape_string if DB connection exists, otherwise fall back to addslashes
+    if (isset($conn)) {
+        $search = mysqli_real_escape_string($conn, $_GET['search']);
+    } else {
+        $search = addslashes($_GET['search']);
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -203,47 +208,65 @@ if (isset($_GET['search'])) {
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <?php
-                    // Dynamic query based on search
-                    $sql = "SELECT * FROM invoices WHERE client_id = '$cid'";
-                    
-                    if ($search != "") {
-                        $sql .= " AND (invoice_no LIKE '%$search%' OR service_name LIKE '%$search%')";
-                    }
-                    
-                    $sql .= " ORDER BY id DESC";
-                    
-                    $invoices = $conn->query($sql);
+               <tbody>
+    <?php
+    // Updated query to join with invoice_items and calculate totals
+    $sql = "SELECT i.*, 
+            GROUP_CONCAT(ii.service_name SEPARATOR ', ') as services_list,
+            SUM(ii.amount) as total_base,
+            SUM(ii.tax_value) as total_tax
+            FROM invoices i
+            LEFT JOIN invoice_items ii ON i.id = ii.invoice_id
+            WHERE i.client_id = '$cid'";
 
-                    if ($invoices && $invoices->num_rows > 0) {
-                        while ($inv = $invoices->fetch_assoc()) {
-                            $is_unpaid = (strtolower($inv['status']) == 'unpaid');
-                            
-                            // Directly pulling the amount from the invoice table
-                            $amount = (float)$inv['amount'];
+    if ($search != "") {
+        if (isset($conn)) {
+            $search = mysqli_real_escape_string($conn, $search);
+        } else {
+            $search = addslashes($search);
+        }
+        $sql .= " AND (i.invoice_no LIKE '%$search%' OR ii.service_name LIKE '%$search%')";
+    }
 
-                            echo "<tr>
-                                    <td>#{$inv['invoice_no']}</td>
-                                    <td><strong>{$inv['service_name']}</strong></td>
-                                    <td style='font-weight:800; color:var(--navy);'>₹" . number_format($amount, 2) . "</td>
-                                    <td><span class='badge " . ($is_unpaid ? 'unpaid' : 'paid') . "'>{$inv['status']}</span></td>
-                                    <td>";
+    $sql .= " GROUP BY i.id ORDER BY i.id DESC";
+    
+    $invoices = (isset($conn)) ? $conn->query($sql) : false;
 
-                            if ($is_unpaid) {
-                                echo "<a href='process-test-pay.php?id={$inv['id']}' class='btn-pay'>
-                                        <i class='fas fa-credit-card'></i> Pay Now
-                                      </a>";
-                            } else {
-                                echo "<span style='color:var(--text-light); font-size:12px;'><i class='fas fa-check-circle'></i> Paid</span>";
-                            }
-                            echo "</td></tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='5' style='text-align:center; padding:40px; color:var(--text-light);'>No invoices found matching your search.</td></tr>";
-                    }
-                    ?>
-                </tbody>
+    if ($invoices && $invoices->num_rows > 0) {
+        while ($inv = $invoices->fetch_assoc()) {
+            $is_unpaid = (strtolower($inv['status']) == 'unpaid');
+            
+            // Calculate totals
+            $base = (float)$inv['total_base'];
+            $tax = (float)$inv['total_tax'];
+            $grand_total = $base + $tax;
+
+            echo "<tr>
+                    <td>#{$inv['invoice_no']}</td>
+                    <td><strong>" . htmlspecialchars($inv['services_list'] ?? 'No items') . "</strong></td>
+                    <td style='font-weight:800; color:var(--navy);'>
+                        ₹" . number_format($grand_total, 2) . "
+                        <div style='font-size:11px; color:var(--text-light); font-weight:normal;'>
+                            (Base: ₹" . number_format($base, 2) . " + Tax: ₹" . number_format($tax, 2) . ")
+                        </div>
+                    </td>
+                    <td><span class='badge " . ($is_unpaid ? 'unpaid' : 'paid') . "'>{$inv['status']}</span></td>
+                    <td>";
+            
+            if ($is_unpaid) {
+                echo "<a href='process-test-pay.php?id={$inv['id']}' class='btn-pay'>
+                        <i class='fas fa-credit-card'></i> Pay Now
+                      </a>";
+            } else {
+                echo "<span style='color:var(--text-light); font-size:12px;'><i class='fas fa-check-circle'></i> Paid</span>";
+            }
+            echo "</td></tr>";
+        }
+    } else {
+        echo "<tr><td colspan='5' style='text-align:center; padding:40px; color:var(--text-light);'>No invoices found.</td></tr>";
+    }
+    ?>
+</tbody>
             </table>
         </div>
     </div>
