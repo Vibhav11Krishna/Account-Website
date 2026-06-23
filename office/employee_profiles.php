@@ -58,6 +58,8 @@ if (isset($_POST['update_profile'])) {
     $doj     = $conn->real_escape_string($_POST['date_of_joining']);
     $emg     = $conn->real_escape_string($_POST['emergency_contact']);
     $address = $conn->real_escape_string($_POST['address']);
+    $firm_reg  = $conn->real_escape_string($_POST['firm_reg_no'] ?? '');
+$prof_qual = $conn->real_escape_string($_POST['prof_qualification'] ?? '');
 
     $doc_path = "../uploads/documents/";
     if (!is_dir($doc_path)) mkdir($doc_path, 0777, true);
@@ -67,12 +69,14 @@ if (isset($_POST['update_profile'])) {
     $pan_photo     = $userData['pan_photo'] ?? '';
     $m10_photo     = $userData['marksheet_10'] ?? '';
     $m12_photo     = $userData['marksheet_12'] ?? '';
+    $prof_doc      = $userData['prof_doc'] ?? '';
 
     $file_map = [
         'aadhaar_img' => ['prefix' => 'aadhaar_', 'target' => &$aadhaar_photo],
         'pan_img'     => ['prefix' => 'pan_doc_', 'target' => &$pan_photo],
         'm10_img'     => ['prefix' => 'm10_',      'target' => &$m10_photo],
-        'm12_img'     => ['prefix' => 'm12_',      'target' => &$m12_photo]
+        'm12_img'     => ['prefix' => 'm12_',      'target' => &$m12_photo],
+        'prof_doc'    => ['prefix' => 'prof_deg_', 'target' => &$prof_doc]
     ];
 
     foreach ($file_map as $input => &$info) {
@@ -104,12 +108,13 @@ if (isset($_POST['update_profile'])) {
     if ($check_exists->num_rows > 0) {
         // UPDATE existing record
         $sql = "UPDATE employee_profiles SET 
-                first_name='$fname', last_name='$lname', phone='$phone', 
-                dob='$dob', aadhaar_no='$aadhaar', pan_no='$pan', 
-                pan_photo='$pan_photo', marksheet_10='$m10_photo', marksheet_12='$m12_photo',
-                date_of_joining='$doj', emergency_contact='$emg', 
-                profile_pic='$profile_pic', aadhaar_photo='$aadhaar_photo', address='$address' 
-                WHERE user_id='$current_user_id'";
+        first_name='$fname', last_name='$lname', phone='$phone', 
+        dob='$dob', aadhaar_no='$aadhaar', pan_no='$pan', 
+        pan_photo='$pan_photo', marksheet_10='$m10_photo', marksheet_12='$m12_photo',
+        date_of_joining='$doj', emergency_contact='$emg', 
+        profile_pic='$profile_pic', aadhaar_photo='$aadhaar_photo', address='$address',
+        firm_reg_no='$firm_reg', prof_qualification='$prof_qual', prof_doc_path='$prof_doc' 
+        WHERE user_id='$current_user_id'";
     } else {
         // INSERT new record
         $sql = "INSERT INTO employee_profiles (user_id, first_name, last_name, phone, dob, aadhaar_no, pan_no, pan_photo, marksheet_10, marksheet_12, date_of_joining, emergency_contact, profile_pic, aadhaar_photo, address) 
@@ -482,7 +487,35 @@ if (isset($_POST['update_profile'])) {
                 <textarea name="address" rows="3" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?>><?= htmlspecialchars($userData['address'] ?? '') ?></textarea>
             </div>
         </div>
+<div class="form-group">
+    <label>Firm Registration No</label>
+    <input type="text" name="firm_reg_no" value="<?= htmlspecialchars($userData['firm_reg_no'] ?? '') ?>" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?>>
+</div>
 
+<div class="form-group">
+    <label>Professional Degree (PDF, JPG, PNG)</label>
+    <input type="text" name="prof_qualification" placeholder="Degree Name" value="<?= htmlspecialchars($userData['prof_qualification'] ?? '') ?>" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?> style="margin-bottom:5px;">
+    
+    <div style="display:flex; align-items:center; gap:10px;">
+        <input type="file" name="prof_doc" accept="image/*,application/pdf" style="flex:1;" <?= $is_locked ? 'disabled' : '' ?>>
+        
+        <?php if(!empty($userData['prof_doc_path'])): ?>
+            <div style="display:flex; gap:5px;">
+                <a href="../uploads/documents/<?= $userData['prof_doc_path'] ?>" target="_blank" 
+                   style="background:#f1f5f9; padding:8px 12px; border-radius:8px; color:var(--navy); text-decoration:none; font-size:12px; font-weight:700; border:1px solid #e2e8f0;">
+                    <i class="fas fa-eye"></i> View
+                </a>
+                
+                <?php if(!$is_locked): ?>
+                    <a href="?delete_doc=prof_doc_path" onclick="return confirm('Delete this document?')" 
+                       style="background:#fee2e2; padding:8px 12px; border-radius:8px; color:#ef4444; border:1px solid #fecaca; text-decoration:none; font-size:12px;">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
         <?php if (!$is_locked): ?>
             <button type="submit" name="update_profile" class="btn-save">Save Profile Changes</button>
         <?php else: ?>
@@ -523,6 +556,21 @@ if (isset($_POST['update_profile'])) {
             <span class="info-label">Emergency Contact</span>
             <span class="info-value"><?= htmlspecialchars($userData['emergency_contact'] ?? 'Not Set') ?></span>
         </div>
+        <div class="info-item">
+    <span class="info-label">Firm Reg No</span>
+    <span class="info-value"><?= htmlspecialchars($userData['firm_reg_no'] ?? 'Not Set') ?></span>
+</div>
+<div class="info-item">
+    <span class="info-label">Qualification</span>
+    <span class="info-value"><?= htmlspecialchars($userData['prof_qualification'] ?? 'Not Set') ?></span>
+</div>
+
+<div class="info-item">
+    <span class="info-label">Prof. Degree</span>
+    <span class="info-value">
+        <?= !empty($userData['prof_doc_path']) ? '<span style="color:green;">✅ Uploaded</span>' : '<span style="color:red;">❌ Missing</span>' ?>
+    </span>
+</div>
         <div class="info-item" style="grid-column: span 3;">
             <span class="info-label">Residential Address</span>
             <span class="info-value"><?= htmlspecialchars($userData['address'] ?? 'No address provided') ?></span>

@@ -338,12 +338,12 @@ if (isset($_POST['process_salary'])) {
                             FROM users u 
                             WHERE u.role='office' 
                             ORDER BY u.name ASC";
-                    $sql = "SELECT u.*, 
+                   $sql = "SELECT u.*, 
         ep.is_locked, ep.aadhaar_no, ep.aadhaar_photo, 
-        ep.pan_no, ep.pan_photo,             -- Added pan_photo
-        ep.marksheet_10, ep.marksheet_12,    -- Added marksheets
+        ep.pan_no, ep.pan_photo, ep.marksheet_10, ep.marksheet_12, 
         ep.address, ep.dob, ep.emergency_contact, 
         ep.profile_pic, ep.date_of_joining,
+        ep.firm_reg_no, ep.prof_qualification, ep.prof_doc_path, -- Add these
         (SELECT login_time FROM attendance WHERE email = u.identifier AND log_date = '$today' LIMIT 1) as attendance_time 
         FROM users u 
         LEFT JOIN employee_profiles ep ON u.id = ep.user_id
@@ -497,6 +497,8 @@ if (isset($_POST['process_salary'])) {
                 <div class="d-row"><span class="d-lbl">Aadhaar No</span><span id="v_aadhaar" class="d-val"></span></div>
                 <div class="d-row"><span class="d-lbl">PAN No</span><span id="v_pan" class="d-val"></span></div>
                 <div class="d-row"><span class="d-lbl">Emergency Contact</span><span id="v_emg" class="d-val"></span></div>
+                <div class="d-row"><span class="d-lbl">Firm Reg No</span><span id="v_firm_reg" class="d-val"></span></div>
+<div class="d-row"><span class="d-lbl">Qualification</span><span id="v_prof_qual" class="d-val"></span></div>
                 <div class="d-row" style="flex-direction:column; align-items:flex-start;">
                     <span class="d-lbl" style="margin-bottom:5px;">Residential Address</span>
                     <span id="v_addr" style="font-size:13px; line-height:1.5; color:#475569;"></span>
@@ -527,6 +529,14 @@ if (isset($_POST['process_salary'])) {
                         </div>
                     </div>
 
+                    
+<div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0; margin-top:10px;">
+    <span class="d-lbl">Professional Degree</span>
+    <div style="margin-top:10px;">
+        <img id="v_prof_img" src="" style="display:none;">
+        <div id="v_prof_txt"></div>
+    </div>
+</div>
                     <div style="background:#f8fafc; padding:10px; border-radius:12px; border:1px solid #e2e8f0;">
                         <span class="d-lbl">12th Marksheet</span>
                         <div style="margin-top:10px;">
@@ -619,6 +629,8 @@ if (isset($_POST['process_salary'])) {
             document.getElementById('v_pan').innerText = data.pan_no || 'Not Set';
             document.getElementById('v_emg').innerText = data.emergency_contact || 'Not Set';
             document.getElementById('v_addr').innerText = data.address || 'Address not provided';
+            document.getElementById('v_firm_reg').innerText = data.firm_reg_no || 'Not Set';
+document.getElementById('v_prof_qual').innerText = data.prof_qualification || 'Not Set'
 
             // 2. Profile Picture
             document.getElementById('v_img').src = data.profile_pic ? "../uploads/profile_pics/" + data.profile_pic : "../uploads/profile_pics/default-avatar.png";
@@ -675,6 +687,7 @@ if (isset($_POST['process_salary'])) {
             processDoc(data.pan_photo, 'v_pan_img', 'v_pan_txt', 'PAN Card');
             processDoc(data.marksheet_10, 'v_m10_img', 'v_m10_txt', '10th Marksheet');
             processDoc(data.marksheet_12, 'v_m12_img', 'v_m12_txt', '12th Marksheet');
+            processDoc(data.prof_doc_path, 'v_prof_img', 'v_prof_txt', 'Professional Degree')
         }
 
         function closeViewModal() {
