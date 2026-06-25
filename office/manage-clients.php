@@ -438,6 +438,7 @@ if (isset($_POST['quick_create'])) {
                 <thead>
                     <tr>
                         <th>Client ID</th>
+                        <th>Login Details</th>
                         <th>Firm Details</th>
                         <th>Contact</th>
                         <th>Tax Info</th>
@@ -445,43 +446,48 @@ if (isset($_POST['quick_create'])) {
                     </tr>
                 </thead>
                 <tbody>
-                  <?php
-// Change the query to select everything from client_profiles
-$sql = "SELECT u.identifier, cp.* FROM users u 
-        LEFT JOIN client_profiles cp ON u.identifier = cp.client_id 
-        WHERE u.role='client' ORDER BY u.id DESC";
+    <?php
+    $sql = "SELECT u.identifier, u.password, cp.* FROM users u 
+            LEFT JOIN client_profiles cp ON u.identifier = cp.client_id 
+            WHERE u.role='client' ORDER BY u.id DESC";
 
-$res = $conn->query($sql);
-while ($row = $res->fetch_assoc()):
-?>
-                    <tr>
-                        <td><span class="id-badge"><?php echo $row['identifier']; ?></span></td>
-                        <td>
-                            <b><?php echo htmlspecialchars($row['company_name'] ?: 'Not Set'); ?></b><br>
-                            <small><?php echo htmlspecialchars($row['owner_name']); ?></small>
-                        </td>
-                        <td><?php echo $row['phone'] ?: '-'; ?><br><small><?php echo $row['business_email'] ?: '-'; ?></small></td>
-                        <td><small>GST: <?php echo $row['gst_no'] ?: '-'; ?><br>PAN: <?php echo $row['pan_no'] ?: '-'; ?></small></td>
-                       <td style="text-align: center;">
-    <?php 
-        // We convert the whole row to JSON so the "Eye" can read it instantly
-        $clientJson = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8'); 
+    $res = $conn->query($sql);
+    while ($row = $res->fetch_assoc()):
     ?>
-    <a href="javascript:void(0)" class="action-btn btn-view" onclick='openViewModal(<?php echo $clientJson; ?>)'>
-        <i class="fas fa-eye"></i>
-    </a>
+    <tr>
+        <td><span class="id-badge"><?php echo $row['identifier']; ?></span></td>
+        
+        <td style="font-size: 12px; line-height: 1.4;">
+            <i class="fas fa-user" style="color:var(--navy);"></i> <b><?php echo htmlspecialchars($row['identifier']); ?></b><br>
+            <i class="fas fa-lock" style="color:var(--orange);"></i> <?php echo htmlspecialchars($row['password']); ?>
+        </td>
+        
+        <td>
+            <b><?php echo htmlspecialchars($row['company_name'] ?: 'Not Set'); ?></b><br>
+            <small><?php echo htmlspecialchars($row['owner_name']); ?></small>
+        </td>
+        <td><?php echo $row['phone'] ?: '-'; ?><br><small><?php echo $row['business_email'] ?: '-'; ?></small></td>
+        <td><small>GST: <?php echo $row['gst_no'] ?: '-'; ?><br>PAN: <?php echo $row['pan_no'] ?: '-'; ?></small></td>
+        
+        <td style="text-align: center;">
+            <?php 
+                $clientJson = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8'); 
+            ?>
+            <a href="javascript:void(0)" class="action-btn btn-view" onclick='openViewModal(<?php echo $clientJson; ?>)'>
+                <i class="fas fa-eye"></i>
+            </a>
 
-    <a href="client-profile.php?id=<?php echo $row['identifier']; ?>" class="action-btn btn-edit">
-        <i class="fas fa-pencil-alt"></i>
-    </a>
+            <a href="client-profile.php?id=<?php echo $row['identifier']; ?>" class="action-btn btn-edit">
+                <i class="fas fa-pencil-alt"></i>
+            </a>
 
-    <a href="?delete=<?php echo $row['identifier']; ?>" class="action-btn btn-delete" onclick="return confirm('Delete this client?')">
-        <i class="fas fa-trash-alt"></i>
-    </a>
-</td>
-                    </tr>
-                    <?php endwhile; ?>
-                </tbody>
+            <a href="?delete=<?php echo $row['identifier']; ?>" class="action-btn btn-delete" onclick="return confirm('Delete this client?')">
+                <i class="fas fa-trash-alt"></i>
+            </a>
+        </td>
+    </tr>
+    <?php endwhile; ?>
+</tbody>
             </table>
         </div>
     </div>

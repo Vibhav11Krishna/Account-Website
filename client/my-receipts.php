@@ -142,6 +142,13 @@ $cid = $_SESSION['user']['identifier'];
             font-size: 11px;
             font-weight: bold;
         }
+        .sidebar a.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-left: 4px solid var(--orange);
+}
+
+.rotate-chevron { transform: rotate(180deg); }
     </style>
 </head>
 
@@ -176,6 +183,31 @@ $cid = $_SESSION['user']['identifier'];
         <h1>Payment Receipts</h1>
         <p style="color:var(--text-light); margin-top:-10px;">Download or view your official payment confirmations.</p>
 
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px;">
+    <?php
+    $stats = [
+        ['label' => 'Total Paid', 'type' => 'date', 'sql' => "SELECT SUM(amount_paid) as val FROM receipts WHERE client_id = '$cid'"],
+        ['label' => 'Total Receipts', 'type' => 'mode', 'sql' => "SELECT COUNT(*) as val FROM receipts WHERE client_id = '$cid'"],
+        ['label' => 'Latest Payment', 'type' => 'none', 'sql' => "SELECT MAX(amount_paid) as val FROM receipts WHERE client_id = '$cid'"]
+    ];
+
+    foreach ($stats as $s) {
+        $res = $conn->query($s['sql']);
+        $val = $res->fetch_assoc()['val'] ?? 0;
+        $display = ($s['type'] != 'count') ? "₹" . number_format($val, 2) : $val;
+        
+        $is_clickable = ($s['type'] != 'none');
+        $onclick = $is_clickable ? "onclick=\"loadReceiptData('{$s['type']}')\"" : "";
+        $cursor = $is_clickable ? "cursor:pointer;" : "";
+
+        echo "
+        <div $onclick style='background: white; padding: 20px; border-radius: 12px; border-left: 5px solid #166534; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); $cursor'>
+            <div style='font-size: 11px; color: var(--text-light); text-transform: uppercase; font-weight: 800; margin-bottom: 5px;'>{$s['label']}</div>
+            <div style='font-size: 22px; font-weight: 800; color: #166534;'>{$display}</div>
+        </div>";
+    }
+    ?>
+</div>
         <div class="card" style="padding:0; overflow:hidden;">
             <table>
                 <thead>
@@ -234,7 +266,32 @@ $cid = $_SESSION['user']['identifier'];
                 chevron.classList.remove("rotate-chevron");
             }
         }
+        
+function loadReceiptData(type) {
+    document.getElementById('receiptModal').style.display = 'flex';
+    document.getElementById('modalContent').innerHTML = "<tr><td style='padding:20px; text-align:center;'>Loading...</td></tr>";
+    
+    fetch('get-receipt-breakdown.php?type=' + type)
+        .then(response => response.text())
+        .then(data => { document.getElementById('modalContent').innerHTML = data; });
+}
+
     </script>
+    <div id="receiptModal" class="modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.4); backdrop-filter:blur(2px); justify-content:center; align-items:center;">
+    <div style="background:#fff; padding:25px; border-radius:16px; width:450px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <h3 style="margin-top:0; color:#0b3c74;">Payment Insights</h3>
+        <p style="color:var(--text-light); font-size:14px; margin-bottom: 15px;">Review your transaction breakdown below.</p>
+        
+        <!-- Table for dynamic content -->
+        <table style="width:100%; border-collapse: collapse;">
+            <tbody id="modalContent">
+                <!-- Data will load here -->
+            </tbody>
+        </table>
+
+        <button onclick="document.getElementById('receiptModal').style.display='none'" style="margin-top:20px; width:100%; padding:12px; background:#0b3c74; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600;">Close</button>
+    </div>
+</div>
 </body>
 
 </html>

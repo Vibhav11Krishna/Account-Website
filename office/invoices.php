@@ -443,7 +443,17 @@ if (isset($_GET['delete_inv'])) {
             margin-bottom: 15px;
             font-weight: 600;
         }
-    </style>
+        
+    /* Table row hover effect */
+    #reportTable tr:hover { background-color: #fff7ed; } /* Subtle orange tint on hover */
+    
+    /* Ensure the search bar matches the theme */
+    #reportSearch { border: 2px solid #f97316 !important; border-radius: 6px; padding: 10px; }
+    
+    /* Tab buttons active state */
+    .tab-btn:hover { border-bottom: 2px solid #f97316; color: #f97316; }
+</style>
+    
 </head>
 
 <body>
@@ -583,11 +593,28 @@ if (isset($_GET['delete_inv'])) {
                     <button name="gen_invoice" class="btn-main">Generate Invoice</button>
                 </form>
             </div>
-
+     
             <div class="card" style="padding:0; overflow:hidden;">
                 <div style="padding:20px 25px; border-bottom: 1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 15px;">
                     <h3 style="margin:0;"><i class="fas fa-history"></i> Invoice History</h3>
-
+ <button type="button" 
+        onclick="document.getElementById('reportModal').style.display='flex'; loadData('daily');" 
+        style="padding: 10px 14px; 
+               font-size: 11px; 
+               font-weight: 700; 
+               border-radius: 6px; 
+               background: linear-gradient(135deg, #3b82f6, #1d4ed8); 
+               color: white; 
+               border: none; 
+               cursor: pointer; 
+               display: inline-flex; 
+               align-items: center; 
+               gap: 6px; 
+               flex-shrink: 0; 
+               width: fit-content;
+               box-shadow: 0 3px 5px rgba(0,0,0,0.2);">
+    <i class="fas fa-chart-line"></i> Summary
+</button>
                     <form method="GET" style="display:flex; align-items:center; gap:10px; background: #f8fafc; padding: 8px 15px; border-radius: 50px; border: 1px solid #e2e8f0;">
 
                         <div style="display:flex; align-items:center; gap:8px;">
@@ -619,6 +646,8 @@ if (isset($_GET['delete_inv'])) {
                         <?php endif; ?>
                     </form>
                 </div>
+
+
 
                 <div style="overflow-x: auto;">
                     <table style="width:100%; border-collapse:collapse;">
@@ -805,6 +834,52 @@ if (isset($_GET['delete_inv'])) {
                 }
             }
         </script>
+        <div id="reportModal" class="modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div style="background:#fff; padding:20px; border-radius:10px; width:450px; height:500px; display:flex; flex-direction:column; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <h3 style="margin-top:0;">Financial Report</h3>
+        
+        <input type="text" id="reportSearch" placeholder="Search date/month..." onkeyup="filterReport()" 
+               style="width:100%; padding:8px; margin-bottom:15px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
+
+        <div style="display:flex; margin-bottom:5px; border-bottom:2px solid #eee;">
+            <button class="tab-btn" onclick="loadData('daily')">Daily</button>
+            <button class="tab-btn" onclick="loadData('weekly')">Weekly</button>
+            <button class="tab-btn" onclick="loadData('monthly')">Monthly</button>
+        </div>
+
+        <div style="flex-grow:1; overflow-y:auto; padding-top:10px;">
+            <table id="reportTable" style="width:100%; border-collapse:collapse;">
+                <tbody id="tabContent"></tbody>
+            </table>
+        </div>
+
+        <button onclick="document.getElementById('reportModal').style.display='none'" style="margin-top:15px; padding:10px; width:100%; background:#64748b; color:white; border:none; border-radius:5px; cursor:pointer;">Close</button>
+    </div>
+</div>
+
+<script>
+function loadData(type) {
+    document.getElementById('tabContent').innerHTML = "<tr><td style='padding:20px; text-align:center;'>Loading...</td></tr>";
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", "get-financial-data.php?type=" + type, true);
+    xhr.onload = function() { document.getElementById('tabContent').innerHTML = this.responseText; };
+    xhr.send();
+}
+
+function filterReport() {
+    let input = document.getElementById("reportSearch").value.toUpperCase();
+    let rows = document.getElementById("reportTable").getElementsByTagName("tr");
+    for (let i = 0; i < rows.length; i++) {
+        rows[i].style.display = rows[i].innerText.toUpperCase().indexOf(input) > -1 ? "" : "none";
+    }
+}
+</script>
+
+<style>
+    .tab-btn { padding:10px; flex:1; border:none; background:none; cursor:pointer; font-weight:600; color:#64748b; }
+    .tab-btn:hover { color:#10b981; border-bottom:2px solid #10b981; }
+    #reportTable td { padding:8px 0; border-bottom:1px solid #f8fafc; font-size:13px; }
+</style>
 </body>
 
 </html>
