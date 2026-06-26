@@ -48,6 +48,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'accept' && isset($_GET['id']))
             color: #334155;
         }
 
+        /* Sidebar Styles (Matching your Invoices page) */
         .sidebar {
     width: 280px;
     background: var(--sidebar);
@@ -90,12 +91,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'accept' && isset($_GET['id']))
             border-left: 4px solid var(--orange);
         }
 
-        .dropdown-content a {
-            color: rgba(255, 255, 255, 0.7) !important;
-            padding: 10px 15px !important;
-            font-size: 14px;
-        }
-
+       
         .rotate-chevron {
             transform: rotate(180deg);
         }
@@ -197,6 +193,13 @@ if (isset($_GET['action']) && $_GET['action'] == 'accept' && isset($_GET['id']))
             margin-bottom: 25px;
             border: 1px solid #bbf7d0;
         }
+        .sidebar a.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-left: 4px solid var(--orange);
+}
+
+.rotate-chevron { transform: rotate(180deg); }
     </style>
 </head>
 

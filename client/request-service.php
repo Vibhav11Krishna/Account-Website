@@ -160,37 +160,30 @@ if (isset($_POST['req'])) {
 
 <body>
 
-    <div class="sidebar">
+      <div class="sidebar">
         <h2>Karunesh Kumar & Associates Client</h2>
-
-        <a href="client-dashboard.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'client-dashboard.php' ? 'active' : ''; ?>">
-            <i class="fas fa-chart-line"></i> Overview
-        </a>
+        <a href="client-dashboard.php" ><i class="fas fa-chart-line"></i> Overview</a>
 
         <div class="dropdown-container">
-            <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleFinances()">
+            <a href="javascript:void(0)" onclick="toggleFinances()">
                 <i class="fas fa-wallet"></i> My Finances
-                <i class="fas fa-chevron-down" id="financeChevron" style="margin-left:auto; font-size:12px; transition:0.3s;"></i>
+                <i class="fas fa-chevron-down rotate-chevron" id="financeChevron" style="margin-left:auto; font-size:12px;"></i>
             </a>
             <div class="dropdown-content" id="financeMenu" style="display:none; background:rgba(0,0,0,0.2); border-radius:10px; margin:0 10px;">
-                <a href="my-quotations.php" style="padding:10px 15px; font-size:14px;"><i class="fas fa-file-alt"></i> Quotations</a>
-                <a href="my-invoices.php" style="padding:10px 15px; font-size:14px;"><i class="fas fa-file-invoice-dollar"></i> Invoices (Pay)</a>
-                <a href="my-receipts.php" style="padding:10px 15px; font-size:14px;"><i class="fas fa-receipt"></i>Acknowledgement</a>
+                <a href="my-quotations.php"><i class="fas fa-file-alt"></i> Quotations</a>
+                <a href="my-invoices.php"><i class="fas fa-file-invoice-dollar"></i> Invoices (Pay)</a>
+                <a href="my-receipts.php"><i class="fas fa-receipt"></i>Acknowledgement</a>
             </div>
         </div>
 
         <a href="my-documents.php"><i class="fas fa-folder-open"></i> Document Vault</a>
-        <a href="upload-docs.php"><i class="fas fa-cloud-upload-alt"></i> Upload Center</a>
+        <a href="upload-docs.php" ><i class="fas fa-cloud-upload-alt"></i> Upload Center</a>
+        <a href="request-service.php" style="background:rgba(255,255,255,0.1); color:white !important;"><i class="fas fa-plus-circle"></i> New Request</a>
 
-        <a href="request-service.php" class="active">
-            <i class="fas fa-plus-circle"></i> New Request
-        </a>
-
-        <a href="../logout.php" class="logout-link" style="margin-top:auto; color:#fda4af !important;">
+        <a href="../logout.php" style="margin-top:auto; color:#fda4af !important; background: rgba(244, 63, 94, 0.1); padding:14px; border-radius:12px; text-decoration:none; display:flex; align-items:center; gap:12px;">
             <i class="fas fa-sign-out-alt"></i> Logout
         </a>
     </div>
-
     <div class="main">
         <h1>Create Service Request</h1>
 

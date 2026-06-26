@@ -56,13 +56,12 @@ if (isset($_GET['search'])) {
             border-right: 4px solid var(--orange); 
         }
 
-        .sidebar h2 {
-            font-size: 20px;
+      .sidebar h2 {
+            font-size: 22px;
             color: var(--orange);
             margin-bottom: 40px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding-bottom: 20px;
-            line-height: 1.4;
         }
 
         .sidebar a {
