@@ -42,6 +42,30 @@ if (isset($_GET['delete']) && isset($_GET['cid'])) {
     header("Location: client-documents.php?cid=" . $c_id);
     exit();
 }
+if (isset($_GET['action']) && isset($_GET['file_id']) && isset($_GET['cid'])) {
+    $file_id = intval($_GET['file_id']);
+    $c_id = intval($_GET['cid']);
+    $action = $_GET['action'];
+
+    if ($action == 'share') {
+        $stmt = $conn->prepare("UPDATE client_files SET status = 'Released' WHERE id = ?");
+        $stmt->bind_param("i", $file_id);
+        $stmt->execute();
+    } elseif ($action == 'unshare') {
+        $stmt = $conn->prepare("UPDATE client_files SET status = 'Internal' WHERE id = ?");
+        $stmt->bind_param("i", $file_id);
+        $stmt->execute();
+    } elseif ($action == 'delete') {
+        // Get path and delete file
+        $res = $conn->query("SELECT file_path FROM client_files WHERE id = $file_id");
+        if ($row = $res->fetch_assoc()) {
+            if (file_exists($row['file_path'])) unlink($row['file_path']);
+            $conn->query("DELETE FROM client_files WHERE id = $file_id");
+        }
+    }
+    header("Location: client-documents.php?cid=" . $c_id);
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -235,6 +259,40 @@ if (isset($_GET['delete']) && isset($_GET['cid'])) {
 .content-body {
     padding: 10px 50px; /* Reduced from 40px to 10px to pull content up */
 }
+/* General button styling */
+.btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+    transition: 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+/* Green Share Button */
+.btn-share {
+    background: #dcfce7;
+    color: #166534;
+}
+.btn-share:hover {
+    background: #166534;
+    color: white;
+}
+
+/* Blue Shared (Status) Button */
+.btn-shared {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* Your View Button (Ensure you have this) */
+.btn-view {
+    background: #f1f5f9;
+    color: #475569;
+}
     </style>
 </head>
 
@@ -364,11 +422,24 @@ if (isset($_GET['delete']) && isset($_GET['cid'])) {
                                 <td><?php echo $f['file_name']; ?></td>
                                 <td><?php echo $f['file_type']; ?></td>
                                 <td><?php echo date('d M Y', strtotime($f['created_at'] ?? 'now')); ?></td>
-                                <td>
-                                    <a href="<?php echo $f['file_path']; ?>" target="_blank" class="btn btn-view">View</a>
-                                    <a href="<?php echo $f['file_path']; ?>" download class="btn btn-down">Download</a>
-                                    <a href="?cid=<?php echo $cid; ?>&delete=<?php echo $f['id']; ?>" class="btn btn-del" onclick="return confirm('Delete this file?')">Delete</a>
-                                </td>
+            <td>
+    <?php if ($f['status'] == 'Internal'): ?>
+        <a href="#" onclick="confirmAction('share', '<?= $f['id'] ?>', '<?= $cid ?>')" class="btn btn-share">
+            <i class="fas fa-share-square"></i> Share
+        </a>
+    <?php else: ?>
+        <a href="#" onclick="confirmAction('unshare', '<?= $f['id'] ?>', '<?= $cid ?>')" class="btn btn-shared" style="background:#f59e0b; color:white;">
+            <i class="fas fa-eye-slash"></i> Recall
+        </a>
+    <?php endif; ?>
+
+    <a href="<?= $f['file_path'] ?>" target="_blank" class="btn btn-view">View</a>
+    
+    <a href="#" onclick="confirmAction('delete', '<?= $f['id'] ?>', '<?= $cid ?>')" class="btn btn-del">
+        <i class="fas fa-trash"></i> Delete
+    </a>
+</td>
+                                
                             </tr>
                         <?php endwhile; ?>
                     </tbody>
@@ -445,6 +516,17 @@ if (isset($_GET['delete']) && isset($_GET['cid'])) {
                 if (c.id !== chevronId) c.classList.remove('rotate-chevron');
             });
         }
+        function confirmAction(action, fileId, clientId) {
+    let messages = {
+        'share': "Are you sure you want to release this document to the client?",
+        'unshare': "Are you sure you want to recall this document? It will no longer be visible to the client.",
+        'delete': "Are you sure you want to PERMANENTLY delete this file?"
+    };
+    
+    if (confirm(messages[action])) {
+        window.location.href = `?cid=${clientId}&file_id=${fileId}&action=${action}`;
+    }
+}
     </script>
 </body>
 

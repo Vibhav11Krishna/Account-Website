@@ -23,8 +23,16 @@ if (isset($_POST['upload'])) {
     $target_file = $target_dir . $new_filename;
 
     if (move_uploaded_file($_FILES["doc_file"]["tmp_name"], $target_file)) {
-        $conn->query("INSERT INTO client_documents (client_id, file_name, file_path, category) VALUES ('$cid', '$file_name', '$new_filename', '$category')");
-        $status_msg = "<div style='color:#166534; padding:15px; background:#dcfce7; border-radius:12px; margin-bottom:20px;'><i class='fas fa-check-circle'></i> File uploaded successfully!</div>";
+        // Using secure prepared statements to save tracking records to upload_docs table
+        $stmt = $conn->prepare("INSERT INTO upload_docs (client_id, category, file_name, file_path) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $cid, $category, $file_name, $new_filename);
+        
+        if ($stmt->execute()) {
+            $status_msg = "<div style='color:#166534; padding:15px; background:#dcfce7; border-radius:12px; margin-bottom:20px;'><i class='fas fa-check-circle'></i> File uploaded successfully!</div>";
+        } else {
+            $status_msg = "<div style='color:#991b1b; padding:15px; background:#fee2e2; border-radius:12px; margin-bottom:20px;'>Database entry error. Please try again.</div>";
+        }
+        $stmt->close();
     } else {
         $status_msg = "<div style='color:#991b1b; padding:15px; background:#fee2e2; border-radius:12px; margin-bottom:20px;'>Upload failed. Check folder permissions.</div>";
     }
@@ -44,8 +52,7 @@ if (isset($_POST['upload'])) {
             --bg: #f8fafc;
         }
 
-        
-          body {
+        body {
             display: flex;
             margin: 0;
             background: var(--bg);
@@ -67,7 +74,7 @@ if (isset($_POST['upload'])) {
             border-right: 4px solid var(--orange); 
         }
 
-         .sidebar h2 {
+        .sidebar h2 {
             font-size: 22px;
             color: var(--orange);
             margin-bottom: 40px;
@@ -95,12 +102,6 @@ if (isset($_POST['upload'])) {
 
         .rotate-chevron {
             transform: rotate(180deg);
-        }
-
-        .logout-link {
-            margin-top: auto;
-            color: #fda4af !important;
-            background: rgba(244, 63, 94, 0.1);
         }
 
         /* Main Content */
@@ -188,7 +189,7 @@ if (isset($_POST['upload'])) {
         <div class="dropdown-container">
             <a href="javascript:void(0)" onclick="toggleFinances()">
                 <i class="fas fa-wallet"></i> My Finances
-                <i class="fas fa-chevron-down rotate-chevron" id="financeChevron" style="margin-left:auto; font-size:12px;"></i>
+                <i class="fas fa-chevron-down" id="financeChevron" style="margin-left:auto; font-size:12px;"></i>
             </a>
             <div class="dropdown-content" id="financeMenu" style="display:none; background:rgba(0,0,0,0.2); border-radius:10px; margin:0 10px;">
                 <a href="my-quotations.php"><i class="fas fa-file-alt"></i> Quotations</a>
@@ -206,7 +207,6 @@ if (isset($_POST['upload'])) {
         </a>
     </div>
 
-
     <div class="main">
         <h1>Document Center</h1>
         <?php echo $status_msg; ?>
@@ -218,7 +218,7 @@ if (isset($_POST['upload'])) {
                     <label style="font-size:14px; font-weight:600;">Document Category</label>
                     <select name="category" required>
                         <optgroup label="Identity & Registration">
-                            <option value="KYC Docs">PAN / Aadhar / Passport</option>
+                            <option value="KYC Docs">PAN / Identity Documents / Passport</option>
                             <option value="Business Registration">GST / MSME / Incorporation</option>
                         </optgroup>
                         <optgroup label="Banking & Finance">
@@ -255,18 +255,24 @@ if (isset($_POST['upload'])) {
                     </thead>
                     <tbody>
                         <?php
-                        $docs = $conn->query("SELECT * FROM client_documents WHERE client_id='$cid' ORDER BY id DESC LIMIT 5");
+                        // Secure data fetching tied to the upload_docs table structure
+                        $stmt_view = $conn->prepare("SELECT file_name, category, uploaded_at FROM upload_docs WHERE client_id = ? ORDER BY id DESC LIMIT 5");
+                        $stmt_view->bind_param("s", $cid);
+                        $stmt_view->execute();
+                        $docs = $stmt_view->get_result();
+
                         if ($docs->num_rows > 0) {
                             while ($d = $docs->fetch_assoc()) {
                                 echo "<tr>
-                                    <td><strong>{$d['file_name']}</strong></td>
-                                    <td><span class='badge'>{$d['category']}</span></td>
-                                    <td style='color:#64748b;'>" . date('d M Y', strtotime($d['upload_date'])) . "</td>
+                                    <td><strong>" . htmlspecialchars($d['file_name']) . "</strong></td>
+                                    <td><span class='badge'>" . htmlspecialchars($d['category']) . "</span></td>
+                                    <td style='color:#64748b;'>" . date('d M Y', strtotime($d['uploaded_at'])) . "</td>
                                 </tr>";
                             }
                         } else {
                             echo "<tr><td colspan='3' style='text-align:center; padding:20px; color:#94a3b8;'>No uploads yet.</td></tr>";
                         }
+                        $stmt_view->close();
                         ?>
                     </tbody>
                 </table>
@@ -288,5 +294,4 @@ if (isset($_POST['upload'])) {
         }
     </script>
 </body>
-
 </html>

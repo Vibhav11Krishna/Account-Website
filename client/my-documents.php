@@ -156,6 +156,27 @@ $client_identifier = $_SESSION['user']['identifier'];
             color: #94a3b8;
             width: 100%;
         }
+        .folder-header {
+    background: #ffffff;
+    padding: 15px 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: var(--navy);
+}
+.folder-content {
+    display: none; /* Hidden by default */
+    padding: 10px;
+    background: #f8fafc;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    margin-bottom: 20px;
+}
     </style>
 </head>
 
@@ -193,70 +214,60 @@ $client_identifier = $_SESSION['user']['identifier'];
                 <p style="color: #64748b;">Permanent records, KYC documents, and issued certificates.</p>
             </div>
         </div>
+<div class="vault-container">
+    <?php
+    // 1. Fetch data using prepared statements for security
+    $stmt = $conn->prepare("
+        SELECT file_name, result_file AS path, created_at AS date, 'vault' AS source, doc_category AS category 
+        FROM client_documents WHERE client_id = ? AND status = 'Released'
+        UNION ALL
+        SELECT file_name, file_path AS path, upload_date AS date, 'shared' AS source, file_type AS category 
+        FROM client_files WHERE client_id = ? AND status = 'Released'
+        ORDER BY date DESC
+    ");
+    $stmt->bind_param("ss", $client_identifier, $client_identifier);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-        <div class="vault-container">
-            <?php
-            // FIX: Using $client_identifier and ensuring status is 'Released'
-            $query = "SELECT * FROM client_documents 
-                  WHERE client_id = '$client_identifier' 
-                  AND doc_category = 'vault' 
-                  AND status = 'Released' 
-                  ORDER BY id DESC";
+    $grouped_files = [];
+    while ($doc = $result->fetch_assoc()) {
+        // Use Y-m-d for internal grouping, display formatted date in HTML
+        $dateKey = date('Y-m-d', strtotime($doc['date']));
+        $grouped_files[$dateKey][] = $doc;
+    }
 
-            $result = $conn->query($query);
-
-            if ($result && $result->num_rows > 0) {
-                while ($doc = $result->fetch_assoc()) {
-                    $file_to_check = $doc['result_file'] ? $doc['result_file'] : $doc['file_name'];
-                    $ext = strtolower(pathinfo($file_to_check, PATHINFO_EXTENSION));
-
-                    $icon = "fa-file-alt";
-                    $icon_bg = "#f1f5f9";
-                    $icon_color = "#64748b";
-
-                    if ($ext == 'pdf') {
-                        $icon = "fa-file-pdf";
-                        $icon_bg = "#fef2f2";
-                        $icon_color = "#ef4444";
-                    } elseif (in_array($ext, ['xls', 'xlsx'])) {
-                        $icon = "fa-file-excel";
-                        $icon_bg = "#ecfdf5";
-                        $icon_color = "#10b981";
-                    }
-            ?>
-
-                    <div class="doc-card">
-                        <div class="doc-info">
-                            <div class="doc-icon" style="background: <?= $icon_bg ?>; color: <?= $icon_color ?>;">
-                                <i class="fas <?= $icon ?>"></i>
-                            </div>
-                            <div>
-                                <h4 style="margin:0;"><?= htmlspecialchars($doc['file_name']) ?></h4>
-                                <small style="color:#94a3b8;">
-                                    <?= date('d M Y', strtotime($doc['created_at'])) ?> •
-                                    <?= strtoupper($ext) ?> Record
-                                </small>
-                            </div>
-                        </div>
-                        <?php if ($doc['result_file']): ?>
-                            <a href="../uploads/vault/<?= htmlspecialchars($doc['result_file']) ?>" class="btn-download" download>
-                                <i class="fas fa-download"></i> Download Result
-                            </a>
-                        <?php else: ?>
-                            <span style="color:#94a3b8; font-size:12px;">Processing...</span>
-                        <?php endif; ?>
-                    </div>
-            <?php
-                }
-            } else {
-                echo '<div class="empty-state">
-                    <i class="fas fa-folder-open fa-3x" style="margin-bottom:15px; opacity:0.3;"></i>
-                    <p>No permanent records found in your vault yet.</p>
-                  </div>';
-            }
-            ?>
+    foreach ($grouped_files as $dateKey => $files) {
+        $displayDate = date('d M Y', strtotime($dateKey));
+        $folderId = 'folder_' . $dateKey; // Unique ID based on Y-m-d
+    ?>
+        <div class="folder-header" onclick="toggleFolder('<?= $folderId ?>')" style="cursor:pointer; padding:15px; background:#f8fafc; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+            <span><i class="fas fa-folder" style="color:var(--orange); margin-right:10px;"></i> Date: <?= $displayDate ?></span>
+            <i class="fas fa-chevron-down"></i>
         </div>
-    </div>
+        
+        <div id="<?= $folderId ?>" class="folder-content" style="display:none; margin-bottom:20px;">
+            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                <tr style="background:#edf2f7; text-align:left;">
+                    <th style="padding:12px;">File Name</th>
+                    <th style="padding:12px;">Category</th>
+                    <th style="padding:12px;">Action</th>
+                </tr>
+                <?php foreach ($files as $doc) { 
+                    $file_url = ($doc['source'] == 'vault') ? '../uploads/vault/' . $doc['path'] : $doc['path'];
+                ?>
+                <tr>
+                    <td style="padding:12px; border-bottom:1px solid #e2e8f0;"><?= htmlspecialchars($doc['file_name']) ?></td>
+                    <td style="padding:12px; border-bottom:1px solid #e2e8f0;"><?= htmlspecialchars($doc['category']) ?></td>
+                    <td style="padding:12px; border-bottom:1px solid #e2e8f0;">
+                        <a href="<?= htmlspecialchars($file_url) ?>" class="btn-download" style="color:var(--navy); font-weight:bold; text-decoration:none;" download>Download</a>
+                    </td>
+                </tr>
+                <?php } ?>
+            </table>
+        </div>
+    <?php } ?>
+</div>
+</div>
     <script>
         function toggleFinances() {
             var menu = document.getElementById("financeMenu");
@@ -270,6 +281,16 @@ $client_identifier = $_SESSION['user']['identifier'];
             }
         }
     </script>
+    <script>
+function toggleFolder(id) {
+    var content = document.getElementById(id);
+    if (content.style.display === "block") {
+        content.style.display = "none";
+    } else {
+        content.style.display = "block";
+    }
+}
+</script>
 </body>
 
 </html>
