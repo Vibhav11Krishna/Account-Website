@@ -697,20 +697,20 @@ if (isset($_POST['apply'])) {
     </div>
     <div class="strip-content">
       <div class="strip-track">
-  <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
-  <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
-  <span class="update-item"><i class="fas fa-circle"></i> GST: New advisory issued on GSTR-1 matching protocols.</span>
-  <span class="update-item"><i class="fas fa-circle"></i> MSME: Udyam registration now mandatory for tenders.</span>
-  <span class="update-item"><i class="fas fa-circle"></i> ITR Filing for AY 2026-27 (FY 2025-26) has commenced.</span>
-  
-  <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
-  <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
-  <span class="update-item"><i class="fas fa-circle"></i> GST: New advisory issued on GSTR-1 matching protocols.</span>
-  <span class="update-item"><i class="fas fa-circle"></i> MSME: Udyam registration now mandatory for tenders.</span>
-  <span class="update-item"><i class="fas fa-circle"></i> ITR Filing for AY 2026-27 (FY 2025-26) has commenced.</span>
-</div>
+        <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
+        <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
+        <span class="update-item"><i class="fas fa-circle"></i> GST: New advisory issued on GSTR-1 matching protocols.</span>
+        <span class="update-item"><i class="fas fa-circle"></i> MSME: Udyam registration now mandatory for tenders.</span>
+        <span class="update-item"><i class="fas fa-circle"></i> ITR Filing for AY 2026-27 (FY 2025-26) has commenced.</span>
+
+        <span class="update-item"><i class="fas fa-circle"></i> MCA V3 Portal: New forms for LLP filing are live.</span>
+        <span class="update-item"><i class="fas fa-circle"></i> Income Tax: Last date for revised returns is 31st March.</span>
+        <span class="update-item"><i class="fas fa-circle"></i> GST: New advisory issued on GSTR-1 matching protocols.</span>
+        <span class="update-item"><i class="fas fa-circle"></i> MSME: Udyam registration now mandatory for tenders.</span>
+        <span class="update-item"><i class="fas fa-circle"></i> ITR Filing for AY 2026-27 (FY 2025-26) has commenced.</span>
       </div>
     </div>
+  </div>
   </div>
   <style>
     .update-strip-v2 {
@@ -2898,71 +2898,101 @@ if (isset($_POST['apply'])) {
         <h2>What Our <span class="text-orange">Clients Say</span></h2>
       </div>
 
-      <div class="testimonial-grid">
-        <div class="testi-box">
-          <div class="google-icon"><i class="fab fa-google"></i></div>
-          <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-          <p>"Their services is very good and fast, The behavior of all the employees here is also very good, I think you can avail its services without any hesitation."</p>
-          <div class="client-info">
-            <strong>Kap Swift</strong>
-            <span>2 reviews</span>
-          </div>
-        </div>
-
-        <div class="testi-box">
-          <div class="google-icon"><i class="fab fa-google"></i></div>
-          <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-          <p>"Good Firm. maine apna Company Registration and GST registration karwaya. fully satisfied"</p>
-          <div class="client-info">
-            <strong>S M INFRA CONSTRUCTION</strong>
-            <span>1 review</span>
-          </div>
-        </div>
-
-        <div class="testi-box">
-          <div class="google-icon"><i class="fab fa-google"></i></div>
-          <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-          <p>"You have been extremely helpful, professional and efficient during the whole transaction, son would again like to express my gratitude for this. We really do appreciate it."</p>
-          <div class="client-info">
-            <strong>HEAD TURNERS</strong>
-            <span>4 reviews · 3 photos</span>
-          </div>
-        </div>
-
-        <div class="testi-box">
-          <div class="google-icon"><i class="fab fa-google"></i></div>
-          <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-          <p>"Very supporting"</p>
-          <div class="client-info">
-            <strong>vinit sarkar</strong>
-            <span>185 reviews · 199 photos</span>
-          </div>
-        </div>
-
-        <div class="testi-box">
-          <div class="google-icon"><i class="fab fa-google"></i></div>
-          <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-          <p>"I had an excellent experience with Karunesh Kumar and Associates."</p>
-          <div class="client-info">
-            <strong>Dilip Kumar</strong>
-            <span>3 reviews</span>
-          </div>
-        </div>
-
-        <div class="testi-box">
-          <div class="google-icon"><i class="fab fa-google"></i></div>
-          <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-          <p>"Very Fast response and reliable service is provided here"</p>
-          <div class="client-info">
-            <strong>Arun Kumar</strong>
-            <span>244 reviews · 25 photos</span>
+      <!-- ROW 1: Moves Left to Right -->
+      <div class="marquee-wrapper">
+        <div class="marquee-track-ltr">
+          <div class="testimonial-grid">
+            <!-- Repeat your 6 boxes here -->
+            <div class="testi-box">
+              <div class="google-icon"><i class="fab fa-google"></i></div>
+              <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+              <p>"Their services is very good and fast, The behavior of all the employees here is also very good, I think you can avail its services without any hesitation."</p>
+              <div class="client-info"><strong>Kap Swift</strong><span>2 reviews</span></div>
+            </div>
+            <div class="testi-box">
+              <div class="google-icon"><i class="fab fa-google"></i></div>
+              <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+              <p>"Good Firm. maine apna Company Registration and GST registration karwaya. fully satisfied"</p>
+              <div class="client-info"><strong>S M INFRA CONSTRUCTION</strong><span>1 review</span></div>
+            </div>
+            <div class="testi-box">
+              <div class="google-icon"><i class="fab fa-google"></i></div>
+              <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+              <p>"You have been extremely helpful, professional and efficient during the whole transaction, son would again like to express my gratitude for this. We really do appreciate it."</p>
+              <div class="client-info"><strong>HEAD TURNERS</strong><span>4 reviews · 3 photos</span></div>
+            </div>
+            <div class="testi-box">
+              <div class="google-icon"><i class="fab fa-google"></i></div>
+              <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+              <p>"Very supporting"</p>
+              <div class="client-info"><strong>vinit sarkar</strong><span>185 reviews · 199 photos</span></div>
+            </div>
+            <div class="testi-box">
+              <div class="google-icon"><i class="fab fa-google"></i></div>
+              <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+              <p>"I had an excellent experience with Karunesh Kumar and Associates."</p>
+              <div class="client-info"><strong>Dilip Kumar</strong><span>3 reviews</span></div>
+            </div>
+            <div class="testi-box">
+              <div class="google-icon"><i class="fab fa-google"></i></div>
+              <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+              <p>"Very Fast response and reliable service is provided here"</p>
+              <div class="client-info"><strong>Arun Kumar</strong><span>244 reviews · 25 photos</span></div>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- ROW 2: Moves Right to Left -->
+      <div class="marquee-wrapper">
+        <div class="marquee-track-rtl">
+          <div class="testimonial-grid">
+            <!-- Repeat your 6 boxes here -->
+            <div class="testi-box">
+              <div class="google-icon"><i class="fab fa-google"></i></div>
+              <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+              <p>"Their services is very good and fast, The behavior of all the employees here is also very good, I think you can avail its services without any hesitation."</p>
+              <div class="client-info"><strong>Kap Swift</strong><span>2 reviews</span></div>
+            </div>
+            <div class="testi-box">
+              <div class="google-icon"><i class="fab fa-google"></i></div>
+              <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+              <p>"Good Firm. maine apna Company Registration and GST registration karwaya. fully satisfied"</p>
+              <div class="client-info"><strong>S M INFRA CONSTRUCTION</strong><span>1 review</span></div>
+            </div>
+            <div class="testi-box">
+              <div class="google-icon"><i class="fab fa-google"></i></div>
+              <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+              <p>"You have been extremely helpful, professional and efficient during the whole transaction, son would again like to express my gratitude for this. We really do appreciate it."</p>
+              <div class="client-info"><strong>HEAD TURNERS</strong><span>4 reviews · 3 photos</span></div>
+            </div>
+            <div class="testi-box">
+              <div class="google-icon"><i class="fab fa-google"></i></div>
+              <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+              <p>"Very supporting"</p>
+              <div class="client-info"><strong>vinit sarkar</strong><span>185 reviews · 199 photos</span></div>
+            </div>
+            <div class="testi-box">
+              <div class="google-icon"><i class="fab fa-google"></i></div>
+              <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+              <p>"I had an excellent experience with Karunesh Kumar and Associates."</p>
+              <div class="client-info"><strong>Dilip Kumar</strong><span>3 reviews</span></div>
+            </div>
+            <div class="testi-box">
+              <div class="google-icon"><i class="fab fa-google"></i></div>
+              <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+              <p>"Very Fast response and reliable service is provided here"</p>
+              <div class="client-info"><strong>Arun Kumar</strong><span>244 reviews · 25 photos</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </section>
 
   <style>
+    /* --- Original Styles --- */
     .section-header {
       text-align: center;
       position: relative;
@@ -2974,53 +3004,23 @@ if (isset($_POST['apply'])) {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-
-      /* Background & Border */
       background: rgba(11, 60, 116, 0.05);
-      /* Light Navy tint */
       border: 1px solid rgba(11, 60, 116, 0.15);
       backdrop-filter: blur(5px);
-      /* Modern glass effect */
-
-      /* Typography */
       color: #0b3c74;
       font-size: 12px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 2px;
-
-      /* Shape & Sizing */
       padding: 8px 20px;
       border-radius: 100px;
-
-      /* Movement - Pushing it UP */
       transform: translateY(-50%);
-      /* Pulls it halfway out of the section */
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-
-      transition: all 0.3s ease;
-    }
-
-    /* Hover Effect */
-    .service-pill:hover {
-      background: #0b3c74;
-      color: #ffffff;
-      border-color: #0b3c74;
-      transform: translateY(-55%) scale(1.05);
-      box-shadow: 0 8px 20px rgba(11, 60, 116, 0.2);
     }
 
     .testimonials-section {
       padding: 80px 0;
       background: #f8fafc;
-    }
-
-    .testimonial-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 30px;
-      max-width: 1200px;
-      margin: 0 auto;
     }
 
     .testi-box {
@@ -3031,9 +3031,9 @@ if (isset($_POST['apply'])) {
       position: relative;
       transition: all 0.4s ease;
       cursor: default;
+      min-width: 350px;
     }
 
-    /* HOVER EFFECT */
     .testi-box:hover {
       transform: translateY(-10px);
       border-color: #ff8c00;
@@ -3046,12 +3046,10 @@ if (isset($_POST['apply'])) {
       right: 25px;
       font-size: 20px;
       color: #4285F4;
-      /* Google Blue */
     }
 
     .stars {
       color: #fbbf24;
-      /* Star Gold */
       font-size: 14px;
       margin-bottom: 15px;
     }
@@ -3075,20 +3073,57 @@ if (isset($_POST['apply'])) {
       color: #94a3b8;
     }
 
-    /* Responsive Grid */
-    @media (max-width: 991px) {
-      .testimonial-grid {
-        grid-template-columns: 1fr 1fr;
+    /* --- Two-Row Scrolling Styles --- */
+    .marquee-wrapper {
+      overflow: hidden;
+      width: 100%;
+      padding: 15px 0;
+    }
+
+    .testimonial-grid {
+      display: flex;
+      gap: 30px;
+      width: max-content;
+    }
+
+    /* LTR Animation (Row 1) */
+    .marquee-track-ltr {
+      display: flex;
+      animation: scrollLTR 50s linear infinite;
+    }
+
+    @keyframes scrollLTR {
+      from {
+        transform: translateX(-50%);
+      }
+
+      to {
+        transform: translateX(0);
       }
     }
 
-    @media (max-width: 768px) {
-      .testimonial-grid {
-        grid-template-columns: 1fr;
+    /* RTL Animation (Row 2) */
+    .marquee-track-rtl {
+      display: flex;
+      animation: scrollRTL 50s linear infinite;
+    }
+
+    @keyframes scrollRTL {
+      from {
+        transform: translateX(0);
       }
+
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Pause on hover */
+    .marquee-track-ltr:hover,
+    .marquee-track-rtl:hover {
+      animation-play-state: paused;
     }
   </style>
-
 
   <section class="team-section" id="team">
     <div class="container-premium">
