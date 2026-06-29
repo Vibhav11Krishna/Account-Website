@@ -304,6 +304,7 @@ if (isset($_POST['process_salary'])) {
                 <a href="manage-clients.php">Clients</a>
                 <a href="client-groups.php">Client Groups</a>
                 <a href="client-services.php">Services</a>
+                <a href="client-upload-docs.php">Clients Uploads</a>
             </div>
         </div>
         <a href="manage-employees.php" class="active"><i class="fas fa-user-tie"></i> Manage Employees</a>

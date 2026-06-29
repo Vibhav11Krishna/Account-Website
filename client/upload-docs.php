@@ -217,26 +217,41 @@ if (isset($_POST['upload'])) {
                 <form method="POST" enctype="multipart/form-data">
                     <label style="font-size:14px; font-weight:600;">Document Category</label>
                     <select name="category" required>
-                        <optgroup label="Identity & Registration">
-                            <option value="KYC Docs">PAN / Identity Documents / Passport</option>
-                            <option value="Business Registration">GST / MSME / Incorporation</option>
-                        </optgroup>
-                        <optgroup label="Banking & Finance">
-                            <option value="Bank Statement">Bank Statements</option>
-                            <option value="Loan Documents">Loan Sanction / Statements</option>
-                            <option value="Investments">Mutual Funds / Fixed Deposits</option>
-                        </optgroup>
-                        <optgroup label="Taxation">
-                            <option value="Income Tax">ITR Forms / Form 16 / 26AS</option>
-                            <option value="GST Sales">GST Sales Invoices</option>
-                            <option value="GST Purchase">GST Purchase Bills</option>
-                            <option value="TDS Docs">TDS Certificates / Challans</option>
-                        </optgroup>
-                        <optgroup label="Others">
-                            <option value="Utility Bills">Electricity / Rent Agreements</option>
-                            <option value="Miscellaneous">Other Miscellaneous Docs</option>
-                        </optgroup>
-                    </select>
+    <optgroup label="Core Identity & Compliance (KYC)">
+        <option value="Aadhaar">Aadhaar Card (Front & Back)</option>
+        <option value="PAN">PAN Card</option>
+        <option value="Photos">Passport Size Photograph</option>
+        <option value="Digital Signature">Digital Signature (DSC) Details</option>
+        <option value="Address Proof">Address Proof (Voter ID / Driving License / Passport)</option>
+    </optgroup>
+
+    <optgroup label="Legal & Statutory">
+        <option value="Incorporation Docs">Certificate of Incorporation / MOA / AOA</option>
+        <option value="Partnership Deed">Partnership Deed / LLP Agreement</option>
+        <option value="Board Resolution">Board Resolutions / Minutes of Meetings</option>
+        <option value="Licenses">Shop & Establishment License / Trade License</option>
+    </optgroup>
+
+    <optgroup label="Banking & Finance">
+        <option value="Bank Statement">Bank Statements (Last 6-12 Months)</option>
+        <option value="Cancelled Cheque">Cancelled Cheque (For Bank Verification)</option>
+        <option value="Loan Docs">Loan Sanction Letters / Repayment Schedules</option>
+        <option value="Investment Docs">Insurance Policies / Demat / Mutual Fund Statements</option>
+    </optgroup>
+
+    <optgroup label="Taxation & Accounting">
+        <option value="ITR">ITR Acknowledgments</option>
+        <option value="Form 16">Form 16 / 26AS / AIS / TIS</option>
+        <option value="GST Returns">GST Return Filings (GSTR-1, 3B, etc.)</option>
+        <option value="Audit Reports">Audited Financial Statements</option>
+    </optgroup>
+
+    <optgroup label="Business Operations">
+        <option value="Agreements">Vendor Contracts / Rent Agreements</option>
+        <option value="Utility Bills">Electricity / Water / Internet Bills</option>
+        <option value="Payroll">Payroll / Salary Sheets</option>
+    </optgroup>
+</select>
                     <label style="font-size:14px; font-weight:600;">Select File</label>
                     <input type="file" name="doc_file" required>
                     <button type="submit" name="upload" class="btn-primary">Upload to Office</button>

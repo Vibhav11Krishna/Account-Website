@@ -299,6 +299,11 @@ if ($search_client != '') {
                                     <td style='color:#64748b;'>{$upload_date}</td>
                                     <td>
                                         <a href='{$file_path}' target='_blank' class='btn-view'><i class='fas fa-eye'></i> View File</a>
+                                        <a href='delete-doc.php?id={$row['id']}' 
+       onclick='return confirm(\"Are you sure you want to delete this file?\");' 
+       style='background:#f43f5e; color:white; padding:8px 12px; border-radius:6px; text-decoration:none; margin-left:5px; font-size:12px;'>
+       <i class='fas fa-trash'></i>
+    </a>
                                     </td>
                                   </tr>";
                         }

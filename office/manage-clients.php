@@ -395,6 +395,7 @@ if (isset($_POST['quick_create'])) {
         <a href="manage-clients.php" class="active">Clients</a>
         <a href="client-groups.php">Client Groups</a>
         <a href="client-services.php">Services</a>
+        <a href="client-upload-docs.php">Clients Uploads</a>
     </div>
 </div>
     <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>

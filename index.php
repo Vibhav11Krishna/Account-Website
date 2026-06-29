@@ -209,7 +209,7 @@ if (isset($_POST['apply'])) {
       top: 0;
       left: 0;
       width: 100%;
-      height: 100px;
+      height: 80px;
       background: var(--white);
       z-index: 1000;
       display: flex;
@@ -2906,14 +2906,14 @@ if (isset($_POST['apply'])) {
             <div class="testi-box">
               <div class="google-icon"><i class="fab fa-google"></i></div>
               <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-              <p>"Their services is very good and fast, The behavior of all the employees here is also very good, I think you can avail its services without any hesitation."</p>
-              <div class="client-info"><strong>Kap Swift</strong><span>2 reviews</span></div>
+              <p>"The service provided by the firm was seamless and optimally up to the mark. Assistance and guidance was provided at every step during the entire process of GST registration. I recommend anyone who needs assistance in tax related matters to contact the firm without any second thoughts. 👍"</p>
+              <div class="client-info"><strong>Ranjeet Verma</strong><span>3 reviews</span></div>
             </div>
             <div class="testi-box">
               <div class="google-icon"><i class="fab fa-google"></i></div>
               <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-              <p>"Good Firm. maine apna Company Registration and GST registration karwaya. fully satisfied"</p>
-              <div class="client-info"><strong>S M INFRA CONSTRUCTION</strong><span>1 review</span></div>
+              <p>"Company registration done from here. Brilliant service"</p>
+              <div class="client-info"><strong>Suhani Verma</strong><span>1 view</span></div>
             </div>
             <div class="testi-box">
               <div class="google-icon"><i class="fab fa-google"></i></div>
@@ -2936,8 +2936,8 @@ if (isset($_POST['apply'])) {
             <div class="testi-box">
               <div class="google-icon"><i class="fab fa-google"></i></div>
               <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-              <p>"Very Fast response and reliable service is provided here"</p>
-              <div class="client-info"><strong>Arun Kumar</strong><span>244 reviews · 25 photos</span></div>
+              <p>"Quick & fast service with great support."</p>
+              <div class="client-info"><strong>Abhishek Ranjan</strong><span>1 review</span></div>
             </div>
           </div>
         </div>
@@ -2957,32 +2957,32 @@ if (isset($_POST['apply'])) {
             <div class="testi-box">
               <div class="google-icon"><i class="fab fa-google"></i></div>
               <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-              <p>"Good Firm. maine apna Company Registration and GST registration karwaya. fully satisfied"</p>
-              <div class="client-info"><strong>S M INFRA CONSTRUCTION</strong><span>1 review</span></div>
+              <p>"The behavior of the staff is very good... the relationship maintained with the customers is good and the service is on time."</p>
+              <div class="client-info"><strong>Raushan Yadav</strong><span>9 review</span></div>
             </div>
             <div class="testi-box">
               <div class="google-icon"><i class="fab fa-google"></i></div>
               <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-              <p>"You have been extremely helpful, professional and efficient during the whole transaction, son would again like to express my gratitude for this. We really do appreciate it."</p>
-              <div class="client-info"><strong>HEAD TURNERS</strong><span>4 reviews · 3 photos</span></div>
+              <p>"GST and GEM work done quickly"</p>
+              <div class="client-info"><strong>Balmiki Prasad</strong><span>1 reviews</span></div>
             </div>
             <div class="testi-box">
               <div class="google-icon"><i class="fab fa-google"></i></div>
               <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-              <p>"Very supporting"</p>
-              <div class="client-info"><strong>vinit sarkar</strong><span>185 reviews · 199 photos</span></div>
+              <p>"Company registration done from here. Brilliant service"</p>
+              <div class="client-info"><strong>Suhani Verma</strong><span>1 reviews</span></div>
             </div>
             <div class="testi-box">
               <div class="google-icon"><i class="fab fa-google"></i></div>
               <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-              <p>"I had an excellent experience with Karunesh Kumar and Associates."</p>
-              <div class="client-info"><strong>Dilip Kumar</strong><span>3 reviews</span></div>
+              <p>"The behavior of the staff is very good... the relationship maintained with the customers is good and the service is on time.</p>
+              <div class="client-info"><strong>The Raushan Yadav</strong><span>9 reviews</span></div>
             </div>
             <div class="testi-box">
               <div class="google-icon"><i class="fab fa-google"></i></div>
               <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-              <p>"Very Fast response and reliable service is provided here"</p>
-              <div class="client-info"><strong>Arun Kumar</strong><span>244 reviews · 25 photos</span></div>
+              <p>"That Legend and most informative person this sir I am fully satisfied for information"</p>
+              <div class="client-info"><strong>Arvind Yadav</strong><span>5 reviwes . 1 photo</span></div>
             </div>
           </div>
         </div>

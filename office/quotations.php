@@ -347,6 +347,7 @@ if (isset($_POST['add_quote'])) {
         <a href="manage-clients.php">Clients</a>
         <a href="client-groups.php">Client Groups</a>
         <a href="client-services.php">Services</a>
+        <a href="client-upload-docs.php">Clients Uploads</a>
     </div>
 </div>
         <a href="manage-employees.php"><i class="fas fa-user-tie"></i> Manage Employees</a>
