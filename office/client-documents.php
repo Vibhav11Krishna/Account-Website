@@ -422,7 +422,7 @@ if (isset($_GET['action']) && isset($_GET['file_id']) && isset($_GET['cid'])) {
                             <tr>
                                 <td><?php echo $f['file_name']; ?></td>
                                 <td><?php echo $f['file_type']; ?></td>
-                                <td><?php echo date('d M Y', strtotime($f['created_at'] ?? 'now')); ?></td>
+                                <td><?php echo date('d M Y', strtotime($f['upload_date'])); ?></td>
             <td>
     <?php if ($f['status'] == 'Internal'): ?>
         <a href="#" onclick="confirmAction('share', '<?= $f['id'] ?>', '<?= $cid ?>')" class="btn btn-share">
