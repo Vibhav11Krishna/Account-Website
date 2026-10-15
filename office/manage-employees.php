@@ -320,117 +320,243 @@ if (isset($_POST['process_salary'])) {
             <input type="text" id="employeeSearch" placeholder="Search by employee name or email..." onkeyup="filterEmployees()">
         </div>
 
-        <div class="table-card">
-            <table id="employeeTable">
-                <thead>
-                    <tr>
-                        <th>Staff Member</th>
-                        <th>Duty Status</th>
-                        <th>Account Details</th>
-                        <th>Quick Reset</th>
-                        <th>Payroll</th>
-                        <th>Control</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $sql = "SELECT u.*, 
-                            (SELECT login_time FROM attendance WHERE email = u.identifier AND log_date = '$today' LIMIT 1) as attendance_time 
-                            FROM users u 
-                            WHERE u.role='office' 
-                            ORDER BY u.name ASC";
-                   $sql = "SELECT u.*, 
-        ep.is_locked, ep.aadhaar_no, ep.aadhaar_photo, 
-        ep.pan_no, ep.pan_photo, ep.marksheet_10, ep.marksheet_12, 
-        ep.address, ep.dob, ep.emergency_contact, 
-        ep.profile_pic, ep.date_of_joining,
-        ep.firm_reg_no, ep.prof_qualification, ep.prof_doc_path, -- Add these
-        (SELECT login_time FROM attendance WHERE email = u.identifier AND log_date = '$today' LIMIT 1) as attendance_time 
-        FROM users u 
-        LEFT JOIN employee_profiles ep ON u.id = ep.user_id
-        WHERE u.role='office' 
-        ORDER BY u.name ASC";
-                    $res = $conn->query($sql);
-                    while ($row = $res->fetch_assoc()) {
-                        $is_present = !empty($row['attendance_time']);
+     <?php
+$today = date('Y-m-d');
 
-                        // Bank Preview logic
-                        $bank_preview = "---";
-                        if (!empty($row['bank_name'])) {
-                            $bank_preview = "<b>" . $row['bank_name'] . "</b><br><small>" . $row['account_number'] . "</small>";
-                        } elseif (!empty($row['upi_id'])) {
-                            $bank_preview = "<small>UPI: " . $row['upi_id'] . "</small>";
-                        }
-                    ?>
-                        <tr>
-                            <td>
-                                <strong><?php echo $row['name']; ?></strong><br>
-                                <span style="font-size:11px; color:#94a3b8;"><?php echo $row['identifier']; ?></span>
-                            </td>
-                            <td>
-                                <?php if ($is_present): ?>
-                                    <span class="badge badge-active">ACTIVE</span>
-                                <?php else: ?>
-                                    <span class="badge badge-absent">ABSENT</span>
-                                <?php endif; ?>
-                            </td>
-                            <td><?php echo $bank_preview; ?></td>
-                            <td>
-                                <form method="POST" class="reset-form" style="display:flex; gap:5px;">
-                                    <input type="hidden" name="user_id" value="<?php echo $row['id']; ?>">
-                                    <input type="text" name="new_password" placeholder="Pass" style="width:70px; padding:5px; border:1px solid #ddd; border-radius:5px;" required>
-                                    <button name="update_pass" class="btn-update">Update</button>
-                                </form>
-                            </td>
-                            <td>
-                                <button class="btn-update" style="background:var(--success);"
-                                    onclick="openSalaryModal(
-                                        '<?php echo $row['id']; ?>', 
-                                        '<?php echo addslashes($row['name']); ?>', 
-                                        '<?php echo addslashes($row['bank_name']); ?>', 
-                                        '<?php echo $row['account_number']; ?>', 
-                                        '<?php echo $row['ifsc_code']; ?>', 
-                                        '<?php echo $row['upi_id']; ?>',
-                                        '<?php echo addslashes($row['account_holder']); ?>'
-                                    )">
-                                    <i class="fas fa-wallet"></i> Pay
-                                </button>
-                            </td>
-                            <td>
-                                <div style="display:flex; gap:15px; align-items:center; justify-content:center;">
-                                    <a href="javascript:void(0)" onclick="viewEmployee(<?php echo htmlspecialchars(json_encode($row)); ?>)" title="View Profile">
-                                        <i class="fas fa-eye" style="color: #1e293b; cursor:pointer;"></i>
-                                    </a>
+// 1. Active Employees Query (tenure_end is NULL or on/after today)
+$sql_active = "SELECT u.*, 
+    ep.is_locked, ep.aadhaar_no, ep.aadhaar_photo, 
+    ep.pan_no, ep.pan_photo, ep.marksheet_10, ep.marksheet_12, 
+    ep.address, ep.dob, ep.emergency_contact, 
+    ep.profile_pic, ep.date_of_joining, ep.tenure_start, ep.tenure_end,
+    ep.firm_reg_no, ep.prof_qualification, ep.prof_doc_path, 
+    (SELECT login_time FROM attendance WHERE email = u.identifier AND log_date = '$today' LIMIT 1) as attendance_time 
+    FROM users u 
+    LEFT JOIN employee_profiles ep ON u.id = ep.user_id
+    WHERE u.role='office' AND (ep.tenure_end IS NULL || ep.tenure_end >= '$today')
+    ORDER BY u.name ASC";
+$res_active = $conn->query($sql_active);
 
-                                    <?php
-                                    // Check if profile is locked (Default to 0 if record doesn't exist)
-                                    $locked_status = isset($row['is_locked']) ? (int)$row['is_locked'] : 0;
+// 2. Tenure Over Employees Query (tenure_end is strictly before today)
+$sql_over = "SELECT u.*, 
+    ep.is_locked, ep.aadhaar_no, ep.aadhaar_photo, 
+    ep.pan_no, ep.pan_photo, ep.marksheet_10, ep.marksheet_12, 
+    ep.address, ep.dob, ep.emergency_contact, 
+    ep.profile_pic, ep.date_of_joining, ep.tenure_start, ep.tenure_end,
+    ep.firm_reg_no, ep.prof_qualification, ep.prof_doc_path, 
+    (SELECT login_time FROM attendance WHERE email = u.identifier AND log_date = '$today' LIMIT 1) as attendance_time 
+    FROM users u 
+    LEFT JOIN employee_profiles ep ON u.id = ep.user_id
+    WHERE u.role='office' AND ep.tenure_end IS NOT NULL AND ep.tenure_end < '$today'
+    ORDER BY u.name ASC";
+$res_over = $conn->query($sql_over);
+?>
 
-                                    if ($locked_status === 1): ?>
-                                        <a href="toggle_lock.php?email=<?php echo urlencode($row['identifier']); ?>&status=0"
-                                            title="Unlock Profile"
-                                            onclick="return confirm('Enable editing for this employee?')">
-                                            <i class="fas fa-lock" style="color: #e11d48; cursor:pointer;"></i>
-                                        </a>
-                                    <?php else: ?>
-                                        <a href="toggle_lock.php?email=<?php echo urlencode($row['identifier']); ?>&status=1"
-                                            title="Lock Profile"
-                                            onclick="return confirm('Freeze this employee profile?')">
-                                            <i class="fas fa-lock-open" style="color: #059669; cursor:pointer;"></i>
-                                        </a>
-                                    <?php endif; ?>
+<!-- ================= 1. ACTIVE EMPLOYEES TABLE ================= -->
+<div class="table-card" style="margin-bottom: 40px;">
+    <h3 style="color: var(--navy); margin-bottom: 20px;"><i class="fas fa-users"></i> Active Employees</h3>
+    <table id="employeeTable">
+        <thead>
+            <tr>
+                <th>Staff Member</th>
+                <th>Start Date</th>
+                <th>Duty Status</th>
+                <th>Account Details</th>
+                <th>Quick Reset</th>
+                <th>Payroll</th>
+                <th>Control</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            if ($res_active->num_rows == 0) {
+                echo '<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:20px;">No active employees found.</td></tr>';
+            }
+            while ($row = $res_active->fetch_assoc()) {
+                $is_present = !empty($row['attendance_time']);
 
-                                    <a href="?delete=<?php echo $row['id']; ?>"
-                                        onclick="return confirm('Permanently remove this employee?')">
-                                        <i class="fas fa-trash-alt" style="color:#ef4444;"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php } ?>
-                </tbody>
-            </table>
-        </div>
+                // Bank Preview logic
+                $bank_preview = "---";
+                if (!empty($row['bank_name'])) {
+                    $bank_preview = "<b>" . $row['bank_name'] . "</b><br><small>" . $row['account_number'] . "</small>";
+                } elseif (!empty($row['upi_id'])) {
+                    $bank_preview = "<small>UPI: " . $row['upi_id'] . "</small>";
+                }
+
+                $start_date = !empty($row['tenure_start']) ? $row['tenure_start'] : ($row['date_of_joining'] ?? 'Not Set');
+            ?>
+                <tr>
+                    <td>
+                        <strong><?php echo $row['name']; ?></strong><br>
+                        <span style="font-size:11px; color:#94a3b8;"><?php echo $row['identifier']; ?></span>
+                    </td>
+                    <td><span style="font-weight:600; color:var(--navy);"><?php echo $start_date; ?></span></td>
+                    <td>
+                        <?php if ($is_present): ?>
+                            <span class="badge badge-active">ACTIVE</span>
+                        <?php else: ?>
+                            <span class="badge badge-absent">ABSENT</span>
+                        <?php endif; ?>
+                    </td>
+                    <td><?php echo $bank_preview; ?></td>
+                    <td>
+                        <form method="POST" class="reset-form" style="display:flex; gap:5px;">
+                            <input type="hidden" name="user_id" value="<?php echo $row['id']; ?>">
+                            <input type="text" name="new_password" placeholder="Pass" style="width:70px; padding:5px; border:1px solid #ddd; border-radius:5px;" required>
+                            <button name="update_pass" class="btn-update">Update</button>
+                        </form>
+                    </td>
+                    <td>
+                        <button class="btn-update" style="background:var(--success);"
+                            onclick="openSalaryModal(
+                                '<?php echo $row['id']; ?>', 
+                                '<?php echo addslashes($row['name']); ?>', 
+                                '<?php echo addslashes($row['bank_name']); ?>', 
+                                '<?php echo $row['account_number']; ?>', 
+                                '<?php echo $row['ifsc_code']; ?>', 
+                                '<?php echo $row['upi_id']; ?>',
+                                '<?php echo addslashes($row['account_holder']); ?>'
+                            )">
+                            <i class="fas fa-wallet"></i> Pay
+                        </button>
+                    </td>
+                    <td>
+                        <div style="display:flex; gap:15px; align-items:center; justify-content:center;">
+                            <a href="javascript:void(0)" onclick="viewEmployee(<?php echo htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8'); ?>)" title="View Profile">
+                                <i class="fas fa-eye" style="color: #1e293b; cursor:pointer;"></i>
+                            </a>
+
+                            <a href="javascript:void(0)" onclick="openTenureModal('<?php echo $row['id']; ?>', '<?php echo addslashes($row['name']); ?>', '<?php echo $row['tenure_start']; ?>', '<?php echo $row['tenure_end']; ?>')" title="Manage Tenure">
+                                <i class="fas fa-calendar-alt" style="color: #082d56; cursor:pointer;"></i>
+                            </a>
+
+                            <?php
+                            $locked_status = isset($row['is_locked']) ? (int)$row['is_locked'] : 0;
+                            if ($locked_status === 1): ?>
+                                <a href="toggle_lock.php?email=<?php echo urlencode($row['identifier']); ?>&status=0"
+                                    title="Unlock Profile"
+                                    onclick="return confirm('Enable editing for this employee?')">
+                                    <i class="fas fa-lock" style="color: #e11d48; cursor:pointer;"></i>
+                                </a>
+                            <?php else: ?>
+                                <a href="toggle_lock.php?email=<?php echo urlencode($row['identifier']); ?>&status=1"
+                                    title="Lock Profile"
+                                    onclick="return confirm('Freeze this employee profile?')">
+                                    <i class="fas fa-lock-open" style="color: #059669; cursor:pointer;"></i>
+                                </a>
+                            <?php endif; ?>
+
+                            <a href="?delete=<?php echo $row['id']; ?>"
+                                onclick="return confirm('Permanently remove this employee?')">
+                                <i class="fas fa-trash-alt" style="color:#ef4444;"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            <?php } ?>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ================= 2. TENURE OVER EMPLOYEES TABLE ================= -->
+<div class="table-card" style="border-top: 4px solid var(--danger);">
+    <h3 style="color: var(--danger); margin-bottom: 20px;"><i class="fas fa-user-clock"></i> Tenure Over Employees</h3>
+    <table id="tenureOverTable">
+        <thead>
+            <tr>
+                <th>Staff Member</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Account Details</th>
+                <th>Quick Reset</th>
+                <th>Payroll</th>
+                <th>Control</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            if ($res_over->num_rows == 0) {
+                echo '<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:20px;">No tenure over employees found.</td></tr>';
+            }
+            while ($row = $res_over->fetch_assoc()) {
+                // Bank Preview logic
+                $bank_preview = "---";
+                if (!empty($row['bank_name'])) {
+                    $bank_preview = "<b>" . $row['bank_name'] . "</b><br><small>" . $row['account_number'] . "</small>";
+                } elseif (!empty($row['upi_id'])) {
+                    $bank_preview = "<small>UPI: " . $row['upi_id'] . "</small>";
+                }
+
+                $start_date = $row['tenure_start'] ?? 'Not Set';
+                $end_date = $row['tenure_end'] ?? 'Not Set';
+            ?>
+                <tr>
+                    <td>
+                        <strong><?php echo $row['name']; ?></strong><br>
+                        <span style="font-size:11px; color:#94a3b8;"><?php echo $row['identifier']; ?></span>
+                    </td>
+                    <td><span style="font-weight:600; color:var(--navy);"><?php echo $start_date; ?></span></td>
+                    <td><span style="font-weight:600; color:var(--danger);"><?php echo $end_date; ?></span></td>
+                    <td><?php echo $bank_preview; ?></td>
+                    <td>
+                        <form method="POST" class="reset-form" style="display:flex; gap:5px;">
+                            <input type="hidden" name="user_id" value="<?php echo $row['id']; ?>">
+                            <input type="text" name="new_password" placeholder="Pass" style="width:70px; padding:5px; border:1px solid #ddd; border-radius:5px;" required>
+                            <button name="update_pass" class="btn-update">Update</button>
+                        </form>
+                    </td>
+                    <td>
+                        <button class="btn-update" style="background:var(--success);"
+                            onclick="openSalaryModal(
+                                '<?php echo $row['id']; ?>', 
+                                '<?php echo addslashes($row['name']); ?>', 
+                                '<?php echo addslashes($row['bank_name']); ?>', 
+                                '<?php echo $row['account_number']; ?>', 
+                                '<?php echo $row['ifsc_code']; ?>', 
+                                '<?php echo $row['upi_id']; ?>',
+                                '<?php echo addslashes($row['account_holder']); ?>'
+                            )">
+                            <i class="fas fa-wallet"></i> Pay
+                        </button>
+                    </td>
+                    <td>
+                        <div style="display:flex; gap:15px; align-items:center; justify-content:center;">
+                            <a href="javascript:void(0)" onclick="viewEmployee(<?php echo htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8'); ?>)" title="View Profile">
+                                <i class="fas fa-eye" style="color: #1e293b; cursor:pointer;"></i>
+                            </a>
+
+                            <a href="javascript:void(0)" onclick="openTenureModal('<?php echo $row['id']; ?>', '<?php echo addslashes($row['name']); ?>', '<?php echo $row['tenure_start']; ?>', '<?php echo $row['tenure_end']; ?>')" title="Manage Tenure">
+                                <i class="fas fa-calendar-alt" style="color: #082d56; cursor:pointer;"></i>
+                            </a>
+
+                            <?php
+                            $locked_status = isset($row['is_locked']) ? (int)$row['is_locked'] : 0;
+                            if ($locked_status === 1): ?>
+                                <a href="toggle_lock.php?email=<?php echo urlencode($row['identifier']); ?>&status=0"
+                                    title="Unlock Profile"
+                                    onclick="return confirm('Enable editing for this employee?')">
+                                    <i class="fas fa-lock" style="color: #e11d48; cursor:pointer;"></i>
+                                </a>
+                            <?php else: ?>
+                                <a href="toggle_lock.php?email=<?php echo urlencode($row['identifier']); ?>&status=1"
+                                    title="Lock Profile"
+                                    onclick="return confirm('Freeze this employee profile?')">
+                                    <i class="fas fa-lock-open" style="color: #059669; cursor:pointer;"></i>
+                                </a>
+                            <?php endif; ?>
+
+                            <a href="?delete=<?php echo $row['id']; ?>"
+                                onclick="return confirm('Permanently remove this employee?')">
+                                <i class="fas fa-trash-alt" style="color:#ef4444;"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            <?php } ?>
+        </tbody>
+    </table>
+</div>
     </div>
 
     <div id="salaryModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(8, 45, 86, 0.7); z-index:9999; align-items:center; justify-content:center; backdrop-filter: blur(5px);">
@@ -694,7 +820,52 @@ document.getElementById('v_prof_qual').innerText = data.prof_qualification || 'N
         function closeViewModal() {
             document.getElementById('viewModal').style.display = 'none';
         }
+        function openTenureModal(id, name, start, end) {
+    document.getElementById('tenureModal').style.display = 'flex';
+    document.getElementById('tenureUserId').value = id;
+    document.getElementById('tenureModalName').innerText = "Tenure: " + name;
+    document.getElementById('tenureStart').value = start || '';
+    document.getElementById('tenureEnd').value = end || '';
+}
+
+function closeTenureModal() {
+    document.getElementById('tenureModal').style.display = 'none';
+}
+
+// Close modal when clicking outside the box
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById('tenureModal');
+    if (e.target === modal) {
+        closeTenureModal();
+    }
+});
     </script>
+  <!-- Tenure Modal -->
+<div id="tenureModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(8, 45, 86, 0.7); z-index:9999; align-items:center; justify-content:center; backdrop-filter: blur(5px);">
+    <div style="background:white; padding:35px; border-radius:24px; width:450px; border-top: 8px solid var(--orange); box-shadow: 0 20px 50px rgba(0,0,0,0.3);">
+        <h2 id="tenureModalName" style="color:var(--navy); margin-top:0; margin-bottom:5px;">Manage Tenure</h2>
+        <p style="color:#64748b; font-size:13px; margin-bottom:20px;">Set working dates using the calendar. If the end date is past today, the staff member automatically moves to the <strong>Tenure Over Employees</strong> table.</p>
+
+        <form action="update-tenure.php" method="POST" id="tenureForm">
+            <input type="hidden" name="user_id" id="tenureUserId">
+            
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:11px; font-weight:800; color:#64748b; margin-bottom:5px; text-transform:uppercase;">Start Date</label>
+                <input type="date" name="tenure_start" id="tenureStart" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:10px; box-sizing:border-box;" required>
+            </div>
+
+            <div style="margin-bottom:25px;">
+                <label style="display:block; font-size:11px; font-weight:800; color:#64748b; margin-bottom:5px; text-transform:uppercase;">End Date</label>
+                <input type="date" name="tenure_end" id="tenureEnd" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:10px; box-sizing:border-box;">
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button type="button" onclick="closeTenureModal()" style="flex:1; padding:12px; background:#f1f5f9; color:#475569; border:none; border-radius:10px; cursor:pointer; font-weight:bold;">Cancel</button>
+                <button type="submit" style="flex:1; padding:12px; background:var(--navy); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:bold;"><i class="fas fa-save"></i> Save Tenure</button>
+            </div>
+        </form>
+    </div>
+</div>
 </body>
 
 </html>

@@ -136,11 +136,12 @@ if (isset($_POST['gen_invoice'])) {
     }
 }
 
-// 3. HANDLE PAYMENT (Unchanged)
+// 3. HANDLE PAYMENT (Updated for Custom Payment Date)
 if (isset($_POST['submit_payment'])) {
     $inv_no = mysqli_real_escape_string($conn, $_POST['inv_no']);
     $pay_amt = (float)$_POST['pay_amount'];
     $pay_method = mysqli_real_escape_string($conn, $_POST['pay_method']);
+    $payment_date = mysqli_real_escape_string($conn, $_POST['payment_date']); // Custom Date from modal
     $new_remarks = mysqli_real_escape_string($conn, $_POST['remarks']);
 
     $res = $conn->query("SELECT amount, cgst_amount, sgst_amount, igst_amount, paid_amount, client_id, remarks FROM invoices WHERE invoice_no = '$inv_no'");
@@ -151,16 +152,21 @@ if (isset($_POST['submit_payment'])) {
         $already_paid = round((float)($inv['paid_amount'] ?? 0), 2);
         $new_total_paid = $already_paid + $pay_amt;
         $status = ($new_total_paid >= round($total_bill, 2)) ? 'Paid' : 'Partially Paid';
-        $date = date('d-m-Y');
-        $updated_remarks = ($inv['remarks'] ?? "") . "\n[$date]: $new_remarks ($pay_method)";
+        
+        // Format the custom selected date for remarks log
+        $formatted_date = date('d-m-Y', strtotime($payment_date));
+        $updated_remarks = ($inv['remarks'] ?? "") . "\n[$formatted_date]: $new_remarks ($pay_method)";
 
+        // Update invoices table with paid amount and status
         $conn->query("UPDATE invoices SET paid_amount = '$new_total_paid', status = '$status', remarks = '$updated_remarks' WHERE invoice_no = '$inv_no'");
 
         $rcp_res = $conn->query("SELECT id FROM receipts");
-        $rcp_no = "RCP-" . date('Y') . "-" . str_pad(($rcp_res->num_rows + 1), 3, "0", STR_PAD_LEFT);
-        $conn->query("INSERT INTO receipts (receipt_no, invoice_no, client_id, amount_paid, payment_mode, method) VALUES ('$rcp_no', '$inv_no', '{$inv['client_id']}', '$pay_amt', '$status', '$pay_method')");
+        $rcp_no = "RCP-" . date('Y', strtotime($payment_date)) . "-" . str_pad(($rcp_res->num_rows + 1), 3, "0", STR_PAD_LEFT);
+        
+        // Insert into receipts table including the custom payment date
+        $conn->query("INSERT INTO receipts (receipt_no, invoice_no, client_id, amount_paid, payment_mode, method, payment_date) VALUES ('$rcp_no', '$inv_no', '{$inv['client_id']}', '$pay_amt', '$status', '$pay_method', '$payment_date')");
 
-        $status_msg = "<div class='alert-success'>✅ Payment Recorded!</div>";
+        $status_msg = "<div class='alert-success'>✅ Payment Recorded for $formatted_date!</div>";
     }
 }
 
@@ -649,127 +655,143 @@ if (isset($_GET['delete_inv'])) {
                 </div>
 
 
+<div style="overflow-x: auto;">
+    <table style="width:100%; border-collapse:collapse;">
+        <colgroup>
+            <col style="width: 14%;">
+            <col style="width: 14%;">
+            <col style="width: 36%;">
+            <col style="width: 18%;">
+            <col style="width: 18%;">
+        </colgroup>
+        <thead>
+            <tr>
+                <th style="padding:15px 25px;">Inv Date</th>
+                <th>Invoice #</th>
+                <th>Client & Description</th>
+                <th>Financials</th>
+                <th>Status & Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            // 1. BUILD FILTERED QUERY
+            $query = "SELECT i.*, cp.company_name 
+      FROM invoices i 
+      JOIN client_profiles cp ON i.client_id = cp.client_id";
 
-                <div style="overflow-x: auto;">
-                    <table style="width:100%; border-collapse:collapse;">
-                        <thead>
-                            <tr>
-                                <th style="padding:15px 25px;">Inv Date</th>
-                                <th>Invoice #</th>
-                                <th>Client & Tax</th>
-                                <th>Financials</th>
-                                <th>Status & Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            // 1. BUILD FILTERED QUERY - Updated to JOIN with client_profiles instead of users
-                            // We link i.client_id to cp.client_id to get the company_name
-                            // 1. BUILD FILTERED QUERY
-                            $query = "SELECT i.*, cp.company_name 
-          FROM invoices i 
-          JOIN client_profiles cp ON i.client_id = cp.client_id";
+            $conditions = [];
 
-                            $conditions = [];
+            // Company Search
+            if (!empty($_GET['company_search'])) {
+                $search = mysqli_real_escape_string($conn, $_GET['company_search']);
+                $conditions[] = "cp.company_name LIKE '%$search%'";
+            }
 
-                            // Company Search
-                            if (!empty($_GET['company_search'])) {
-                                $search = mysqli_real_escape_string($conn, $_GET['company_search']);
-                                $conditions[] = "cp.company_name LIKE '%$search%'";
-                            }
+            // From Date
+            if (!empty($_GET['from_date'])) {
+                $from = mysqli_real_escape_string($conn, $_GET['from_date']);
+                $conditions[] = "i.invoice_date >= '$from'";
+            }
 
-                            // From Date
-                            if (!empty($_GET['from_date'])) {
-                                $from = mysqli_real_escape_string($conn, $_GET['from_date']);
-                                $conditions[] = "i.invoice_date >= '$from'";
-                            }
+            // To Date
+            if (!empty($_GET['to_date'])) {
+                $to = mysqli_real_escape_string($conn, $_GET['to_date']);
+                $conditions[] = "i.invoice_date <= '$to'";
+            }
 
-                            // To Date
-                            if (!empty($_GET['to_date'])) {
-                                $to = mysqli_real_escape_string($conn, $_GET['to_date']);
-                                $conditions[] = "i.invoice_date <= '$to'";
-                            }
+            // Apply conditions
+            if (count($conditions) > 0) {
+                $query .= " WHERE " . implode(" AND ", $conditions);
+            }
 
-                            // Apply conditions
-                            if (count($conditions) > 0) {
-                                $query .= " WHERE " . implode(" AND ", $conditions);
-                            }
-                            // Replace your existing else block with this:
- 
+            // 2. SORTING
+            $query .= " ORDER BY i.invoice_date DESC, i.id DESC";
+            $invoices = $conn->query($query);
+            if ($invoices && $invoices->num_rows > 0) {
+                while ($inv = $invoices->fetch_assoc()) {
+                    $base = (float)$inv['amount'];
+                    $gst = (float)$inv['cgst_amount'] + (float)$inv['sgst_amount'] + (float)$inv['igst_amount'];
+                    $grand_total = $base + $gst;
+                    $paid = (float)($inv['paid_amount'] ?? 0);
+                    $balance = $grand_total - $paid;
+                    $status_class = strtolower(str_replace(' ', '', $inv['status']));
 
-                            // 2. SORTING
-                            $query .= " ORDER BY i.invoice_date DESC, i.id DESC";
-                            $invoices = $conn->query($query);
-                            if ($invoices && $invoices->num_rows > 0) {
-                                while ($inv = $invoices->fetch_assoc()) {
-                                    $base = (float)$inv['amount'];
-                                    $gst = (float)$inv['cgst_amount'] + (float)$inv['sgst_amount'] + (float)$inv['igst_amount'];
-                                    $grand_total = $base + $gst;
-                                    $paid = (float)($inv['paid_amount'] ?? 0);
-                                    $balance = $grand_total - $paid;
-                                    $status_class = strtolower(str_replace(' ', '', $inv['status']));
-                            ?>
-                                    <tr>
-                                        <td style="padding:15px 25px;">
-                                            <span style="font-weight:600;"><?php echo date('d-m-Y', strtotime($inv['invoice_date'])); ?></span>
-                                            <div style="font-size:10px; color:var(--text-light); margin-top:4px;">
-                                                Due: <?php echo date('d-m-Y', strtotime($inv['due_date'])); ?>
-                                            </div>
-                                        </td>
-                                        <td style='font-weight:700; color:var(--navy);'><?php echo $inv['invoice_no']; ?></td>
-                                        <td>
-                                            <b><?php echo htmlspecialchars($inv['company_name']); ?></b><br>
-                                            <span class='tax-tag'><?php echo $inv['tax_type']; ?></span>
-                                        </td>
-                                        <td>
-                                            <div>Total: <b>₹<?php echo number_format($grand_total, 2); ?></b></div>
-                                            <div style='font-size:11px; color:#ef4444;'>Balance: ₹<?php echo number_format($balance, 2); ?></div>
-                                        </td>
-                                        <td>
-                                            <span class='status-<?php echo $status_class; ?>'><?php echo $inv['status']; ?></span>
-                                            <div style='margin-top:10px;'>
-                                                <a href='view-invoice.php?inv_no=<?php echo $inv['invoice_no']; ?>' target='_blank' style='color:#e11d48; margin-right:10px;' title='PDF'><i class='fas fa-file-pdf'></i></a>
-                                                <a href='javascript:void(0)' onclick='openPayModal("<?php echo $inv['invoice_no']; ?>", "<?php echo $balance; ?>")' style='color:#10b981; margin-right:10px;' title='Record Payment'><i class='fas fa-coins'></i></a>
-                                                <a href='edit-invoice.php?id=<?php echo $inv['id']; ?>' style='color:#3b82f6; margin-right:10px;' title='Edit'><i class='fas fa-edit'></i></a>
-                                                <a href='invoices.php?delete_inv=<?php echo $inv['invoice_no']; ?>' onclick='return confirm("Are you sure you want to delete this invoice?")' style='color:#ccc;' title='Delete'><i class='fas fa-trash-alt'></i></a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                            <?php
-                                }
-                            } else {
-                                echo "<tr><td colspan='5' style='text-align:center; padding:50px; color:var(--text-light);'>
+                    // Fetch the first description for this invoice to display in the table
+                    $inv_id_db = $inv['id'];
+                    $desc_res = $conn->query("SELECT description FROM invoice_items WHERE invoice_id = '$inv_id_db' LIMIT 1");
+                    $desc_row = ($desc_res && $desc_res->num_rows > 0) ? $desc_res->fetch_assoc() : null;
+                    $invoice_desc = $desc_row ? $desc_row['description'] : '';
+            ?>
+                    <tr>
+                        <td style="padding:15px 25px;">
+                            <span style="font-weight:600;"><?php echo date('d-m-Y', strtotime($inv['invoice_date'])); ?></span>
+                            <div style="font-size:10px; color:var(--text-light); margin-top:4px;">
+                                Due: <?php echo date('d-m-Y', strtotime($inv['due_date'])); ?>
+                            </div>
+                        </td>
+                        <td style='font-weight:700; color:var(--navy);'><?php echo $inv['invoice_no']; ?></td>
+                        <td>
+                            <b><?php echo htmlspecialchars($inv['company_name']); ?></b><br>
+                            <span style='font-size:11px; color:var(--text-light);'><?php echo htmlspecialchars($invoice_desc); ?></span>
+                        </td>
+                        <td>
+                            <div>Total: <b>₹<?php echo number_format($grand_total, 2); ?></b></div>
+                            <div style='font-size:11px; color:#ef4444;'>Balance: ₹<?php echo number_format($balance, 2); ?></div>
+                        </td>
+                        <td>
+                            <span class='status-<?php echo $status_class; ?>'><?php echo $inv['status']; ?></span>
+                            <div style='margin-top:10px;'>
+                                <a href='view-invoice.php?inv_no=<?php echo $inv['invoice_no']; ?>' target='_blank' style='color:#e11d48; margin-right:10px;' title='PDF'><i class='fas fa-file-pdf'></i></a>
+                                <a href='javascript:void(0)' onclick='openPayModal("<?php echo $inv['invoice_no']; ?>", "<?php echo $balance; ?>")' style='color:#10b981; margin-right:10px;' title='Record Payment'><i class='fas fa-coins'></i></a>
+                                <a href='edit-invoice.php?id=<?php echo $inv['id']; ?>' style='color:#3b82f6; margin-right:10px;' title='Edit'><i class='fas fa-edit'></i></a>
+                                <a href='invoices.php?delete_inv=<?php echo $inv['invoice_no']; ?>' onclick='return confirm("Are you sure you want to delete this invoice?")' style='color:#ccc;' title='Delete'><i class='fas fa-trash-alt'></i></a>
+                            </div>
+                        </td>
+                    </tr>
+            <?php
+                }
+            } else {
+                echo "<tr><td colspan='5' style='text-align:center; padding:50px; color:var(--text-light);'>
                 <i class='fas fa-search' style='font-size:30px; opacity:0.3; margin-bottom:10px; display:block;'></i>
                 No invoices found for this period.
-              </td></tr>";
-                            }
-                            ?>
-                        </tbody>
-                    </table>
-                </div>
+             </td></tr>";
+            }
+            ?>
+        </tbody>
+    </table>
+</div>
             </div>
         </div>
 
-        <div id="payModal" class="modal">
-            <div class="modal-content">
-                <h3>Record Payment</h3>
-                <form method="POST">
-                    <input type="hidden" name="inv_no" id="modal_inv_no">
-                    <label>Amount Paid</label>
-                    <input type="number" step="0.01" name="pay_amount" id="modal_pay_amt" required>
-                    <label>Method</label>
-                    <select name="pay_method" required>
-                        <option value="UPI">UPI</option>
-                        <option value="Cash">Cash</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                    </select>
-                    <label>Remarks</label>
-                    <textarea name="remarks" placeholder="Payment details..." rows="3"></textarea>
-                    <button name="submit_payment" class="btn-main">Save Payment</button>
-                    <button type="button" onclick="closeModal('payModal')" style="width:100%; border:none; background:none; cursor:pointer; margin-top:10px;">Cancel</button>
-                </form>
-            </div>
-        </div>
+       <div id="payModal" class="modal">
+    <div class="modal-content">
+        <h3>Record Payment</h3>
+        <form method="POST">
+            <input type="hidden" name="inv_no" id="modal_inv_no">
+            
+            <label>Amount Paid</label>
+            <input type="number" step="0.01" name="pay_amount" id="modal_pay_amt" required>
+            
+            <label>Method</label>
+            <select name="pay_method" required>
+                <option value="UPI">UPI</option>
+                <option value="Cash">Cash</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+
+            <!-- Added Date Paid Calendar Field -->
+            <label>Date Paid</label>
+            <input type="date" name="payment_date" value="<?php echo date('Y-m-d'); ?>" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px; box-sizing:border-box;">
+
+            <label>Remarks</label>
+            <textarea name="remarks" placeholder="Payment details..." rows="3"></textarea>
+            
+            <button name="submit_payment" class="btn-main">Save Payment</button>
+            <button type="button" onclick="closeModal('payModal')" style="width:100%; border:none; background:none; cursor:pointer; margin-top:10px;">Cancel</button>
+        </form>
+    </div>
+</div>
 
         <script>
             function toggleMenu(menuId, chevronId) {

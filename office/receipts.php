@@ -36,9 +36,9 @@ if (!empty($search)) {
     $query .= " AND (cp.company_name LIKE '%$search%' OR r.receipt_no LIKE '%$search%' OR r.invoice_no LIKE '%$search%')";
 }
 
-// Filter by Date Range (Correctly handles the created_at timestamp)
+// Filter by Date Range (Updated to filter by payment_date instead of created_at)
 if (!empty($from_date) && !empty($to_date)) {
-    $query .= " AND DATE(r.created_at) BETWEEN '$from_date' AND '$to_date'";
+    $query .= " AND r.payment_date BETWEEN '$from_date' AND '$to_date'";
 }
 
 $query .= " ORDER BY r.id DESC"; // Order by most recent
@@ -384,11 +384,14 @@ if (!$receipts) {
     <?php
     if ($receipts->num_rows > 0) {
         while ($r = $receipts->fetch_assoc()) {
-            $date = date('d M Y', strtotime($r['created_at']));
-           // UPDATED: Use company_name from client_profiles
+            // UPDATED: Use payment_date if available, otherwise fallback to created_at
+            $display_date = !empty($r['payment_date']) ? $r['payment_date'] : $r['created_at'];
+            $date = date('d M Y', strtotime($display_date));
+
+           // Use company_name from client_profiles
             $c_name = !empty($r['company_name']) 
-                      ? "<b style='color:#0f172a; text-transform: uppercase;'>" . htmlspecialchars($r['company_name']) . "</b>" 
-                      : "<span style='color:#94a3b8;'>ID: {$r['client_id']}</span>";
+                    ? "<b style='color:#0f172a; text-transform: uppercase;'>" . htmlspecialchars($r['company_name']) . "</b>" 
+                    : "<span style='color:#94a3b8;'>ID: {$r['client_id']}</span>";
 
             // Determine Icon and Color for the Method
             $method = !empty($r['method']) ? $r['method'] : 'Not Specified';
@@ -439,7 +442,7 @@ if (!$receipts) {
         echo "<tr><td colspan='8' style='text-align:center; padding:60px; color:var(--text-light);'>
             <i class='fas fa-search' style='font-size:30px; margin-bottom:10px; display:block;'></i>
             No records found for the selected filters.
-          </td></tr>";
+         </td></tr>";
     }
     ?>
 </tbody>

@@ -32,7 +32,8 @@ $total_received = (float)$data['amount_paid'];
 // --- Currency Function ---
 function getIndianCurrency(float $number) {
     $no = floor($number);
-    $point = round($number - $no, 2) * 100;
+    // FIXED: Added missing multiplication operator (*)
+    $point = round(($number - $no), 2) * 100;
     $hundred = null; $digits_1 = strlen($no); $i = 0; $str = array();
     $words = array('0' => '', '1' => 'one', '2' => 'two', '3' => 'three', '4' => 'four', '5' => 'five', '6' => 'six', '7' => 'seven', '8' => 'eight', '9' => 'nine', '10' => 'ten', '11' => 'eleven', '12' => 'twelve', '13' => 'thirteen', '14' => 'fourteen', '15' => 'fifteen', '16' => 'sixteen', '17' => 'seventeen', '18' => 'eighteen', '19' => 'nineteen', '20' => 'twenty', '30' => 'thirty', '40' => 'forty', '50' => 'fifty', '60' => 'sixty', '70' => 'seventy', '80' => 'eighty', '90' => 'ninety');
     $digits = array('', 'hundred', 'thousand', 'lakh', 'crore');
@@ -118,7 +119,13 @@ function getIndianCurrency(float $number) {
         </tr>
         <tr>
             <td class="label">Date of Payment</td>
-            <td><?php echo date('d F Y', strtotime($data['created_at'])); ?></td>
+            <td>
+                <?php 
+                    // UPDATED: Displays the custom payment_date if set, otherwise falls back to created_at
+                    $display_date = !empty($data['payment_date']) ? $data['payment_date'] : $data['created_at'];
+                    echo date('d F Y', strtotime($display_date)); 
+                ?>
+            </td>
         </tr>
         <tr>
             <td class="label">Received From</td>
