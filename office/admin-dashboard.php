@@ -1068,5 +1068,326 @@ if (isset($_GET['del_schedule'])) {
         setInterval(updateClock, 1000);
         updateClock();
     </script>
+    <?php
+// Trigger once right after login (set $_SESSION['just_logged_in'] = true; in Register.php on successful login)
+$show_admin_anim = !empty($_SESSION['just_logged_in']);
+if ($show_admin_anim) {
+    unset($_SESSION['just_logged_in']);
+}
+$admin_name = $display_name ?? ($_SESSION['user']['name'] ?? 'Administrator');
+?>
+<?php if ($show_admin_anim): ?>
+<div id="kkaAdminSplash" class="kka-admin-splash" aria-hidden="true">
+    <div class="kka-admin-glow kka-admin-glow-1"></div>
+    <div class="kka-admin-glow kka-admin-glow-2"></div>
+
+    <div class="kka-admin-card">
+        <div class="kka-admin-ring">
+            <div class="kka-admin-emblem">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+        </div>
+
+        <div class="kka-admin-tag">
+            <i class="fas fa-crown"></i> Admin Command Center
+        </div>
+
+        <h2 class="kka-admin-title">Karunesh Kumar &amp; Associates</h2>
+        <p class="kka-admin-sub">Welcome back, <strong><?php echo htmlspecialchars($admin_name); ?></strong></p>
+
+        <div class="kka-admin-stage" id="kkaAdminStageText">Verifying administrative session &amp; privileges...</div>
+
+        <div class="kka-admin-bar">
+            <div class="kka-admin-bar-fill"></div>
+        </div>
+
+        <div class="kka-admin-footer">
+            <span id="kkaAdminCountdown">Entering admin panel in 15s</span>
+            <button type="button" id="kkaAdminSkipBtn" class="kka-admin-skip">
+                Skip <i class="fas fa-forward"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .kka-admin-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        overflow: hidden;
+        background: radial-gradient(circle at top left, rgba(22, 78, 141, 0.96), rgba(11, 60, 116, 0.98) 65%, #07264a 100%);
+        backdrop-filter: blur(10px);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        opacity: 1;
+        transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    .kka-admin-splash.is-hiding {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .kka-admin-glow {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(75px);
+        pointer-events: none;
+        opacity: 0.35;
+    }
+
+    .kka-admin-glow-1 {
+        width: 340px;
+        height: 340px;
+        background: #ff8c00;
+        top: -90px;
+        right: -70px;
+        animation: kkaAdminDriftA 15s ease-in-out infinite;
+    }
+
+    .kka-admin-glow-2 {
+        width: 310px;
+        height: 310px;
+        background: #38bdf8;
+        bottom: -95px;
+        left: -60px;
+        animation: kkaAdminDriftB 15s ease-in-out infinite;
+    }
+
+    .kka-admin-card {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        max-width: 490px;
+        width: 100%;
+        padding: 38px 30px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow: 0 24px 60px rgba(3, 18, 38, 0.48);
+        animation: kkaAdminCardIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .kka-admin-ring {
+        width: 84px;
+        height: 84px;
+        margin: 0 auto 18px;
+        border-radius: 24px;
+        padding: 3px;
+        background: linear-gradient(135deg, #ff8c00, #fbbf24, #38bdf8);
+        animation: kkaAdminPulse 2.5s ease-in-out infinite;
+    }
+
+    .kka-admin-emblem {
+        width: 100%;
+        height: 100%;
+        border-radius: 21px;
+        background: #0b3c74;
+        color: #ff8c00;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        animation: kkaAdminIconBob 3s ease-in-out infinite;
+    }
+
+    .kka-admin-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        background: rgba(255, 140, 0, 0.18);
+        border: 1px solid rgba(255, 140, 0, 0.45);
+        color: #fdba74;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+    }
+
+    .kka-admin-title {
+        margin: 0;
+        font-size: 25px;
+        font-weight: 800;
+        letter-spacing: -0.3px;
+        background: linear-gradient(90deg, #ffffff 0%, #dbeafe 50%, #fdba74 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: kkaAdminTextSlide 0.9s cubic-bezier(0.22, 1, 0.36, 1) both, kkaAdminShimmer 5s linear infinite;
+    }
+
+    .kka-admin-sub {
+        margin: 10px 0 14px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.88);
+        font-weight: 500;
+    }
+
+    .kka-admin-sub strong {
+        color: #ffffff;
+        font-weight: 700;
+    }
+
+    .kka-admin-stage {
+        font-size: 12px;
+        color: #bae6fd;
+        font-weight: 600;
+        margin-bottom: 14px;
+        min-height: 18px;
+    }
+
+    .kka-admin-bar {
+        width: 100%;
+        height: 5px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.16);
+        overflow: hidden;
+    }
+
+    .kka-admin-bar-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #38bdf8, #ff8c00);
+        animation: kkaAdminProgress15s 15s linear forwards;
+    }
+
+    .kka-admin-footer {
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 11.5px;
+        color: rgba(255, 255, 255, 0.75);
+        font-weight: 600;
+    }
+
+    .kka-admin-skip {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fdba74;
+        border: 1px solid rgba(255, 140, 0, 0.45);
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s ease;
+    }
+
+    .kka-admin-skip:hover {
+        background: #ff8c00;
+        color: #ffffff;
+    }
+
+    @keyframes kkaAdminCardIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes kkaAdminTextSlide {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes kkaAdminShimmer {
+        0% { background-position: 0% center; }
+        100% { background-position: 200% center; }
+    }
+
+    @keyframes kkaAdminPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    @keyframes kkaAdminIconBob {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+    }
+
+    @keyframes kkaAdminDriftA {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(-45px, 35px); }
+    }
+
+    @keyframes kkaAdminDriftB {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(45px, -35px); }
+    }
+
+    @keyframes kkaAdminProgress15s {
+        from { width: 0%; }
+        to { width: 100%; }
+    }
+</style>
+
+<script>
+    (function () {
+        const splash = document.getElementById('kkaAdminSplash');
+        if (!splash) return;
+
+        const stageEl = document.getElementById('kkaAdminStageText');
+        const countEl = document.getElementById('kkaAdminCountdown');
+        const skipBtn = document.getElementById('kkaAdminSkipBtn');
+
+        const stages = [
+            { at: 0,  text: 'Verifying administrative session & privileges...' },
+            { at: 4,  text: 'Loading client portfolios, staff & service requests...' },
+            { at: 9,  text: 'Compiling billing, compliance & attendance overview...' },
+            { at: 13, text: 'Preparing Karunesh Kumar & Associates control panel...' }
+        ];
+
+        let remaining = 15;
+        let dismissed = false;
+
+        function dismissSplash() {
+            if (dismissed) return;
+            dismissed = true;
+            clearInterval(timer);
+            splash.classList.add('is-hiding');
+            setTimeout(() => splash.remove(), 650);
+        }
+
+        function syncText() {
+            const elapsed = 15 - remaining;
+            let currentStage = stages[0].text;
+            for (const s of stages) {
+                if (elapsed >= s.at) currentStage = s.text;
+            }
+            if (stageEl) stageEl.textContent = currentStage;
+            if (countEl) countEl.textContent = 'Entering admin panel in ' + Math.max(0, remaining) + 's';
+        }
+
+        syncText();
+
+        const timer = setInterval(() => {
+            remaining--;
+            if (remaining <= 0) {
+                if (countEl) countEl.textContent = 'Entering admin panel in 0s';
+                dismissSplash();
+            } else {
+                syncText();
+            }
+        }, 1000);
+
+        if (skipBtn) {
+            skipBtn.addEventListener('click', dismissSplash);
+        }
+    })();
+</script>
+<?php endif; ?>
 </body>
 </html>

@@ -49,17 +49,17 @@ if (isset($_POST['update_profile'])) {
     }
 
     // Sanitize basic inputs
-    $fname   = $conn->real_escape_string($_POST['first_name']);
-    $lname   = $conn->real_escape_string($_POST['last_name']);
-    $phone   = $conn->real_escape_string($_POST['phone']);
-    $dob     = $conn->real_escape_string($_POST['dob']);
-    $aadhaar = $conn->real_escape_string($_POST['aadhaar_no']);
-    $pan     = $conn->real_escape_string($_POST['pan_no']);
-    $doj     = $conn->real_escape_string($_POST['date_of_joining']);
-    $emg     = $conn->real_escape_string($_POST['emergency_contact']);
-    $address = $conn->real_escape_string($_POST['address']);
+    $fname     = $conn->real_escape_string($_POST['first_name']);
+    $lname     = $conn->real_escape_string($_POST['last_name']);
+    $phone     = $conn->real_escape_string($_POST['phone']);
+    $dob       = $conn->real_escape_string($_POST['dob']);
+    $aadhaar   = $conn->real_escape_string($_POST['aadhaar_no']);
+    $pan       = $conn->real_escape_string($_POST['pan_no']);
+    $doj       = $conn->real_escape_string($_POST['date_of_joining']);
+    $emg       = $conn->real_escape_string($_POST['emergency_contact']);
+    $address   = $conn->real_escape_string($_POST['address']);
     $firm_reg  = $conn->real_escape_string($_POST['firm_reg_no'] ?? '');
-$prof_qual = $conn->real_escape_string($_POST['prof_qualification'] ?? '');
+    $prof_qual = $conn->real_escape_string($_POST['prof_qualification'] ?? '');
 
     $doc_path = "../uploads/documents/";
     if (!is_dir($doc_path)) mkdir($doc_path, 0777, true);
@@ -132,119 +132,641 @@ $prof_qual = $conn->real_escape_string($_POST['prof_qualification'] ?? '');
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KKA Staff | Profile</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --navy: #0b3c74;
-            --orange: #ff8c00;
-            --sidebar: #082d56;
-            --bg: #f8fafc;
+            --green-deep: #052e16;
+            --green-forest: #064e3b;
+            --green-primary: #15803d;
+            --green-vivid: #16a34a;
+            --green-soft: #dcfce7;
+            --green-tint: #f0fdf4;
+            --yellow-accent: #eab308;
+            --yellow-warm: #ca8a04;
+            --yellow-soft: #fef9c3;
+            --bg: #f3f7f4;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #4b5563;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+            --border: #d1fae5;
+            --border-neutral: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(21, 128, 61, 0.05);
+            --shadow-md: 0 10px 25px -5px rgba(21, 128, 61, 0.1);
         }
 
-        body { display: flex; margin: 0; background: var(--bg); font-family: 'Inter', sans-serif; color: #334155; }
-
-    .sidebar {
-    width: 280px;
-    background: var(--sidebar);
-    color: white;
-    height: 100vh; /* Keeps the sidebar full height */
-    position: fixed;
-    top: 0;
-    left: 0;
-    padding: 30px 20px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    border-right: 4px solid var(--orange);
-    
-    /* This makes the scrollbar behave correctly */
-    overflow-y: auto;
-    scrollbar-width: thin; /* Firefox: makes the scrollbar thin */
-    scrollbar-color: var(--orange) var(--sidebar); /* Thumb and track color */
-}
-
-/* Chrome, Safari, Edge: Custom Scrollbar Line */
-.sidebar::-webkit-scrollbar {
-    width: 8px; /* Thickness of the side line */
-}
-
-.sidebar::-webkit-scrollbar-track {
-    background: #082d56; /* Darker track */
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-    background-color: var(--orange); /* The "line" you can grab */
-    border-radius: 10px;
-    border: 2px solid #082d56;
-}
-
-        .sidebar h2 {
-            font-size: 22px;
-            color: var(--orange);
-            margin-bottom: 40px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 20px;
+        * {
+            box-sizing: border-box;
         }
-        .sidebar a {
-            color: rgba(255, 255, 255, 0.7);
+
+        body {
+            display: flex;
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-main);
+        }
+
+        /* ================= GREEN SIDEBAR ================= */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, var(--green-forest) 0%, var(--green-deep) 100%);
+            color: #ffffff;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 24px 18px;
+            display: flex;
+            flex-direction: column;
+            border-right: 3px solid var(--yellow-accent);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--yellow-accent) var(--green-deep);
+            z-index: 100;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: var(--yellow-accent);
+            border-radius: 10px;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 6px 18px 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            margin-bottom: 18px;
+        }
+
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--green-vivid);
+            border: 1.5px solid var(--yellow-accent);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .brand-header h2 {
+            margin: 0;
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.3;
+        }
+
+        .profile-box {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px 12px;
+            margin-bottom: 20px;
+        }
+
+        .avatar-ring {
+            width: 82px;
+            height: 82px;
+            margin: 0 auto 10px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, var(--green-vivid), var(--yellow-accent));
+        }
+
+        .avatar-ring img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #ffffff;
+            display: block;
+        }
+
+        .profile-box h4 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .profile-role {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: rgba(234, 179, 8, 0.16);
+            color: #fef08a;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
+
+        .nav-section-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.45);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 8px 10px;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar nav a {
+            color: rgba(255, 255, 255, 0.78);
             text-decoration: none;
             display: flex;
-            align-items: center; gap: 12px; padding: 14px; margin-bottom: 8px; border-radius: 12px; transition: 0.3s;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s ease;
         }
 
-        .sidebar a:hover, .sidebar a.active { background: rgba(255, 255, 255, 0.1); color: white; border-left: 4px solid var(--orange); }
-
-        .main { margin-left: 280px; padding: 40px; width: calc(100% - 280px); }
-
-        .card {
-            background: white; padding: 30px; border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03); border-left: 5px solid var(--navy); margin-bottom: 30px;
+        .sidebar nav a:hover,
+        .sidebar nav a.active {
+            background: rgba(22, 163, 74, 0.24);
+            color: #ffffff;
+            border-left: 3px solid var(--yellow-accent);
+            padding-left: 17px;
         }
 
-        /* SUMMARY BOX STYLE */
-        .info-display-box {
-            background: #f1f5f9; border-radius: 15px; padding: 20px;
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; border: 1px dashed #cbd5e1;
+        .logout-link {
+            margin-top: auto;
+            color: #fca5a5 !important;
+            background: rgba(239, 68, 68, 0.14);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            transition: all 0.2s ease;
         }
-        .info-item { display: flex; flex-direction: column; }
-        .info-label { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: bold; }
-        .info-value { font-size: 14px; color: var(--navy); font-weight: 600; }
 
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
-        label { font-weight: 600; margin-bottom: 8px; color: #64748b; font-size: 12px; text-transform: uppercase; }
-        input, textarea { padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; }
-        
-        .btn-save { background: var(--navy); color: white; border: none; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; transition: 0.3s; }
-        .btn-save:hover { background: var(--orange); }
+        .logout-link:hover {
+            background: var(--danger);
+            color: #ffffff !important;
+        }
 
-        .avatar-img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--orange); }
+        /* ================= MAIN & ADMIN-STYLE HEADER ================= */
+        .main {
+            margin-left: 280px;
+            width: calc(100% - 280px);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            padding: 14px 40px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            box-shadow: var(--shadow-sm);
+            gap: 16px;
+        }
+
+        .brand-section h1 {
+            margin: 0;
+            font-size: 20px;
+            color: var(--green-deep);
+            font-weight: 800;
+        }
+
+        .welcome-text {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .header-right-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .staff-id-badge {
+            background: var(--yellow-soft);
+            color: #854d0e;
+            border: 1px solid #fde047;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 0.4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-clock {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--green-tint);
+            padding: 7px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .clock-icon i {
+            color: var(--yellow-warm);
+            font-size: 15px;
+        }
+
+        .clock-display {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .clock-display span {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .clock-display strong {
+            font-size: 12px;
+            color: var(--green-deep);
+            font-weight: 700;
+        }
+
+        .header-user-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #ffffff;
+            padding: 5px 6px 5px 14px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-user-name {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--green-primary);
+        }
+
+        .header-logout-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--danger-bg);
+            color: var(--danger);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 12.5px;
+            transition: all 0.2s ease;
+        }
+
+        .header-logout-icon:hover {
+            background: var(--danger);
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .content-body {
+            padding: 32px 40px 48px;
+            flex: 1;
+            width: 100%;
+        }
+
+        /* ================= CARDS & FORM LAYOUT ================= */
+        .profile-surface {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--green-primary);
+            border-radius: 22px;
+            padding: 28px 32px;
+            box-shadow: var(--shadow-sm);
+            max-width: 1020px;
+            margin: 0 auto 28px;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .profile-surface:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .profile-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 18px 22px;
+            background: var(--green-tint);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .profile-hero-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .avatar-img {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--yellow-accent);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .group-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--green-forest);
+            margin: 24px 0 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .group-bar i {
+            color: var(--green-primary);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px 22px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .form-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--green-deep);
+            text-transform: uppercase;
+            letter-spacing: 0.45px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .icon-badge {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            background: var(--green-soft);
+            color: var(--green-primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="date"],
+        .form-group textarea {
+            padding: 11px 14px;
+            border: 1.5px solid var(--border-neutral);
+            background: #f8fafc;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 13.5px;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group input[type="date"]:focus,
+        .form-group textarea:focus {
+            border-color: var(--green-primary);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.12);
+        }
+
+        .form-group input[type="file"] {
+            padding: 8px 10px;
+            border: 1.5px dashed #86efac;
+            background: var(--green-tint);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 12.5px;
+            color: var(--text-main);
+        }
+
+        .doc-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .doc-view-btn {
+            background: var(--green-soft);
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: var(--green-deep);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid #86efac;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .doc-view-btn:hover {
+            background: var(--green-primary);
+            color: #ffffff;
+        }
+
+        .doc-del-btn {
+            background: var(--danger-bg);
+            padding: 8px 11px;
+            border-radius: 8px;
+            color: var(--danger);
+            border: 1px solid #fecaca;
+            text-decoration: none;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .doc-del-btn:hover {
+            background: var(--danger);
+            color: #ffffff;
+        }
+
+        .btn-save {
+            margin-top: 24px;
+            background: var(--green-primary);
+            color: #ffffff;
+            padding: 13px 24px;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-save:hover {
+            background: var(--green-deep);
+            transform: translateY(-1px);
+        }
+
+        /* ================= SUMMARY SECTION ================= */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            background: var(--green-tint);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+        }
+
+        .summary-tile {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .summary-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.45px;
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .summary-label i {
+            color: var(--green-primary);
+        }
+
+        .summary-val {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--green-deep);
+        }
+
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        @media (max-width: 1024px) {
+            .admin-top-bar {
+                padding: 14px 20px;
+            }
+            .content-body {
+                padding: 24px 20px;
+            }
+            .form-grid,
+            .summary-grid,
+            .docs-grid {
+                grid-template-columns: 1fr;
+            }
+            .summary-tile[style*="span 3"] {
+                grid-column: span 1 !important;
+            }
+            .form-group[style*="span 2"] {
+                grid-column: span 1 !important;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <h2 style="font-size: 20px; color: var(--orange); margin-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 15px; text-align: center;">
-        Karunesh Kumar & Associates Employee
-    </h2>
-    
-    <div style="text-align: center; padding: 5px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
-        <div style="width: 90px; height: 90px; margin: 0 auto 12px; border-radius: 50%; overflow: hidden;  background: #eee; display: flex; align-items: center; justify-content: center;">
-            <img src="../uploads/profile_pics/<?php echo $profile_img; ?>" 
-                 onerror="this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($display_name); ?>&background=0b3c74&color=fff';"
-                 style="width: 100%; height: 100%; object-fit: cover; display: block;">
-        </div>
-        
-        <h4 style="margin: 0; color: white; font-size: 18px; font-weight: 600; line-height: 1.2;">
-            <?php echo htmlspecialchars($display_name); ?>
-        </h4>
-        <span style="color: var(--orange); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 5px;">
-            <i  style="font-size: 9px;"></i> Office Employee
-        </span>
+<aside class="sidebar">
+    <div class="brand-header">
+        <div class="brand-logo"><i class="fas fa-leaf"></i></div>
+        <h2>Karunesh Kumar &amp; Associates</h2>
     </div>
 
-    <nav style="display: flex; flex-direction: column; gap: 2px;">
+    <div class="profile-box">
+        <div class="avatar-ring">
+            <img src="../uploads/profile_pics/<?php echo htmlspecialchars($profile_img); ?>" 
+                 onerror="this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($display_name); ?>&background=15803d&color=fff';"
+                 alt="<?php echo htmlspecialchars($display_name); ?>">
+        </div>
+        <h4><?php echo htmlspecialchars($display_name); ?></h4>
+        <span class="profile-role">Office Employee</span>
+    </div>
+
+    <div class="nav-section-title">Workspace</div>
+    <nav>
         <a href="employee-dashboard.php"><i class="fas fa-tasks"></i> My Tasks</a>
         <a href="work-basket.php"><i class="fas fa-briefcase"></i> Work Basket</a>
         <a href="employee-payments.php"><i class="fas fa-wallet"></i> Payments</a>
@@ -252,362 +774,340 @@ $prof_qual = $conn->real_escape_string($_POST['prof_qualification'] ?? '');
         <a href="staff-attendance.php"><i class="fas fa-clock"></i> Attendance</a>
     </nav>
 
-    <a href="../logout.php" class="logout-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Logout</a>
-</div>
+    <a href="../logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</aside>
 
 <div class="main">
-    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
-        <h1>Profile Management</h1>
-        <div style="background:#fff7ed; color:var(--orange); padding:10px 20px; border-radius:10px; font-weight:bold;">
-           <?php 
-    // Get the year from joining date, or current year if not set
-    $yearCode = !empty($userData['date_of_joining']) ? date("Y", strtotime($userData['date_of_joining'])) : date("Y"); 
-    
-    // Display only KKA and the Year
-    echo "ID: KKA-" . $yearCode; 
-?>
+    <header class="admin-top-bar">
+        <div class="brand-section">
+            <h1>Profile Management</h1>
+            <div class="welcome-text">Personal records, government identity proofs, and academic credentials</div>
+        </div>
+
+        <div class="header-right-group">
+            <div class="staff-id-badge">
+                <i class="fas fa-id-card"></i>
+                <?php 
+                $yearCode = !empty($userData['date_of_joining']) ? date("Y", strtotime($userData['date_of_joining'])) : date("Y"); 
+                echo "ID: KKA-" . htmlspecialchars($yearCode); 
+                ?>
+            </div>
+
+            <div class="header-clock">
+                <div class="clock-icon"><i class="fas fa-clock"></i></div>
+                <div class="clock-display">
+                    <span id="liveDate">Loading Date...</span>
+                    <strong id="liveTime">00:00:00</strong>
+                </div>
+            </div>
+
+            <div class="header-user-pill">
+                <span class="header-user-name"><?php echo htmlspecialchars($display_name); ?></span>
+                <a href="../logout.php" class="header-logout-icon" title="Logout">
+                    <i class="fas fa-power-off"></i>
+                </a>
+            </div>
         </div>
     </header>
-<style>
-    .profile-card {
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        max-width: 900px;
-        margin: 20px auto;
-    }
 
-    .form-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-        margin-top: 20px;
-    }
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .form-group label {
-        font-size: 13px;
-        font-weight: 600;
-        color: #475569;
-    }
-
-    .form-group input, .form-group textarea {
-        padding: 10px 14px;
-        border: 1px solid #cbd5e1;
-        border-radius: 10px;
-        font-size: 14px;
-        transition: border-color 0.2s;
-    }
-
-    .form-group input:focus {
-        border-color: var(--orange);
-        outline: none;
-    }
-
-    .btn-save {
-        margin-top: 25px;
-        background: var(--navy);
-        color: white;
-        padding: 12px 24px;
-        border: none;
-        border-radius: 10px;
-        font-weight: 600;
-        cursor: pointer;
-        width: 100%;
-        transition: opacity 0.2s;
-    }
-
-    .btn-save:hover {
-        opacity: 0.9;
-    }
-
-    .avatar-img {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid #f1f5f9;
-    }
-</style>
-
-<div class="profile-card">
-    <form method="POST" enctype="multipart/form-data">
-        <div style="display:flex; align-items:center; gap:25px; padding-bottom:20px; border-bottom: 1px solid #f1f5f9; margin-bottom:25px;">
-            <div style="position:relative;">
-                <img src="../uploads/profile_pics/<?= !empty($userData['profile_pic']) ? $userData['profile_pic'] : 'default-avatar.png' ?>" class="avatar-img" id="output">
-                
-                <?php if(!$is_locked): ?>
-                    <label for="profile_img" style="position:absolute; bottom:5px; right:5px; background:var(--orange); color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; border:2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <i class="fas fa-camera" style="font-size:12px;"></i>
-                    </label>
-                    <input type="file" name="profile_img" id="profile_img" accept="image/*" style="display:none;" onchange="document.getElementById('output').src = URL.createObjectURL(event.target.files[0])">
-                <?php endif; ?>
-            </div>
-            <div>
-                <h3 style="margin:0; color:var(--navy);"><?= htmlspecialchars($userData['email']) ?></h3>
-                <p style="margin:5px 0 0 0; font-size:14px; color:#64748b;">
-                    <?= $is_locked ? "<i class='fas fa-check-circle' style='color:#22c55e;'></i> Profile Verified & Locked" : "Update your profile picture and personal details." ?>
-                </p>
-            </div>
-        </div>
-
-        <div class="form-grid">
-            <div class="form-group">
-                <label>First Name</label>
-                <input type="text" name="first_name" value="<?= htmlspecialchars($userData['first_name'] ?? '') ?>" <?= $is_locked ? 'readonly style="background:#f8fafc; cursor:not-allowed;"' : 'required' ?>>
-            </div>
-            
-            <div class="form-group">
-                <label>Last Name</label>
-                <input type="text" name="last_name" value="<?= htmlspecialchars($userData['last_name'] ?? '') ?>" <?= $is_locked ? 'readonly style="background:#f8fafc; cursor:not-allowed;"' : 'required' ?>>
-            </div>
-
-            <div class="form-group">
-                <label>Aadhaar No</label>
-                <input type="text" name="aadhaar_no" value="<?= htmlspecialchars($userData['aadhaar_no'] ?? '') ?>" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?>>
-            </div>
-
-            <div class="form-group">
-    <label>Aadhaar Card (Photo/PDF)</label>
-    <div style="display:flex; align-items:center; gap:10px;">
-        <input type="file" name="aadhaar_img" accept="image/*,application/pdf" style="flex:1;" <?= $is_locked ? 'disabled' : '' ?>>
-        <?php if(!empty($userData['aadhaar_photo'])): ?>
-            <div style="display:flex; gap:5px;">
-                <a href="../uploads/documents/<?= $userData['aadhaar_photo'] ?>" target="_blank" 
-                   style="background:#f1f5f9; padding:8px 12px; border-radius:8px; color:var(--navy); text-decoration:none; font-size:12px; font-weight:700; border:1px solid #e2e8f0;">
-                    <i class="fas fa-eye"></i> View
-                </a>
-                <?php if(!$is_locked): ?>
-                    <a href="?delete_doc=aadhaar_photo" onclick="return confirm('Delete this document?')" 
-                       style="background:#fee2e2; padding:8px 12px; border-radius:8px; color:#ef4444; border:1px solid #fecaca; text-decoration:none; font-size:12px;">
-                        <i class="fas fa-trash"></i>
-                    </a>
-                <?php endif; ?>
+    <div class="content-body">
+        <?php if (isset($_GET['status']) && $_GET['status'] === 'success'): ?>
+            <div style="max-width:1020px; margin:0 auto 22px; background:var(--green-soft); color:#166534; padding:14px 18px; border-radius:12px; border:1px solid #86efac; border-left:4px solid var(--green-vivid); font-weight:700; font-size:13.5px; display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-check-circle"></i> Profile details updated successfully!
             </div>
         <?php endif; ?>
-    </div>
-</div>
 
-            <div class="form-group">
-                <label>PAN No</label>
-                <input type="text" name="pan_no" value="<?= htmlspecialchars($userData['pan_no'] ?? '') ?>" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?>>
-            </div>
+        <div class="profile-surface">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="profile-hero">
+                    <div class="profile-hero-left">
+                        <div style="position:relative;">
+                            <img src="../uploads/profile_pics/<?php echo htmlspecialchars(!empty($userData['profile_pic']) ? $userData['profile_pic'] : 'default-avatar.png'); ?>" class="avatar-img" id="output" alt="Profile Avatar">
+                            
+                            <?php if(!$is_locked): ?>
+                                <label for="profile_img" title="Update Avatar" style="position:absolute; bottom:3px; right:3px; background:var(--green-primary); color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; border:2px solid var(--yellow-accent); box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                                    <i class="fas fa-camera" style="font-size:12px;"></i>
+                                </label>
+                                <input type="file" name="profile_img" id="profile_img" accept="image/*" style="display:none;" onchange="document.getElementById('output').src = URL.createObjectURL(event.target.files[0])">
+                            <?php endif; ?>
+                        </div>
+                        <div>
+                            <h3 style="margin:0; color:var(--green-deep); font-size:17px; font-weight:800;"><i class="fas fa-envelope" style="color:var(--green-primary); font-size:14px;"></i> <?php echo htmlspecialchars($userData['email']); ?></h3>
+                            <p style="margin:6px 0 0 0; font-size:13px; color:var(--text-muted); font-weight:500;">
+                                <?php echo $is_locked ? "<i class='fas fa-shield-check' style='color:var(--green-vivid);'></i> Profile Verified &amp; Locked" : "<i class='fas fa-pen-to-square' style='color:var(--yellow-warm);'></i> Keep your personal information, KYC proofs, and qualifications up to date."; ?>
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="form-group">
-    <label>PAN Card (Photo/PDF)</label>
-    <div style="display:flex; align-items:center; gap:10px;">
-        <input type="file" name="pan_img" accept="image/*,application/pdf" style="flex:1;" <?= $is_locked ? 'disabled' : '' ?>>
-        <?php if(!empty($userData['pan_photo'])): ?>
-            <div style="display:flex; gap:5px;">
-                <a href="../uploads/documents/<?= $userData['pan_photo'] ?>" target="_blank" 
-                   style="background:#f1f5f9; padding:8px 12px; border-radius:8px; color:var(--navy); text-decoration:none; font-size:12px; font-weight:700; border:1px solid #e2e8f0;">
-                    <i class="fas fa-eye"></i> View
-                </a>
-                <?php if(!$is_locked): ?>
-                    <a href="?delete_doc=pan_photo" onclick="return confirm('Delete this document?')" 
-                       style="background:#fee2e2; padding:8px 12px; border-radius:8px; color:#ef4444; border:1px solid #fecaca; text-decoration:none; font-size:12px;">
-                        <i class="fas fa-trash"></i>
-                    </a>
+                <div class="group-bar" style="margin-top:0;"><i class="fas fa-user-check"></i> Personal &amp; Contact Details</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-user"></i></span> First Name</label>
+                        <input type="text" name="first_name" placeholder="First name" value="<?php echo htmlspecialchars($userData['first_name'] ?? ''); ?>" <?php echo $is_locked ? 'readonly style="background:#f1f5f9; cursor:not-allowed;"' : 'required'; ?>>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-user-tag"></i></span> Last Name</label>
+                        <input type="text" name="last_name" placeholder="Last name" value="<?php echo htmlspecialchars($userData['last_name'] ?? ''); ?>" <?php echo $is_locked ? 'readonly style="background:#f1f5f9; cursor:not-allowed;"' : 'required'; ?>>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-phone"></i></span> Phone</label>
+                        <input type="text" name="phone" placeholder="Primary phone number" value="<?php echo htmlspecialchars($userData['phone'] ?? ''); ?>" <?php echo $is_locked ? 'readonly style="background:#f1f5f9; cursor:not-allowed;"' : ''; ?>>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-phone-volume"></i></span> Emergency Contact</label>
+                        <input type="text" name="emergency_contact" placeholder="Emergency contact number" value="<?php echo htmlspecialchars($userData['emergency_contact'] ?? ''); ?>" <?php echo $is_locked ? 'readonly style="background:#f1f5f9; cursor:not-allowed;"' : ''; ?>>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-cake-candles"></i></span> Date of Birth</label>
+                        <input type="date" name="dob" value="<?php echo htmlspecialchars($userData['dob'] ?? ''); ?>" <?php echo $is_locked ? 'readonly style="background:#f1f5f9; cursor:not-allowed;"' : ''; ?>>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-calendar-check"></i></span> Joining Date</label>
+                        <input type="date" name="date_of_joining" value="<?php echo htmlspecialchars($userData['date_of_joining'] ?? ''); ?>" <?php echo $is_locked ? 'readonly style="background:#f1f5f9; cursor:not-allowed;"' : ''; ?>>
+                    </div>
+
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label><span class="icon-badge"><i class="fas fa-location-dot"></i></span> Full Residential Address</label>
+                        <textarea name="address" rows="3" placeholder="Enter full residential address" <?php echo $is_locked ? 'readonly style="background:#f1f5f9; cursor:not-allowed;"' : ''; ?>><?php echo htmlspecialchars($userData['address'] ?? ''); ?></textarea>
+                    </div>
+                </div>
+
+                <div class="group-bar"><i class="fas fa-id-card-clip"></i> Identity &amp; Academic Documents</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-address-card"></i></span> Aadhaar No</label>
+                        <input type="text" name="aadhaar_no" placeholder="12-digit Aadhaar number" value="<?php echo htmlspecialchars($userData['aadhaar_no'] ?? ''); ?>" <?php echo $is_locked ? 'readonly style="background:#f1f5f9; cursor:not-allowed;"' : ''; ?>>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-file-shield"></i></span> Aadhaar Card (Photo/PDF)</label>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <input type="file" name="aadhaar_img" accept="image/*,application/pdf" style="flex:1; min-width:170px;" <?php echo $is_locked ? 'disabled' : ''; ?>>
+                            <?php if(!empty($userData['aadhaar_photo'])): ?>
+                                <div class="doc-actions">
+                                    <a href="../uploads/documents/<?php echo urlencode($userData['aadhaar_photo']); ?>" target="_blank" class="doc-view-btn">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <?php if(!$is_locked): ?>
+                                        <a href="?delete_doc=aadhaar_photo" onclick="return confirm('Delete this document?')" class="doc-del-btn" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-credit-card"></i></span> PAN No</label>
+                        <input type="text" name="pan_no" placeholder="PAN number" value="<?php echo htmlspecialchars($userData['pan_no'] ?? ''); ?>" <?php echo $is_locked ? 'readonly style="background:#f1f5f9; cursor:not-allowed;"' : ''; ?>>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-file-invoice"></i></span> PAN Card (Photo/PDF)</label>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <input type="file" name="pan_img" accept="image/*,application/pdf" style="flex:1; min-width:170px;" <?php echo $is_locked ? 'disabled' : ''; ?>>
+                            <?php if(!empty($userData['pan_photo'])): ?>
+                                <div class="doc-actions">
+                                    <a href="../uploads/documents/<?php echo urlencode($userData['pan_photo']); ?>" target="_blank" class="doc-view-btn">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <?php if(!$is_locked): ?>
+                                        <a href="?delete_doc=pan_photo" onclick="return confirm('Delete this document?')" class="doc-del-btn" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-graduation-cap"></i></span> 10th Marksheet (Photo/PDF)</label>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <input type="file" name="m10_img" accept="image/*,application/pdf" style="flex:1; min-width:170px;" <?php echo $is_locked ? 'disabled' : ''; ?>>
+                            <?php if(!empty($userData['marksheet_10'])): ?>
+                                <div class="doc-actions">
+                                    <a href="../uploads/documents/<?php echo urlencode($userData['marksheet_10']); ?>" target="_blank" class="doc-view-btn">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <?php if(!$is_locked): ?>
+                                        <a href="?delete_doc=marksheet_10" onclick="return confirm('Delete this document?')" class="doc-del-btn" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-award"></i></span> 12th Marksheet (Photo/PDF)</label>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <input type="file" name="m12_img" accept="image/*,application/pdf" style="flex:1; min-width:170px;" <?php echo $is_locked ? 'disabled' : ''; ?>>
+                            <?php if(!empty($userData['marksheet_12'])): ?>
+                                <div class="doc-actions">
+                                    <a href="../uploads/documents/<?php echo urlencode($userData['marksheet_12']); ?>" target="_blank" class="doc-view-btn">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <?php if(!$is_locked): ?>
+                                        <a href="?delete_doc=marksheet_12" onclick="return confirm('Delete this document?')" class="doc-del-btn" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="group-bar"><i class="fas fa-briefcase"></i> Professional Credentials</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-building"></i></span> Firm Registration No</label>
+                        <input type="text" name="firm_reg_no" placeholder="Firm registration number" value="<?php echo htmlspecialchars($userData['firm_reg_no'] ?? ''); ?>" <?php echo $is_locked ? 'readonly style="background:#f1f5f9; cursor:not-allowed;"' : ''; ?>>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="icon-badge"><i class="fas fa-certificate"></i></span> Professional Degree (PDF, JPG, PNG)</label>
+                        <input type="text" name="prof_qualification" placeholder="Degree Name" value="<?php echo htmlspecialchars($userData['prof_qualification'] ?? ''); ?>" <?php echo $is_locked ? 'readonly style="background:#f1f5f9; cursor:not-allowed;"' : ''; ?> style="margin-bottom:6px;">
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <input type="file" name="prof_doc" accept="image/*,application/pdf" style="flex:1; min-width:170px;" <?php echo $is_locked ? 'disabled' : ''; ?>>
+                            <?php if(!empty($userData['prof_doc_path'])): ?>
+                                <div class="doc-actions">
+                                    <a href="../uploads/documents/<?php echo urlencode($userData['prof_doc_path']); ?>" target="_blank" class="doc-view-btn">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <?php if(!$is_locked): ?>
+                                        <a href="?delete_doc=prof_doc_path" onclick="return confirm('Delete this document?')" class="doc-del-btn" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if (!$is_locked): ?>
+                    <button type="submit" name="update_profile" class="btn-save">
+                        <i class="fas fa-floppy-disk"></i> Save Profile Changes
+                    </button>
+                <?php else: ?>
+                    <div style="margin-top:24px; padding:15px; background:var(--yellow-soft); color:#854d0e; border-radius:12px; border:1px solid #fde047; text-align:center; font-weight:700; font-size:13.5px;">
+                        <i class="fas fa-lock"></i> This profile is verified and locked. Contact the Admin panel to enable editing.
+                    </div>
                 <?php endif; ?>
+            </form>
+        </div>
+
+        <div class="profile-surface" style="border-top-color: var(--yellow-accent);">
+            <h3 style="margin:0 0 18px 0; color:var(--green-deep); font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-database" style="color:var(--green-primary);"></i> Currently Saved Profile Data
+            </h3>
+
+            <div class="summary-grid">
+                <div class="summary-tile">
+                    <span class="summary-label"><i class="fas fa-user"></i> Full Name</span>
+                    <span class="summary-val"><?php echo htmlspecialchars((($userData['first_name'] ?? '-') . ' ' . ($userData['last_name'] ?? ''))); ?></span>
+                </div>
+                <div class="summary-tile">
+                    <span class="summary-label"><i class="fas fa-phone"></i> Phone</span>
+                    <span class="summary-val"><?php echo htmlspecialchars($userData['phone'] ?? 'Not Set'); ?></span>
+                </div>
+                <div class="summary-tile">
+                    <span class="summary-label"><i class="fas fa-calendar-check"></i> Joining Date</span>
+                    <span class="summary-val"><?php echo htmlspecialchars($userData['date_of_joining'] ?? 'Not Set'); ?></span>
+                </div>
+                <div class="summary-tile">
+                    <span class="summary-label"><i class="fas fa-address-card"></i> Aadhaar No</span>
+                    <span class="summary-val"><?php echo htmlspecialchars($userData['aadhaar_no'] ?? 'Not Set'); ?></span>
+                </div>
+                <div class="summary-tile">
+                    <span class="summary-label"><i class="fas fa-credit-card"></i> PAN No</span>
+                    <span class="summary-val"><?php echo htmlspecialchars($userData['pan_no'] ?? 'Not Set'); ?></span>
+                </div>
+                <div class="summary-tile">
+                    <span class="summary-label"><i class="fas fa-phone-volume"></i> Emergency Contact</span>
+                    <span class="summary-val"><?php echo htmlspecialchars($userData['emergency_contact'] ?? 'Not Set'); ?></span>
+                </div>
+                <div class="summary-tile">
+                    <span class="summary-label"><i class="fas fa-building"></i> Firm Reg No</span>
+                    <span class="summary-val"><?php echo htmlspecialchars($userData['firm_reg_no'] ?? 'Not Set'); ?></span>
+                </div>
+                <div class="summary-tile">
+                    <span class="summary-label"><i class="fas fa-graduation-cap"></i> Qualification</span>
+                    <span class="summary-val"><?php echo htmlspecialchars($userData['prof_qualification'] ?? 'Not Set'); ?></span>
+                </div>
+                <div class="summary-tile">
+                    <span class="summary-label"><i class="fas fa-certificate"></i> Prof. Degree</span>
+                    <span class="summary-val">
+                        <?php echo !empty($userData['prof_doc_path']) ? '<span style="color:var(--green-primary);"><i class="fas fa-check-circle"></i> Uploaded</span>' : '<span style="color:var(--danger);"><i class="fas fa-times-circle"></i> Missing</span>'; ?>
+                    </span>
+                </div>
+                <div class="summary-tile" style="grid-column: span 3;">
+                    <span class="summary-label"><i class="fas fa-location-dot"></i> Residential Address</span>
+                    <span class="summary-val"><?php echo htmlspecialchars($userData['address'] ?? 'No address provided'); ?></span>
+                </div>
             </div>
-        <?php endif; ?>
+
+            <div class="group-bar" style="margin-top:22px; margin-bottom:12px;"><i class="fas fa-file-shield"></i> Verification &amp; Documents</div>
+            <div class="docs-grid">
+                <div class="summary-tile">
+                    <span class="summary-label"><i class="fas fa-address-card"></i> Aadhaar Doc</span>
+                    <span class="summary-val">
+                        <?php echo !empty($userData['aadhaar_photo']) ? '<span style="color:var(--green-primary);"><i class="fas fa-check-circle"></i> Uploaded</span>' : '<span style="color:var(--danger);"><i class="fas fa-times-circle"></i> Missing</span>'; ?>
+                    </span>
+                </div>
+                <div class="summary-tile">
+                    <span class="summary-label"><i class="fas fa-file-invoice"></i> PAN Photo</span>
+                    <span class="summary-val">
+                        <?php echo !empty($userData['pan_photo']) ? '<span style="color:var(--green-primary);"><i class="fas fa-check-circle"></i> Uploaded</span>' : '<span style="color:var(--danger);"><i class="fas fa-times-circle"></i> Missing</span>'; ?>
+                    </span>
+                </div>
+                <div class="summary-tile">
+                    <span class="summary-label"><i class="fas fa-graduation-cap"></i> 10th Marksheet</span>
+                    <span class="summary-val">
+                        <?php echo !empty($userData['marksheet_10']) ? '<span style="color:var(--green-primary);"><i class="fas fa-check-circle"></i> Uploaded</span>' : '<span style="color:var(--danger);"><i class="fas fa-times-circle"></i> Missing</span>'; ?>
+                    </span>
+                </div>
+                <div class="summary-tile">
+                    <span class="summary-label"><i class="fas fa-award"></i> 12th Marksheet</span>
+                    <span class="summary-val">
+                        <?php echo !empty($userData['marksheet_12']) ? '<span style="color:var(--green-primary);"><i class="fas fa-check-circle"></i> Uploaded</span>' : '<span style="color:var(--danger);"><i class="fas fa-times-circle"></i> Missing</span>'; ?>
+                    </span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="form-group">
-    <label>10th Marksheet (Photo/PDF)</label>
-    <div style="display:flex; align-items:center; gap:10px;">
-        <input type="file" name="m10_img" accept="image/*,application/pdf" style="flex:1;" <?= $is_locked ? 'disabled' : '' ?>>
-        <?php if(!empty($userData['marksheet_10'])): ?>
-            <div style="display:flex; gap:5px;">
-                <a href="../uploads/documents/<?= $userData['marksheet_10'] ?>" target="_blank" 
-                   style="background:#f1f5f9; padding:8px 12px; border-radius:8px; color:var(--navy); text-decoration:none; font-size:12px; font-weight:700; border:1px solid #e2e8f0;">
-                    <i class="fas fa-graduation-cap"></i> View
-                </a>
-                <?php if(!$is_locked): ?>
-                    <a href="?delete_doc=marksheet_10" onclick="return confirm('Delete this document?')" 
-                       style="background:#fee2e2; padding:8px 12px; border-radius:8px; color:#ef4444; border:1px solid #fecaca; text-decoration:none; font-size:12px;">
-                        <i class="fas fa-trash"></i>
-                    </a>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
-
-<div class="form-group">
-    <label>12th Marksheet (Photo/PDF)</label>
-    <div style="display:flex; align-items:center; gap:10px;">
-        <input type="file" name="m12_img" accept="image/*,application/pdf" style="flex:1;" <?= $is_locked ? 'disabled' : '' ?>>
-        <?php if(!empty($userData['marksheet_12'])): ?>
-            <div style="display:flex; gap:5px;">
-                <a href="../uploads/documents/<?= $userData['marksheet_12'] ?>" target="_blank" 
-                   style="background:#f1f5f9; padding:8px 12px; border-radius:8px; color:var(--navy); text-decoration:none; font-size:12px; font-weight:700; border:1px solid #e2e8f0;">
-                    <i class="fas fa-graduation-cap"></i> View
-                </a>
-                <?php if(!$is_locked): ?>
-                    <a href="?delete_doc=marksheet_12" onclick="return confirm('Delete this document?')" 
-                       style="background:#fee2e2; padding:8px 12px; border-radius:8px; color:#ef4444; border:1px solid #fecaca; text-decoration:none; font-size:12px;">
-                        <i class="fas fa-trash"></i>
-                    </a>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
-            <div class="form-group">
-                <label>Phone</label>
-                <input type="text" name="phone" value="<?= htmlspecialchars($userData['phone'] ?? '') ?>" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?>>
-            </div>
-
-            <div class="form-group">
-                <label>Emergency Contact</label>
-                <input type="text" name="emergency_contact" value="<?= htmlspecialchars($userData['emergency_contact'] ?? '') ?>" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?>>
-            </div>
-
-            <div class="form-group">
-                <label>Date of Birth</label>
-                <input type="date" name="dob" value="<?= $userData['dob'] ?? '' ?>" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?>>
-            </div>
-
-            <div class="form-group">
-                <label>Joining Date</label>
-                <input type="date" name="date_of_joining" value="<?= $userData['date_of_joining'] ?? '' ?>" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?>>
-            </div>
-
-            <div class="form-group" style="grid-column: span 2;">
-                <label>Full Residential Address</label>
-                <textarea name="address" rows="3" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?>><?= htmlspecialchars($userData['address'] ?? '') ?></textarea>
-            </div>
-        </div>
-<div class="form-group">
-    <label>Firm Registration No</label>
-    <input type="text" name="firm_reg_no" value="<?= htmlspecialchars($userData['firm_reg_no'] ?? '') ?>" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?>>
-</div>
-
-<div class="form-group">
-    <label>Professional Degree (PDF, JPG, PNG)</label>
-    <input type="text" name="prof_qualification" placeholder="Degree Name" value="<?= htmlspecialchars($userData['prof_qualification'] ?? '') ?>" <?= $is_locked ? 'readonly style="background:#f8fafc;"' : '' ?> style="margin-bottom:5px;">
-    
-    <div style="display:flex; align-items:center; gap:10px;">
-        <input type="file" name="prof_doc" accept="image/*,application/pdf" style="flex:1;" <?= $is_locked ? 'disabled' : '' ?>>
-        
-        <?php if(!empty($userData['prof_doc_path'])): ?>
-            <div style="display:flex; gap:5px;">
-                <a href="../uploads/documents/<?= $userData['prof_doc_path'] ?>" target="_blank" 
-                   style="background:#f1f5f9; padding:8px 12px; border-radius:8px; color:var(--navy); text-decoration:none; font-size:12px; font-weight:700; border:1px solid #e2e8f0;">
-                    <i class="fas fa-eye"></i> View
-                </a>
-                
-                <?php if(!$is_locked): ?>
-                    <a href="?delete_doc=prof_doc_path" onclick="return confirm('Delete this document?')" 
-                       style="background:#fee2e2; padding:8px 12px; border-radius:8px; color:#ef4444; border:1px solid #fecaca; text-decoration:none; font-size:12px;">
-                        <i class="fas fa-trash"></i>
-                    </a>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-</div>
-        <?php if (!$is_locked): ?>
-            <button type="submit" name="update_profile" class="btn-save">Save Profile Changes</button>
-        <?php else: ?>
-            <div style="margin-top:25px; padding:15px; background:#fff1f2; color:#e11d48; border-radius:12px; border:1px solid #fda4af; text-align:center; font-weight:600; font-size:14px;">
-                <i class="fas fa-lock"></i> This profile is verified and locked. Contact the Admin panel to enable editing.
-            </div>
-        <?php endif; ?>
-    </form>
-</div>
-
-    <div class="card" style="border-left-color: var(--orange); margin-top: 30px;">
-    <h3 style="margin-top:0; color:var(--orange); border-bottom: 1px solid #f1f5f9; padding-bottom: 15px;">
-        <i class="fas fa-database"></i> Currently Saved Profile Data
-    </h3>
-    
-    <div class="info-display-box" style="margin-bottom: 25px;">
-        <div class="info-item">
-            <span class="info-label">Full Name</span>
-            <span class="info-value"><?= htmlspecialchars(($userData['first_name'] ?? '-') . ' ' . ($userData['last_name'] ?? '')) ?></span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Phone</span>
-            <span class="info-value"><?= htmlspecialchars($userData['phone'] ?? 'Not Set') ?></span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Joining Date</span>
-            <span class="info-value"><?= htmlspecialchars($userData['date_of_joining'] ?? 'Not Set') ?></span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Aadhaar No</span>
-            <span class="info-value"><?= htmlspecialchars($userData['aadhaar_no'] ?? 'Not Set') ?></span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">PAN No</span>
-            <span class="info-value"><?= htmlspecialchars($userData['pan_no'] ?? 'Not Set') ?></span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Emergency Contact</span>
-            <span class="info-value"><?= htmlspecialchars($userData['emergency_contact'] ?? 'Not Set') ?></span>
-        </div>
-        <div class="info-item">
-    <span class="info-label">Firm Reg No</span>
-    <span class="info-value"><?= htmlspecialchars($userData['firm_reg_no'] ?? 'Not Set') ?></span>
-</div>
-<div class="info-item">
-    <span class="info-label">Qualification</span>
-    <span class="info-value"><?= htmlspecialchars($userData['prof_qualification'] ?? 'Not Set') ?></span>
-</div>
-
-<div class="info-item">
-    <span class="info-label">Prof. Degree</span>
-    <span class="info-value">
-        <?= !empty($userData['prof_doc_path']) ? '<span style="color:green;">✅ Uploaded</span>' : '<span style="color:red;">❌ Missing</span>' ?>
-    </span>
-</div>
-        <div class="info-item" style="grid-column: span 3;">
-            <span class="info-label">Residential Address</span>
-            <span class="info-value"><?= htmlspecialchars($userData['address'] ?? 'No address provided') ?></span>
-        </div>
-    </div>
-
-    <h4 style="font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">
-        <i class="fas fa-file-shield"></i> Verification & Documents
-    </h4>
-    <div class="info-display-box" style="background: #f8fafc; border-style: solid; grid-template-columns: repeat(4, 1fr);">
-        <div class="info-item">
-            <span class="info-label">Aadhaar Doc</span>
-            <span class="info-value">
-                <?= !empty($userData['aadhaar_photo']) ? '<span style="color:green;">✅ Uploaded</span>' : '<span style="color:red;">❌ Missing</span>' ?>
-            </span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">PAN Photo</span>
-            <span class="info-value">
-                <?= !empty($userData['pan_photo']) ? '<span style="color:green;">✅ Uploaded</span>' : '<span style="color:red;">❌ Missing</span>' ?>
-            </span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">10th Marksheet</span>
-            <span class="info-value">
-                <?= !empty($userData['marksheet_10']) ? '<span style="color:green;">✅ Uploaded</span>' : '<span style="color:red;">❌ Missing</span>' ?>
-            </span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">12th Marksheet</span>
-            <span class="info-value">
-                <?= !empty($userData['marksheet_12']) ? '<span style="color:green;">✅ Uploaded</span>' : '<span style="color:red;">❌ Missing</span>' ?>
-            </span>
-        </div>
-    </div>
-</div>
-</div>
+<script>
+    function updateClock() {
+        const now = new Date();
+        const dateEl = document.getElementById('liveDate');
+        const timeEl = document.getElementById('liveTime');
+        if (dateEl) {
+            dateEl.textContent = now.toLocaleDateString('en-IN', {
+                weekday: 'short',
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+        if (timeEl) {
+            timeEl.textContent = now.toLocaleTimeString('en-IN', { hour12: true });
+        }
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+</script>
 
 </body>
 </html>

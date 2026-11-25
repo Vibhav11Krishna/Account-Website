@@ -8,6 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if($res->num_rows > 0){
         $u = $res->fetch_assoc();
         $_SESSION['user'] = $u;
+        $_SESSION['just_logged_in'] = true;
         if($u['role'] == 'admin') header("Location: office/admin-dashboard.php");
         elseif($u['role'] == 'office') header("Location: office/employee-dashboard.php");
         else header("Location: client/client-dashboard.php");
@@ -148,29 +149,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin-top: 10px;
             box-shadow: 0 10px 20px rgba(11, 60, 116, 0.15);
         }
-.password-container {
-    position: relative;
-    width: 100%;
-}
+        .password-container {
+            position: relative;
+            width: 100%;
+        }
 
-.password-container input {
-    padding-right: 45px; /* Leave space for the icon */
-}
+        .password-container input {
+            padding-right: 45px; /* Leave space for the icon */
+        }
 
-#togglePassword:hover {
-    color: var(--navy) !important;
-}
-.legal-footer a:hover {
-    color: var(--orange) !important;
-}
-.brand-img {
-    display: block;
-    height: 80px;
-    width: auto;
-    margin-left: 0;
-    margin-right: auto;
-    margin-bottom: 1px;
-}
+        #togglePassword:hover {
+            color: var(--navy) !important;
+        }
+        .legal-footer a:hover {
+            color: var(--orange) !important;
+        }
+        .brand-img {
+            display: block;
+            height: 80px;
+            width: auto;
+            margin-left: 0;
+            margin-right: auto;
+            margin-bottom: 1px;
+        }
         .btn-login:hover { background: var(--orange); transform: translateY(-3px); box-shadow: 0 15px 30px rgba(255, 140, 0, 0.2); }
 
         .error { color: #e11d48; background: #fff1f2; padding: 14px; border-radius: 12px; margin-bottom: 25px; font-size: 14px; font-weight: 600; border: 1px solid #ffe4e6; text-align: center; }
@@ -178,43 +179,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         @media (max-width: 1024px) { .image-side { flex: 0.8; padding: 0 5%; } .image-side h1 { font-size: 38px; } }
         @media (max-width: 850px) { .image-side { display: none; } }
         .image-side {
-    position: relative;
-    overflow: hidden;
-    background-color: #0b3c74; /* Fallback color */
-}
+            position: relative;
+            overflow: hidden;
+            background-color: #0b3c74; /* Fallback color */
+        }
 
-/* The overlay gradient stays constant, the image fades behind it */
-.image-side::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(135deg, rgba(11, 60, 116, 0.9), rgba(22, 78, 141, 0.7));
-    z-index: 1;
-}
+        /* The overlay gradient stays constant, the image fades behind it */
+        .image-side::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(11, 60, 116, 0.9), rgba(22, 78, 141, 0.7));
+            z-index: 1;
+        }
 
-.fade-in-out {
-    animation: smoothFade 5s infinite;
-}
+        .fade-in-out {
+            animation: smoothFade 5s infinite;
+        }
 
-@keyframes smoothFade {
-    0%, 20% { opacity: 1; }
-    40%, 60% { opacity: 0.5; }
-    80%, 100% { opacity: 1; }
-}
+        @keyframes smoothFade {
+            0%, 20% { opacity: 1; }
+            40%, 60% { opacity: 0.5; }
+            80%, 100% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-       <div class="image-side" id="hero-side">
-    <div id="bg-layer" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:1; transition: opacity 1.5s ease-in-out; background-size:cover; background-position:center;"></div>
-    
-    <div style="position:relative; z-index:2; width:100%;">
-        <img src="assets/CMA.jpg" alt="CMA Logo" class="brand-img">
-        <h1 id="hero-title">Expert Finance,<br>Excellence Delivered.</h1>
-        <p id="hero-desc">Welcome to the Karunesh Kumar & Associates Digital Portal.</p>
-    </div>
-</div>
+        <div class="image-side" id="hero-side">
+            <div id="bg-layer" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:1; transition: opacity 1.5s ease-in-out; background-size:cover; background-position:center;"></div>
+            
+            <div style="position:relative; z-index:2; width:100%;">
+                <img src="assets/CMA.jpg" alt="CMA Logo" class="brand-img">
+                <h1 id="hero-title">Expert Finance,<br>Excellence Delivered.</h1>
+                <p id="hero-desc">Welcome to the Karunesh Kumar &amp; Associates Digital Portal.</p>
+            </div>
+        </div>
 
         <div class="form-side">
             <a href="index.php" class="back-home">
@@ -227,8 +228,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
 
                 <div class="tab-menu">
-                    <button class="tab-btn active" onclick="switchMode('client', this)">Client Portal</button>
-                    <button class="tab-btn" onclick="switchMode('office', this)">Office Staff</button>
+                    <button type="button" class="tab-btn active" onclick="switchMode('client', this)">Client Portal</button>
+                    <button type="button" class="tab-btn" onclick="switchMode('office', this)">Office Staff</button>
                 </div>
 
                 <?php if(isset($err)) echo "<div class='error'><i class='fas fa-exclamation-circle'></i> $err</div>"; ?>
@@ -239,13 +240,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <input type="text" name="uid" id="uid-field" placeholder="enter your ID" required>
                     </div>
                     
-                 <div class="input-group">
-    <label>Secure Password</label>
-    <div class="password-container" style="position: relative;">
-        <input type="password" name="pass" id="password-field" placeholder="enter your password" required>
-        <i class="far fa-eye" id="togglePassword" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b;"></i>
-    </div>
-</div>
+                    <div class="input-group">
+                        <label>Secure Password</label>
+                        <div class="password-container" style="position: relative;">
+                            <input type="password" name="pass" id="password-field" placeholder="enter your password" required>
+                            <i class="far fa-eye" id="togglePassword" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b;"></i>
+                        </div>
+                    </div>
 
                     <div id="forgot-pass-container" class="forgot-link">
                         <a href="forgot-password.php">Forgot office password?</a>
@@ -253,71 +254,72 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     <button type="submit" class="btn-login">Secure Sign In</button>
                     <div style="display: flex; align-items: flex-start; gap: 10px; margin: 20px 0;">
-    <input type="checkbox" id="agree" required style="width: 16px; height: 16px; cursor: pointer; margin-top: 3px;">
-    <label for="agree" style="font-size: 12px; color: var(--slate); font-weight: 500; text-transform: none;">
-        I agree to the <a href="privacy-policy.php" style="color: var(--navy); text-decoration: none; font-weight: 700;">Privacy Policy</a> and 
-        <a href="terms-of-service.php" style="color: var(--navy); text-decoration: none; font-weight: 700;">Terms of Service</a>.
-    </label>
-</div>
+                        <input type="checkbox" id="agree" required style="width: 16px; height: 16px; cursor: pointer; margin-top: 3px;">
+                        <label for="agree" style="font-size: 12px; color: var(--slate); font-weight: 500; text-transform: none;">
+                            I agree to the <a href="privacy-policy.php" style="color: var(--navy); text-decoration: none; font-weight: 700;">Privacy Policy</a> and 
+                            <a href="terms-of-service.php" style="color: var(--navy); text-decoration: none; font-weight: 700;">Terms of Service</a>.
+                        </label>
+                    </div>
                 </form>
                 <div class="legal-footer" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9; text-align: center;">
-    <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 10px;">
-        <a href="privacy-policy.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Privacy Policy</a>
-        <span style="color: #cbd5e1;">&bull;</span>
-        <a href="terms-of-service.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Terms of Service</a>
-        <span style="color: #cbd5e1;">&bull;</span>
-        <a href="cookies.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Cookies Policy</a>
-    </div>
-    <p style="font-size: 11px; color: #94a3b8;">&copy; 2026 Karunesh Kumar & Associates</p>
-</div>
+                    <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 10px;">
+                        <a href="privacy-policy.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Privacy Policy</a>
+                        <span style="color: #cbd5e1;">&bull;</span>
+                        <a href="terms-of-service.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Terms of Service</a>
+                        <span style="color: #cbd5e1;">&bull;</span>
+                        <a href="cookies.php" style="font-size: 12px; color: var(--slate); text-decoration: none; font-weight: 600;">Cookies Policy</a>
+                    </div>
+                    <p style="font-size: 11px; color: #94a3b8;">&copy; 2026 Karunesh Kumar &amp; Associates</p>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         const heroData = [
-    { image: "assets/Startup7.jpg", title: "Expert Finance,<br>Excellence Delivered.", desc: "Welcome to the Karunesh Kumar & Associates Digital Portal." },
-    { image: "assets/Project.jpg", title: "Strategic Growth,<br>Simplified.", desc: "Empowering your business with precision accounting." },
-    { image: "assets/Registration.jpg", title: "Secure Access,<br>Global Standards.", desc: "Your financial data protected and accessible 24/7." }
-];
+            { image: "assets/Startup7.jpg", title: "Expert Finance,<br>Excellence Delivered.", desc: "Welcome to the Karunesh Kumar & Associates Digital Portal." },
+            { image: "assets/Project.jpg", title: "Strategic Growth,<br>Simplified.", desc: "Empowering your business with precision accounting." },
+            { image: "assets/Registration.jpg", title: "Secure Access,<br>Global Standards.", desc: "Your financial data protected and accessible 24/7." }
+        ];
 
-let currentIndex = 0;
-const bgLayer = document.getElementById('bg-layer');
-const heroTitle = document.getElementById('hero-title');
-const heroDesc = document.getElementById('hero-desc');
+        let currentIndex = 0;
+        const bgLayer = document.getElementById('bg-layer');
+        const heroTitle = document.getElementById('hero-title');
+        const heroDesc = document.getElementById('hero-desc');
 
-// Set initial background
-bgLayer.style.backgroundImage = `url('${heroData[0].image}')`;
+        // Set initial background
+        bgLayer.style.backgroundImage = `url('${heroData[0].image}')`;
 
-function updateHero() {
-    // 1. Fade Out
-    bgLayer.style.opacity = 0;
-    heroTitle.style.opacity = 0;
-    heroDesc.style.opacity = 0;
-    heroTitle.style.transform = "translateY(10px)";
+        function updateHero() {
+            // 1. Fade Out
+            bgLayer.style.opacity = 0;
+            heroTitle.style.opacity = 0;
+            heroDesc.style.opacity = 0;
+            heroTitle.style.transform = "translateY(10px)";
 
-    setTimeout(() => {
-        currentIndex = (currentIndex + 1) % heroData.length;
-        const data = heroData[currentIndex];
+            setTimeout(() => {
+                currentIndex = (currentIndex + 1) % heroData.length;
+                const data = heroData[currentIndex];
 
-        // 2. Change Content while invisible
-        bgLayer.style.backgroundImage = `url('${data.image}')`;
-        heroTitle.innerHTML = data.title;
-        heroDesc.innerText = data.desc;
+                // 2. Change Content while invisible
+                bgLayer.style.backgroundImage = `url('${data.image}')`;
+                heroTitle.innerHTML = data.title;
+                heroDesc.innerText = data.desc;
 
-        // 3. Fade In
-        bgLayer.style.opacity = 1;
-        heroTitle.style.opacity = 1;
-        heroDesc.style.opacity = 0.85;
-        heroTitle.style.transform = "translateY(0)";
-    }, 1500); // This matches the 1.5s transition in CSS
-}
+                // 3. Fade In
+                bgLayer.style.opacity = 1;
+                heroTitle.style.opacity = 1;
+                heroDesc.style.opacity = 0.85;
+                heroTitle.style.transform = "translateY(0)";
+            }, 1500); // This matches the 1.5s transition in CSS
+        }
 
-// Ensure smooth transitions for text too
-heroTitle.style.transition = "all 1s ease-in-out";
-heroDesc.style.transition = "all 1s ease-in-out";
+        // Ensure smooth transitions for text too
+        heroTitle.style.transition = "all 1s ease-in-out";
+        heroDesc.style.transition = "all 1s ease-in-out";
 
-setInterval(updateHero, 6000); // Total cycle time
+        setInterval(updateHero, 6000); // Total cycle time
+
         function switchMode(mode, btn) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -338,17 +340,18 @@ setInterval(updateHero, 6000); // Total cycle time
                 forgot.style.display = 'none';
             }
         }
-        const togglePassword = document.querySelector('#togglePassword');
-const password = document.querySelector('#password-field');
 
-togglePassword.addEventListener('click', function (e) {
-    // toggle the type attribute
-    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-    password.setAttribute('type', type);
-    
-    // toggle the eye / eye slash icon
-    this.classList.toggle('fa-eye-slash');
-});
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password-field');
+
+        togglePassword.addEventListener('click', function (e) {
+            // toggle the type attribute
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            
+            // toggle the eye / eye slash icon
+            this.classList.toggle('fa-eye-slash');
+        });
     </script>
 </body>
 </html>

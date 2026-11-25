@@ -7,6 +7,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'office') {
     header("Location: ../Register.php"); 
     exit();
 }
+
 // 1. Get the email from session
 $user_email = $_SESSION['user']['identifier'];
 
@@ -32,7 +33,6 @@ $updateSuccess = false;
 // Logic to complete a task
 if (isset($_POST['complete_task'])) {
     $tid = $conn->real_escape_string($_POST['task_id']); 
-    // ADDED completed_date=CURDATE() to the query below
     $sql = "UPDATE service_requests 
             SET status='Completed', 
                 completed_date=CURDATE() 
@@ -45,310 +45,1237 @@ if (isset($_POST['complete_task'])) {
 
 // Fetch Counts for the Buttons
 $pendingRes = $conn->query("SELECT COUNT(*) as total FROM service_requests WHERE assigned_to='$email' AND status='Assigned'");
-$pendingCount = $pendingRes->fetch_assoc()['total'];
+$pendingCount = (int)($pendingRes->fetch_assoc()['total'] ?? 0);
 
 $completedRes = $conn->query("SELECT COUNT(*) as total FROM service_requests WHERE assigned_to='$email' AND status='Completed'");
-$completedCount = $completedRes->fetch_assoc()['total'];
+$completedCount = (int)($completedRes->fetch_assoc()['total'] ?? 0);
+
+$totalTasks = $pendingCount + $completedCount;
+$completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) : 0;
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KKA Staff | Workspace</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --navy: #0b3c74;
-            --orange: #ff8c00;
-            --sidebar: #082d56;
-            --bg: #f8fafc;
+            --green-deep: #052e16;
+            --green-forest: #064e3b;
+            --green-primary: #15803d;
+            --green-vivid: #16a34a;
+            --green-soft: #dcfce7;
+            --green-tint: #f0fdf4;
+            --yellow-accent: #eab308;
+            --yellow-warm: #ca8a04;
+            --yellow-soft: #fef9c3;
+            --bg: #f3f7f4;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #4b5563;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+            --border: #d1fae5;
+            --border-neutral: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(21, 128, 61, 0.05);
+            --shadow-md: 0 10px 25px -5px rgba(21, 128, 61, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            display: flex;
             margin: 0;
+            display: flex;
+            min-height: 100vh;
             background: var(--bg);
-            font-family: 'Inter', sans-serif;
-            color: #334155;
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-     .sidebar {
-    width: 280px;
-    background: var(--sidebar);
-    color: white;
-    height: 100vh; /* Keeps the sidebar full height */
-    position: fixed;
-    top: 0;
-    left: 0;
-    padding: 30px 20px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    border-right: 4px solid var(--orange);
-    
-    /* This makes the scrollbar behave correctly */
-    overflow-y: auto;
-    scrollbar-width: thin; /* Firefox: makes the scrollbar thin */
-    scrollbar-color: var(--orange) var(--sidebar); /* Thumb and track color */
-}
-
-/* Chrome, Safari, Edge: Custom Scrollbar Line */
-.sidebar::-webkit-scrollbar {
-    width: 8px; /* Thickness of the side line */
-}
-
-.sidebar::-webkit-scrollbar-track {
-    background: #082d56; /* Darker track */
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-    background-color: var(--orange); /* The "line" you can grab */
-    border-radius: 10px;
-    border: 2px solid #082d56;
-}
-
-        .sidebar h2 {
-            font-size: 22px;
-            color: var(--orange);
-            margin-bottom: 40px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 20px;
+        /* ================= GREEN SIDEBAR ================= */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, var(--green-forest) 0%, var(--green-deep) 100%);
+            color: #ffffff;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 24px 18px;
+            display: flex;
+            flex-direction: column;
+            border-right: 3px solid var(--yellow-accent);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--yellow-accent) var(--green-deep);
+            z-index: 100;
         }
 
-        .sidebar a {
-            color: rgba(255, 255, 255, 0.7);
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: var(--yellow-accent);
+            border-radius: 10px;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 6px 18px 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            margin-bottom: 18px;
+        }
+
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--green-vivid);
+            border: 1.5px solid var(--yellow-accent);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .brand-header h2 {
+            margin: 0;
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.3;
+        }
+
+        .profile-box {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px 12px;
+            margin-bottom: 20px;
+        }
+
+        .avatar-ring {
+            width: 82px;
+            height: 82px;
+            margin: 0 auto 10px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, var(--green-vivid), var(--yellow-accent));
+        }
+
+        .avatar-ring img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #ffffff;
+            display: block;
+        }
+
+        .profile-box h4 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .profile-role {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: rgba(234, 179, 8, 0.16);
+            color: #fef08a;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
+
+        .nav-section-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.45);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 8px 10px;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar nav a {
+            color: rgba(255, 255, 255, 0.78);
             text-decoration: none;
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 14px;
-            margin-bottom: 8px;
-            border-radius: 12px;
-            transition: 0.3s;
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s ease;
         }
 
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border-left: 4px solid var(--orange);
+        .sidebar nav a:hover,
+        .sidebar nav a.active {
+            background: rgba(22, 163, 74, 0.24);
+            color: #ffffff;
+            border-left: 3px solid var(--yellow-accent);
+            padding-left: 17px;
         }
 
         .logout-link {
             margin-top: auto;
-            color: #fda4af !important;
-            background: rgba(244, 63, 94, 0.1);
+            color: #fca5a5 !important;
+            background: rgba(239, 68, 68, 0.14);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            transition: all 0.2s ease;
         }
 
+        .logout-link:hover {
+            background: var(--danger);
+            color: #ffffff !important;
+        }
+
+        /* ================= MAIN & ADMIN-STYLE HEADER ================= */
         .main {
             margin-left: 280px;
-            padding: 50px;
             width: calc(100% - 280px);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Stat Buttons Styling */
-        .stats-container {
+        .admin-top-bar {
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            padding: 14px 40px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            box-shadow: var(--shadow-sm);
+            gap: 16px;
+        }
+
+        .brand-section h1 {
+            margin: 0;
+            font-size: 20px;
+            color: var(--green-deep);
+            font-weight: 800;
+        }
+
+        .welcome-text {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .header-right-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .header-clock {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--green-tint);
+            padding: 7px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .clock-icon i {
+            color: var(--yellow-warm);
+            font-size: 15px;
+        }
+
+        .clock-display {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .clock-display span {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .clock-display strong {
+            font-size: 12px;
+            color: var(--green-deep);
+            font-weight: 700;
+        }
+
+        .header-user-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #ffffff;
+            padding: 5px 6px 5px 14px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-user-name {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--green-primary);
+        }
+
+        .header-logout-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--danger-bg);
+            color: var(--danger);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 12.5px;
+            transition: all 0.2s ease;
+        }
+
+        .header-logout-icon:hover {
+            background: var(--danger);
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .content-body {
+            padding: 32px 40px 48px;
+            flex: 1;
+            width: 100%;
+        }
+
+        /* ================= STAT BUTTONS & PROGRESS ================= */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 16px;
         }
 
         .stat-btn {
-            flex: 1;
-            padding: 20px;
-            border-radius: 15px;
-            border: none;
+            padding: 22px 24px;
+            border-radius: 18px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
             cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            text-align: left;
+            font-family: inherit;
+            transition: all 0.25s ease;
+            box-shadow: var(--shadow-sm);
         }
 
         .stat-btn.pending {
-            background: white;
-            border-left: 5px solid var(--orange);
+            border-left: 5px solid var(--yellow-accent);
         }
 
         .stat-btn.completed {
-            background: white;
-            border-left: 5px solid #22c55e;
+            border-left: 5px solid var(--green-vivid);
         }
 
         .stat-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 15px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow-md);
         }
 
-        .stat-info h3 { margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase; }
-        .stat-info h2 { margin: 5px 0 0; font-size: 24px; color: var(--navy); }
-        .stat-icon { font-size: 24px; opacity: 0.2; }
+        .stat-info h3 {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            font-weight: 700;
+        }
 
+        .stat-info h2 {
+            margin: 6px 0 0;
+            font-size: 28px;
+            color: var(--green-deep);
+            font-weight: 800;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .stat-btn.pending .stat-icon {
+            background: var(--yellow-soft);
+            color: var(--yellow-warm);
+        }
+
+        .stat-btn.completed .stat-icon {
+            background: var(--green-soft);
+            color: var(--green-primary);
+        }
+
+        .progress-strip {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 18px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .progress-track {
+            height: 8px;
+            background: var(--green-soft);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green-primary), var(--green-vivid));
+            border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+
+        /* ================= TOOLBAR ================= */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 240px;
+            max-width: 420px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--green-primary);
+            font-size: 13px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 14px 10px 38px;
+            border: 1.5px solid var(--border-neutral);
+            background: var(--card-bg);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 13px;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-box input:focus {
+            border-color: var(--green-primary);
+            box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.12);
+        }
+
+        .filter-pills {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-pill.active,
+        .filter-pill:hover {
+            background: var(--green-primary);
+            color: #ffffff;
+            border-color: var(--green-primary);
+        }
+
+        /* ================= TASK CARDS ================= */
         .card {
-            background: white;
-            padding: 25px;
+            background: var(--card-bg);
+            padding: 24px;
             border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
-            margin-bottom: 25px;
-            border-left: 5px solid var(--navy);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 18px;
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--green-primary);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
         }
 
         .status-pill {
-            padding: 4px 12px;
+            padding: 5px 12px;
             border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            background: #fff7ed;
-            color: var(--orange);
+            font-size: 11.5px;
+            font-weight: 700;
+            background: var(--yellow-soft);
+            color: #854d0e;
+            border: 1px solid #fde047;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .btn-done {
-            background: #22c55e;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-
-        .alert-success {
-            background: #dcfce7;
-            color: #166534;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #bbf7d0;
+        .meta-row {
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .meta-chip {
+            background: #f8fafc;
+            border: 1px solid var(--border-neutral);
+            padding: 5px 11px;
+            border-radius: 9px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .meta-chip strong {
+            color: var(--green-deep);
+        }
+
+        .desc-box {
+            background: var(--green-tint);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--green-vivid);
+            padding: 13px 16px;
+            border-radius: 12px;
+            color: var(--text-main);
+            margin: 0;
+            font-size: 13.5px;
+            line-height: 1.55;
+        }
+
+        .btn-done {
+            background: var(--green-primary);
+            color: #ffffff;
+            border: none;
+            padding: 11px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-done:hover {
+            background: var(--green-deep);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            background: var(--green-soft);
+            color: var(--green-deep);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid #86efac;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary-link:hover {
+            background: var(--green-primary);
+            color: #ffffff;
+        }
+
+        .alert-success {
+            background: var(--green-soft);
+            color: #166534;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 22px;
+            border: 1px solid #86efac;
+            border-left: 4px solid var(--green-vivid);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 13.5px;
+        }
+
+        @media (max-width: 1024px) {
+            .admin-top-bar {
+                padding: 14px 20px;
+            }
+            .content-body {
+                padding: 24px 20px;
+            }
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="sidebar">
-    <h2 style="font-size: 20px; color: var(--orange); margin-bottom: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 15px; text-align: center;">
-        Karunesh Kumar & Associates Employee
-    </h2>
-    
-    <div style="text-align: center; padding: 5px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
-        <div style="width: 90px; height: 90px; margin: 0 auto 12px; border-radius: 50%; overflow: hidden;  background: #eee; display: flex; align-items: center; justify-content: center;">
-            <img src="../uploads/profile_pics/<?php echo $profile_img; ?>" 
-                 onerror="this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($display_name); ?>&background=0b3c74&color=fff';"
-                 style="width: 100%; height: 100%; object-fit: cover; display: block;">
+    <aside class="sidebar">
+        <div class="brand-header">
+            <div class="brand-logo"><i class="fas fa-leaf"></i></div>
+            <h2>Karunesh Kumar &amp; Associates</h2>
         </div>
-        
-        <h4 style="margin: 0; color: white; font-size: 18px; font-weight: 600; line-height: 1.2;">
-            <?php echo htmlspecialchars($display_name); ?>
-        </h4>
-        <span style="color: var(--orange); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 5px;">
-            <i  style="font-size: 9px;"></i> Office Employee
-        </span>
-    </div>
 
-    <nav style="display: flex; flex-direction: column; gap: 2px;">
-        <a href="employee-dashboard.php" class="active"><i class="fas fa-tasks"></i> My Tasks</a>
-        <a href="work-basket.php"><i class="fas fa-briefcase"></i> Work Basket</a>
-        <a href="employee-payments.php"><i class="fas fa-wallet"></i> Payments</a>
-        <a href="Employee_profiles.php"><i class="fas fa-user-circle"></i> Profile</a>
-        <a href="staff-attendance.php"><i class="fas fa-clock"></i> Attendance</a>
-    </nav>
+        <div class="profile-box">
+            <div class="avatar-ring">
+                <img src="../uploads/profile_pics/<?php echo htmlspecialchars($profile_img); ?>"
+                     onerror="this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($display_name); ?>&background=15803d&color=fff';"
+                     alt="<?php echo htmlspecialchars($display_name); ?>">
+            </div>
+            <h4><?php echo htmlspecialchars($display_name); ?></h4>
+            <span class="profile-role">Office Employee</span>
+        </div>
 
-    <a href="../logout.php" class="logout-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> Logout</a>
-</div>
+        <div class="nav-section-title">Workspace</div>
+        <nav>
+            <a href="employee-dashboard.php" class="active"><i class="fas fa-tasks"></i> My Tasks</a>
+            <a href="work-basket.php"><i class="fas fa-briefcase"></i> Work Basket</a>
+            <a href="employee-payments.php"><i class="fas fa-wallet"></i> Payments</a>
+            <a href="Employee_profiles.php"><i class="fas fa-user-circle"></i> Profile</a>
+            <a href="staff-attendance.php"><i class="fas fa-clock"></i> Attendance</a>
+        </nav>
+
+        <a href="../logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </aside>
 
     <div class="main">
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:40px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0;">
-        <div>
-            <h1 style="margin:0; font-size: 26px;">Welcome, <?php echo htmlspecialchars($first_name); ?>! 👋</h1>
-            <p style="margin: 5px 0 0; color: #64748b; font-size: 14px;">
-                <i class="fas fa-envelope" style="margin-right: 5px;"></i> 
-                <?php echo htmlspecialchars($email); ?>
-            </p>
-            
-        </div>
-    </header>
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-            <h1>Employee Workspace</h1>
-            <div style="background:#dcfce7; color:#166534; padding:10px 20px; border-radius:10px; font-weight:bold;">
-                <i class="fas fa-check-circle"></i> Active Session
+        <header class="admin-top-bar">
+            <div class="brand-section">
+                <h1>Employee Workspace</h1>
+                <div class="welcome-text">
+                    <span>Welcome, <strong><?php echo htmlspecialchars($first_name); ?></strong></span>
+                    <span>&bull;</span>
+                    <span><i class="fas fa-envelope" style="color:var(--green-primary);"></i> <?php echo htmlspecialchars($email); ?></span>
+                </div>
+            </div>
+
+            <div class="header-right-group">
+                <div class="header-clock">
+                    <div class="clock-icon"><i class="fas fa-clock"></i></div>
+                    <div class="clock-display">
+                        <span id="liveDate">Loading Date...</span>
+                        <strong id="liveTime">00:00:00</strong>
+                    </div>
+                </div>
+
+                <div class="header-user-pill">
+                    <span class="header-user-name"><?php echo htmlspecialchars($first_name); ?></span>
+                    <a href="../logout.php" class="header-logout-icon" title="Logout">
+                        <i class="fas fa-power-off"></i>
+                    </a>
+                </div>
             </div>
         </header>
 
-        <div class="stats-container">
-            <button class="stat-btn pending" onclick="location.href='employee-dashboard.php'">
-                <div class="stat-info">
-                    <h3>Pending Tasks</h3>
-                    <h2><?php echo $pendingCount; ?></h2>
-                </div>
-                <i class="fas fa-clock stat-icon" style="color: var(--orange);"></i>
-            </button>
+        <div class="content-body">
+            <div class="stats-container">
+                <button type="button" class="stat-btn pending" onclick="location.href='employee-dashboard.php'">
+                    <div class="stat-info">
+                        <h3>Pending Tasks</h3>
+                        <h2><?php echo $pendingCount; ?></h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </button>
 
-            <button class="stat-btn completed" onclick="location.href='work-basket.php'">
-                <div class="stat-info">
-                    <h3>Completed</h3>
-                    <h2><?php echo $completedCount; ?></h2>
-                </div>
-                <i class="fas fa-check-circle stat-icon" style="color: #22c55e;"></i>
-            </button>
-        </div>
-
-        <?php if ($updateSuccess): ?>
-            <div class="alert-success">
-                <i class="fas fa-thumbs-up"></i> Task successfully moved to completed!
+                <button type="button" class="stat-btn completed" onclick="location.href='work-basket.php'">
+                    <div class="stat-info">
+                        <h3>Completed</h3>
+                        <h2><?php echo $completedCount; ?></h2>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </button>
             </div>
-        <?php endif; ?>
 
-        <?php
-      $tasks = $conn->query("SELECT t.*, cp.company_name 
-                       FROM service_requests t 
-                       LEFT JOIN client_profiles cp ON t.client_id = cp.client_id 
-                       WHERE t.assigned_to='$email' AND t.status='Assigned' 
-                       ORDER BY t.created_at DESC");
-        
-        if ($tasks->num_rows > 0) {
-            while ($t = $tasks->fetch_assoc()) {
-        ?>
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:start;">
-                        <div>
-                            <span class="status-pill"><i class="fas fa-hourglass-half"></i> Work in Progress</span>
-                            <h3 style="margin:15px 0 5px 0;"><?php echo htmlspecialchars($t['service_type']); ?></h3>
-                     <p style="color:#64748b; margin-bottom:15px;">
-    Client: <strong style="color: var(--navy);">
-        <?php echo !empty($t['company_name']) ? htmlspecialchars($t['company_name']) : 'N/A'; ?>
-    </strong> 
-    <span style="font-size: 12px;">(ID: <?php echo htmlspecialchars($t['client_id']); ?>)</span>
-    <span style="margin: 0 10px; color: #cbd5e1;">|</span>
-    Assigned on: <?php echo date('d-m-Y', strtotime($t['assigned_date'])); ?>
-</p>
-                            <p style="background:#f1f5f9; padding:15px; border-radius:10px; font-style:italic; color: #475569;">
-                                "<?php echo nl2br(htmlspecialchars($t['description'])); ?>"
-                            </p>
-                        </div>
-                        <form method="POST" onsubmit="return confirm('Mark this task as finished?');">
-                            <input type="hidden" name="task_id" value="<?php echo $t['id']; ?>">
-                            <button name="complete_task" class="btn-done">
-                                <i class="fas fa-check"></i> Mark as Completed
-                            </button>
-                        </form>
+            <div class="progress-strip">
+                <div class="progress-meta">
+                    <span><i class="fas fa-chart-line" style="color:var(--green-primary);"></i> Overall Task Completion</span>
+                    <span style="color:var(--green-deep);"><?php echo $completedCount; ?> / <?php echo $totalTasks; ?> Done (<?php echo $completionPct; ?>%)</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" style="width: <?php echo $completionPct; ?>%;"></div>
+                </div>
+            </div>
+
+            <?php if ($updateSuccess): ?>
+                <div class="alert-success">
+                    <i class="fas fa-thumbs-up"></i> Task successfully moved to completed!
+                </div>
+            <?php endif; ?>
+
+            <?php
+            $tasks = $conn->query("SELECT t.*, cp.company_name 
+                                   FROM service_requests t 
+                                   LEFT JOIN client_profiles cp ON t.client_id = cp.client_id 
+                                   WHERE t.assigned_to='$email' AND t.status='Assigned' 
+                                   ORDER BY t.created_at DESC");
+
+            if ($tasks && $tasks->num_rows > 0) {
+            ?>
+                <div class="toolbar">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="taskSearch" placeholder="Search by client, service type, or notes..." oninput="filterTasks()">
+                    </div>
+                    <div class="filter-pills">
+                        <button type="button" class="filter-pill active" data-filter="all" onclick="setFilter('all', this)">All Pending</button>
+                        <button type="button" class="filter-pill" data-filter="today" onclick="setFilter('today', this)">Assigned Today</button>
+                        <button type="button" class="filter-pill" data-filter="older" onclick="setFilter('older', this)">Earlier</button>
                     </div>
                 </div>
-        <?php
+
+                <div id="tasksContainer">
+                <?php
+                $todayStr = date('Y-m-d');
+                while ($t = $tasks->fetch_assoc()) {
+                    $assignedYmd = !empty($t['assigned_date']) ? date('Y-m-d', strtotime($t['assigned_date'])) : '';
+                    $isToday = ($assignedYmd === $todayStr) ? 'today' : 'older';
+                    $daysOpen = !empty($t['assigned_date']) ? max(0, (int)floor((time() - strtotime($assignedYmd)) / 86400)) : 0;
+                    $searchBlob = strtolower(($t['service_type'] ?? '') . ' ' . ($t['company_name'] ?? '') . ' ' . ($t['client_id'] ?? '') . ' ' . ($t['description'] ?? ''));
+                ?>
+                    <div class="card task-card" data-age="<?php echo $isToday; ?>" data-search="<?php echo htmlspecialchars($searchBlob, ENT_QUOTES); ?>">
+                        <div style="display:flex; justify-content:space-between; align-items:start; gap:18px; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:260px;">
+                                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                    <span class="status-pill"><i class="fas fa-hourglass-half"></i> Work in Progress</span>
+                                    <span class="meta-chip" style="margin:0;"><i class="fas fa-calendar-day" style="color:var(--green-primary);"></i> <?php echo $daysOpen === 0 ? 'Assigned Today' : $daysOpen . 'd open'; ?></span>
+                                </div>
+
+                                <h3 style="margin:12px 0 10px 0; color:var(--green-deep); font-size:18px; font-weight:800;"><?php echo htmlspecialchars($t['service_type']); ?></h3>
+
+                                <div class="meta-row">
+                                    <span class="meta-chip">
+                                        <i class="fas fa-building" style="color:var(--green-primary);"></i>
+                                        Client: <strong><?php echo !empty($t['company_name']) ? htmlspecialchars($t['company_name']) : 'N/A'; ?></strong>
+                                        <span>(#<?php echo htmlspecialchars($t['client_id']); ?>)</span>
+                                    </span>
+                                    <span class="meta-chip">
+                                        <i class="fas fa-clock" style="color:var(--yellow-warm);"></i>
+                                        Assigned: <strong><?php echo date('d-m-Y', strtotime($t['assigned_date'])); ?></strong>
+                                    </span>
+                                </div>
+
+                                <p class="desc-box"><?php echo nl2br(htmlspecialchars($t['description'])); ?></p>
+                            </div>
+
+                            <form method="POST" onsubmit="return handleCompleteSubmit(this);">
+                                <input type="hidden" name="task_id" value="<?php echo htmlspecialchars($t['id'], ENT_QUOTES); ?>">
+                                <button type="submit" name="complete_task" class="btn-done">
+                                    <i class="fas fa-check"></i> Mark as Completed
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                <?php
+                }
+                ?>
+                </div>
+
+                <div id="noFilterMatch" class="card" style="display:none; text-align:center; padding:32px; color:var(--text-muted);">
+                    <i class="fas fa-filter" style="font-size:24px; color:var(--green-primary); margin-bottom:8px; display:block;"></i>
+                    <strong>No tasks match your current search or filter.</strong>
+                </div>
+            <?php
+            } else {
+                echo "
+                <div class='card' style='text-align:center; border:1px solid var(--border); border-left:5px solid var(--green-vivid); padding: 50px;'>
+                    <i class='fas fa-seedling' style='font-size: 40px; color: var(--green-vivid); opacity: 0.55; margin-bottom: 14px; display:block;'></i>
+                    <h3 style='color: var(--green-deep); margin:0 0 6px 0;'>All caught up! No pending tasks.</h3>
+                    <p style='color: var(--text-muted); margin:0; font-size:13px;'>Review finished items in your Work Basket or log your shift checkout.</p>
+                    <div style='display:flex; justify-content:center; gap:10px; flex-wrap:wrap;'>
+                        <a href='work-basket.php' class='btn-secondary-link'><i class='fas fa-briefcase'></i> View Work Basket</a>
+                        <a href='staff-attendance.php' class='btn-secondary-link' style='background:var(--yellow-soft); color:#854d0e; border-color:#fde047;'><i class='fas fa-clock'></i> Attendance</a>
+                    </div>
+                </div>";
             }
-        } else {
-            echo "
-            <div class='card' style='text-align:center; border:none; padding: 50px;'>
-                <i class='fas fa-coffee' style='font-size: 40px; color: #cbd5e1; margin-bottom: 20px;'></i>
-                <h3 style='color: #64748b;'>All caught up! No pending tasks.</h3>
-            </div>";
-        }
-        ?>
+            ?>
+        </div>
     </div>
+
+    <script>
+        let activeAgeFilter = 'all';
+
+        function setFilter(filterVal, btnEl) {
+            activeAgeFilter = filterVal;
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+            filterTasks();
+        }
+
+        function filterTasks() {
+            const input = document.getElementById('taskSearch');
+            const query = input ? input.value.trim().toLowerCase() : '';
+            const cards = document.querySelectorAll('.task-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const age = card.getAttribute('data-age');
+                const haystack = card.getAttribute('data-search') || '';
+                const matchesAge = (activeAgeFilter === 'all') || (age === activeAgeFilter);
+                const matchesText = !query || haystack.includes(query);
+
+                if (matchesAge && matchesText) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            const emptyMatch = document.getElementById('noFilterMatch');
+            if (emptyMatch) {
+                emptyMatch.style.display = (cards.length > 0 && visibleCount === 0) ? 'block' : 'none';
+            }
+        }
+
+        function handleCompleteSubmit(form) {
+            if (!confirm('Mark this task as finished?')) return false;
+            const btn = form.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing...';
+            }
+            return true;
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const dateEl = document.getElementById('liveDate');
+            const timeEl = document.getElementById('liveTime');
+            if (dateEl) {
+                dateEl.textContent = now.toLocaleDateString('en-IN', {
+                    weekday: 'short',
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            }
+            if (timeEl) {
+                timeEl.textContent = now.toLocaleTimeString('en-IN', { hour12: true });
+            }
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+ <?php
+// Trigger once right after login (set $_SESSION['just_logged_in'] = true; in Register.php on successful login)
+$show_login_anim = !empty($_SESSION['just_logged_in']);
+if ($show_login_anim) {
+    unset($_SESSION['just_logged_in']);
+}
+?>
+<?php if ($show_login_anim): ?>
+<div id="kkaLoginSplash" class="kka-splash" aria-hidden="true">
+    <div class="kka-orb kka-orb-1"></div>
+    <div class="kka-orb kka-orb-2"></div>
+
+    <div class="kka-splash-card">
+        <div class="kka-splash-ring">
+            <div class="kka-splash-emblem">
+                <i class="fas fa-leaf"></i>
+            </div>
+        </div>
+
+        <div class="kka-splash-tag">
+            <i class="fas fa-sparkles"></i> Employee Workspace Suite
+        </div>
+
+        <h2 class="kka-splash-title">Karunesh Kumar &amp; Associates</h2>
+        <p class="kka-splash-sub">Welcome back, <strong><?php echo htmlspecialchars($display_name ?? 'Employee'); ?></strong></p>
+
+        <div class="kka-stage-text" id="kkaStageText">Initializing session &amp; security checks...</div>
+
+        <div class="kka-splash-bar">
+            <div class="kka-splash-bar-fill"></div>
+        </div>
+
+        <div class="kka-splash-footer">
+            <span id="kkaCountdown">Entering workspace in 15s</span>
+            <button type="button" id="kkaSkipBtn" class="kka-skip-btn">
+                Skip <i class="fas fa-forward"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .kka-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        overflow: hidden;
+        background: radial-gradient(circle at top, rgba(6, 78, 59, 0.95), rgba(5, 46, 22, 0.98));
+        backdrop-filter: blur(10px);
+        opacity: 1;
+        transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    .kka-splash.is-hiding {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .kka-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(70px);
+        pointer-events: none;
+        opacity: 0.35;
+    }
+
+    .kka-orb-1 {
+        width: 340px;
+        height: 340px;
+        background: #16a34a;
+        top: -80px;
+        left: -60px;
+        animation: kkaFloatA 15s ease-in-out infinite;
+    }
+
+    .kka-orb-2 {
+        width: 300px;
+        height: 300px;
+        background: #eab308;
+        bottom: -90px;
+        right: -50px;
+        animation: kkaFloatB 15s ease-in-out infinite;
+    }
+
+    .kka-splash-card {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        max-width: 490px;
+        width: 100%;
+        padding: 38px 30px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+        animation: kkaCardIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .kka-splash-ring {
+        width: 84px;
+        height: 84px;
+        margin: 0 auto 18px;
+        border-radius: 24px;
+        padding: 3px;
+        background: linear-gradient(135deg, #16a34a, #eab308);
+        animation: kkaPulse 2.5s ease-in-out infinite;
+    }
+
+    .kka-splash-emblem {
+        width: 100%;
+        height: 100%;
+        border-radius: 21px;
+        background: #064e3b;
+        color: #fef08a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        animation: kkaIconBob 3s ease-in-out infinite;
+    }
+
+    .kka-splash-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        background: rgba(234, 179, 8, 0.16);
+        border: 1px solid rgba(234, 179, 8, 0.35);
+        color: #fef08a;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+    }
+
+    .kka-splash-title {
+        margin: 0;
+        font-size: 25px;
+        font-weight: 800;
+        letter-spacing: -0.3px;
+        background: linear-gradient(90deg, #ffffff 0%, #dcfce7 50%, #fef08a 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: kkaTextSlide 0.9s cubic-bezier(0.22, 1, 0.36, 1) both, kkaShimmer 5s linear infinite;
+    }
+
+    .kka-splash-sub {
+        margin: 10px 0 14px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.86);
+        font-weight: 500;
+    }
+
+    .kka-splash-sub strong {
+        color: #ffffff;
+        font-weight: 700;
+    }
+
+    .kka-stage-text {
+        font-size: 12px;
+        color: #bbf7d0;
+        font-weight: 600;
+        margin-bottom: 14px;
+        min-height: 18px;
+        transition: opacity 0.3s ease;
+    }
+
+    .kka-splash-bar {
+        width: 100%;
+        height: 5px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+        overflow: hidden;
+    }
+
+    .kka-splash-bar-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #16a34a, #eab308);
+        animation: kkaProgress15s 15s linear forwards;
+    }
+
+    .kka-splash-footer {
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 11.5px;
+        color: rgba(255, 255, 255, 0.72);
+        font-weight: 600;
+    }
+
+    .kka-skip-btn {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fef08a;
+        border: 1px solid rgba(234, 179, 8, 0.35);
+        padding: 5px 12px;
+        border-radius: 999px;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s ease;
+    }
+
+    .kka-skip-btn:hover {
+        background: #eab308;
+        color: #052e16;
+    }
+
+    @keyframes kkaCardIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes kkaTextSlide {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes kkaShimmer {
+        0% { background-position: 0% center; }
+        100% { background-position: 200% center; }
+    }
+
+    @keyframes kkaPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    @keyframes kkaIconBob {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+    }
+
+    @keyframes kkaFloatA {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(45px, 35px); }
+    }
+
+    @keyframes kkaFloatB {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(-45px, -35px); }
+    }
+
+    @keyframes kkaProgress15s {
+        from { width: 0%; }
+        to { width: 100%; }
+    }
+</style>
+
+<script>
+    (function () {
+        const splash = document.getElementById('kkaLoginSplash');
+        if (!splash) return;
+
+        const stageEl = document.getElementById('kkaStageText');
+        const countEl = document.getElementById('kkaCountdown');
+        const skipBtn = document.getElementById('kkaSkipBtn');
+
+        const stages = [
+            { at: 0,  text: 'Initializing session & security checks...' },
+            { at: 4,  text: 'Loading assigned client tasks & filings...' },
+            { at: 9,  text: 'Syncing attendance & workspace metrics...' },
+            { at: 13, text: 'Preparing Karunesh Kumar & Associates workspace...' }
+        ];
+
+        let remaining = 15;
+        let dismissed = false;
+
+        function dismissSplash() {
+            if (dismissed) return;
+            dismissed = true;
+            clearInterval(timer);
+            splash.classList.add('is-hiding');
+            setTimeout(() => splash.remove(), 650);
+        }
+
+        function syncText() {
+            const elapsed = 15 - remaining;
+            let currentStage = stages[0].text;
+            for (const s of stages) {
+                if (elapsed >= s.at) currentStage = s.text;
+            }
+            if (stageEl) stageEl.textContent = currentStage;
+            if (countEl) countEl.textContent = 'Entering workspace in ' + Math.max(0, remaining) + 's';
+        }
+
+        syncText();
+
+        const timer = setInterval(() => {
+            remaining--;
+            if (remaining <= 0) {
+                if (countEl) countEl.textContent = 'Entering workspace in 0s';
+                dismissSplash();
+            } else {
+                syncText();
+            }
+        }, 1000);
+
+        if (skipBtn) {
+            skipBtn.addEventListener('click', dismissSplash);
+        }
+    })();
+</script>
+<?php endif; ?>
 </body>
 
 </html>
