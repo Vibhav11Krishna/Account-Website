@@ -5,7 +5,7 @@ include('../db.php');
 // 1. Security & Session Check
 // Redirect if not logged in or if the role is not 'office'
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'office') {
-    header("Location: ../Login.php");
+    header("Location: ../Register.php");
     exit();
 }
 

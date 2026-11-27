@@ -1,35 +1,483 @@
 <?php
 session_start();
 include('../db.php');
+date_default_timezone_set('Asia/Kolkata');
 
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
-    header("Location: ../Login.php");
+if (!isset($_SESSION['user']) || ($_SESSION['user']['role'] ?? '') !== 'admin') {
+    header("Location: ../Register.php");
     exit();
 }
 
-$status_msg = "";
-if (isset($_GET['msg'])) {
-    if ($_GET['msg'] == 'released') $status_msg = "Document released to Client Vault successfully!";
-    if ($_GET['msg'] == 'rejected') $status_msg = "Document sent back to staff with feedback.";
+function ensureAdminReviewSchema(mysqli $conn): void
+{
+    $conn->query(
+        "CREATE TABLE IF NOT EXISTS `work_submissions` (
+            `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            `source_table` VARCHAR(32) NOT NULL DEFAULT 'client_documents',
+            `source_id` INT UNSIGNED NOT NULL DEFAULT 0,
+            `client_id` VARCHAR(100) NOT NULL DEFAULT '',
+            `service_or_doc` VARCHAR(255) NOT NULL DEFAULT '',
+            `staff_email` VARCHAR(190) NOT NULL DEFAULT '',
+            `submission_type` ENUM('document', 'message') NOT NULL DEFAULT 'document',
+            `result_file` VARCHAR(255) DEFAULT NULL,
+            `staff_message` TEXT DEFAULT NULL,
+            `admin_note` TEXT DEFAULT NULL,
+            `review_status` ENUM('Pending Review', 'Released', 'Rejected') NOT NULL DEFAULT 'Pending Review',
+            `submitted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            `reviewed_at` DATETIME DEFAULT NULL,
+            PRIMARY KEY (`id`),
+            KEY `idx_client_status` (`client_id`, `review_status`),
+            KEY `idx_staff_status` (`staff_email`, `review_status`),
+            KEY `idx_source` (`source_table`, `source_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+    );
+
+    $colRes = $conn->query("SHOW COLUMNS FROM `client_documents`");
+    if ($colRes) {
+        $existing = [];
+        while ($c = $colRes->fetch_assoc()) {
+            $existing[strtolower((string)$c['Field'])] = true;
+        }
+        if (!isset($existing['result_file'])) {
+            $conn->query("ALTER TABLE `client_documents` ADD COLUMN `result_file` VARCHAR(255) DEFAULT NULL");
+        }
+        if (!isset($existing['admin_note'])) {
+            $conn->query("ALTER TABLE `client_documents` ADD COLUMN `admin_note` TEXT DEFAULT NULL");
+        }
+        if (!isset($existing['shared_with_client'])) {
+            $conn->query("ALTER TABLE `client_documents` ADD COLUMN `shared_with_client` TINYINT(1) NOT NULL DEFAULT 0");
+        }
+    }
 }
 
-// Logic for Release/Reject stays the same
-if (isset($_POST['release_file'])) {
-    $id = mysqli_real_escape_string($conn, $_POST['doc_id']);
-    $sql = "UPDATE client_documents SET status='Released', admin_note=NULL WHERE id='$id'";
-    if ($conn->query($sql)) {
+function syncDocumentToClientDashboard(mysqli $conn, string $clientId, string $docTitle, string $fileName, string $note = '', string $senderEmail = 'admin'): void
+{
+    $clientId = trim($clientId);
+    if ($clientId === '' || $fileName === '') {
+        return;
+    }
+
+    // Ensure client_documents has a visible 'Released' row for client dashboard queries
+    $chkStmt = $conn->prepare(
+        "SELECT `id` FROM `client_documents`
+         WHERE `client_id` COLLATE utf8mb4_general_ci = ?
+           AND (`result_file` = ? OR `file_name` = ?)
+         ORDER BY `id` DESC LIMIT 1"
+    );
+    if ($chkStmt) {
+        $chkStmt->bind_param("sss", $clientId, $fileName, $fileName);
+        $chkStmt->execute();
+        $chkRes = $chkStmt->get_result();
+        $existingRow = $chkRes ? $chkRes->fetch_assoc() : null;
+        $chkStmt->close();
+
+        if ($existingRow) {
+            $eid = (int)$existingRow['id'];
+            $upd = $conn->prepare(
+                "UPDATE `client_documents`
+                 SET `status` = 'Released',
+                     `doc_category` = 'vault',
+                     `result_file` = COALESCE(NULLIF(`result_file`, ''), ?),
+                     `shared_with_client` = 1
+                 WHERE `id` = ?"
+            );
+            if ($upd) {
+                $upd->bind_param("si", $fileName, $eid);
+                $upd->execute();
+                $upd->close();
+            }
+        } else {
+            $statusReleased = 'Released';
+            $docCat = 'vault';
+            $sharedFlag = 1;
+            $ins = $conn->prepare(
+                "INSERT INTO `client_documents`
+                 (`client_id`, `file_name`, `assigned_to`, `status`, `doc_category`, `category`, `instruction`, `result_file`, `admin_note`, `shared_with_client`, `created_at`)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())"
+            );
+            if ($ins) {
+                $noteStored = $note !== '' ? ("[Admin Direct Send]: " . $note) : "[Admin Direct Send]: Shared to client dashboard";
+                $ins->bind_param(
+                    "sssssssssi",
+                    $clientId,
+                    $docTitle,
+                    $senderEmail,
+                    $statusReleased,
+                    $docCat,
+                    $docTitle,
+                    $note,
+                    $fileName,
+                    $noteStored,
+                    $sharedFlag
+                );
+                $ins->execute();
+                $ins->close();
+            }
+        }
+    }
+
+    // If a dedicated client_vault_documents table exists in your DB, mirror the shared file there too
+    $tblCheck = $conn->query("SHOW TABLES LIKE 'client_vault_documents'");
+    if ($tblCheck && $tblCheck->num_rows > 0) {
+        $vStmt = $conn->prepare(
+            "INSERT INTO `client_vault_documents` (`client_id`, `title`, `file_name`, `notes`, `uploaded_by`, `created_at`)
+             VALUES (?, ?, ?, ?, ?, NOW())"
+        );
+        if ($vStmt) {
+            $vStmt->bind_param("sssss", $clientId, $docTitle, $fileName, $note, $senderEmail);
+            $vStmt->execute();
+            $vStmt->close();
+        }
+    }
+}
+
+$adminName = $_SESSION['user']['name'] ?? 'Admin Executive';
+$lookupId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : 0;
+$lookupIdent = trim((string)($_SESSION['user']['identifier'] ?? ($_SESSION['user']['email'] ?? '')));
+
+if (isset($conn) && $conn instanceof mysqli) {
+    ensureAdminReviewSchema($conn);
+
+    if ($lookupId > 0) {
+        $stmtAdmin = $conn->prepare("SELECT `name` FROM `users` WHERE `id` = ? LIMIT 1");
+        if ($stmtAdmin) {
+            $stmtAdmin->bind_param("i", $lookupId);
+            $stmtAdmin->execute();
+            $resAdmin = $stmtAdmin->get_result();
+            if ($resAdmin && ($rowAdmin = $resAdmin->fetch_assoc()) && !empty($rowAdmin['name'])) {
+                $adminName = $rowAdmin['name'];
+            }
+            $stmtAdmin->close();
+        }
+    } elseif ($lookupIdent !== '') {
+        $stmtAdmin = $conn->prepare("SELECT `name` FROM `users` WHERE `identifier` = ? LIMIT 1");
+        if ($stmtAdmin) {
+            $stmtAdmin->bind_param("s", $lookupIdent);
+            $stmtAdmin->execute();
+            $resAdmin = $stmtAdmin->get_result();
+            if ($resAdmin && ($rowAdmin = $resAdmin->fetch_assoc()) && !empty($rowAdmin['name'])) {
+                $adminName = $rowAdmin['name'];
+            }
+            $stmtAdmin->close();
+        }
+    }
+}
+$initials = strtoupper(substr(trim((string)$adminName), 0, 1) ?: 'A');
+
+$status_msg = "";
+$status_is_error = false;
+if (isset($_GET['msg'])) {
+    if ($_GET['msg'] === 'released') $status_msg = "Document approved and sent to the Client Dashboard!";
+    if ($_GET['msg'] === 'rejected') $status_msg = "Submission sent back to staff with feedback.";
+    if ($_GET['msg'] === 'direct_sent') $status_msg = "Document directly sent to the Client Dashboard!";
+    if ($_GET['msg'] === 'direct_err') {
+        $status_msg = "Please select a client and attach a valid file to send directly.";
+        $status_is_error = true;
+    }
+}
+
+// 1. Approve & Release employee document/message to Client Dashboard
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['release_file'])) {
+    $id = (int)($_POST['doc_id'] ?? 0);
+    if ($id > 0) {
+        $docRow = null;
+        $getDoc = $conn->prepare("SELECT `client_id`, `file_name`, `category`, `result_file`, `admin_note` FROM `client_documents` WHERE `id` = ? LIMIT 1");
+        if ($getDoc) {
+            $getDoc->bind_param("i", $id);
+            $getDoc->execute();
+            $gRes = $getDoc->get_result();
+            if ($gRes) {
+                $docRow = $gRes->fetch_assoc();
+            }
+            $getDoc->close();
+        }
+
+        $stmtRel = $conn->prepare(
+            "UPDATE `client_documents`
+             SET `status` = 'Released', `shared_with_client` = 1, `admin_note` = NULL
+             WHERE `id` = ?"
+        );
+        if ($stmtRel) {
+            $stmtRel->bind_param("i", $id);
+            $stmtRel->execute();
+            $stmtRel->close();
+        }
+
+        $stmtLogRel = $conn->prepare(
+            "UPDATE `work_submissions`
+             SET `review_status` = 'Released', `admin_note` = NULL, `reviewed_at` = NOW()
+             WHERE `source_table` = 'client_documents' AND `source_id` = ? AND `review_status` = 'Pending Review'"
+        );
+        if ($stmtLogRel) {
+            $stmtLogRel->bind_param("i", $id);
+            $stmtLogRel->execute();
+            $stmtLogRel->close();
+        }
+
+        if ($docRow && !empty($docRow['client_id']) && !empty($docRow['result_file'])) {
+            $title = (string)($docRow['file_name'] ?: ($docRow['category'] ?: 'Client Document'));
+            syncDocumentToClientDashboard(
+                $conn,
+                (string)$docRow['client_id'],
+                $title,
+                (string)$docRow['result_file'],
+                '',
+                $lookupIdent !== '' ? $lookupIdent : 'admin'
+            );
+        }
+
         header("Location: admin-review.php?msg=released");
         exit();
     }
 }
 
-if (isset($_POST['reject_file'])) {
-    $id = mysqli_real_escape_string($conn, $_POST['doc_id']);
-    $note = mysqli_real_escape_string($conn, $_POST['reject_note']);
-    $sql = "UPDATE client_documents SET status='Assigned', admin_note='$note' WHERE id='$id'";
-    if ($conn->query($sql)) {
+// 2. Reject / Send back to staff with feedback
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reject_file'])) {
+    $id = (int)($_POST['doc_id'] ?? 0);
+    $note = trim((string)($_POST['reject_note'] ?? ''));
+    if ($id > 0 && $note !== '') {
+        $formattedFeedback = "[Admin Feedback]: " . $note;
+        $stmtRej = $conn->prepare("UPDATE `client_documents` SET `status` = 'Assigned', `admin_note` = ? WHERE `id` = ?");
+        if ($stmtRej) {
+            $stmtRej->bind_param("si", $formattedFeedback, $id);
+            $stmtRej->execute();
+            $stmtRej->close();
+        }
+        $stmtLogRej = $conn->prepare(
+            "UPDATE `work_submissions`
+             SET `review_status` = 'Rejected', `admin_note` = ?, `reviewed_at` = NOW()
+             WHERE `source_table` = 'client_documents' AND `source_id` = ? AND `review_status` = 'Pending Review'"
+        );
+        if ($stmtLogRej) {
+            $stmtLogRej->bind_param("si", $formattedFeedback, $id);
+            $stmtLogRej->execute();
+            $stmtLogRej->close();
+        }
         header("Location: admin-review.php?msg=rejected");
         exit();
+    }
+}
+
+// 3. Direct Admin -> Client Dashboard Document Send
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['direct_send_to_client'])) {
+    $targetClientId = trim((string)($_POST['direct_client_id'] ?? ''));
+    $customDocTitle = trim((string)($_POST['direct_doc_title'] ?? ''));
+    $directNote = trim((string)($_POST['direct_note'] ?? ''));
+    $hasDirectFile = !empty($_FILES['direct_doc_file']['name']);
+
+    if ($targetClientId === '' || !$hasDirectFile) {
+        header("Location: admin-review.php?msg=direct_err");
+        exit();
+    }
+
+    $fileErr = (int)($_FILES['direct_doc_file']['error'] ?? UPLOAD_ERR_NO_FILE);
+    $origName = (string)($_FILES['direct_doc_file']['name'] ?? '');
+    $tmpName = (string)($_FILES['direct_doc_file']['tmp_name'] ?? '');
+
+    if ($fileErr === UPLOAD_ERR_OK && $origName !== '' && is_uploaded_file($tmpName)) {
+        $vaultDir = "../uploads/vault/";
+        if (!is_dir($vaultDir)) {
+            mkdir($vaultDir, 0777, true);
+        }
+        $safeBase = preg_replace('/[^A-Za-z0-9._-]/', '_', basename($origName));
+        $savedName = time() . "_client_" . $safeBase;
+
+        if (move_uploaded_file($tmpName, $vaultDir . $savedName)) {
+            $docLabel = $customDocTitle !== '' ? $customDocTitle : pathinfo($origName, PATHINFO_FILENAME);
+            syncDocumentToClientDashboard(
+                $conn,
+                $targetClientId,
+                $docLabel,
+                $savedName,
+                $directNote,
+                $lookupIdent !== '' ? $lookupIdent : 'admin'
+            );
+            header("Location: admin-review.php?msg=direct_sent");
+            exit();
+        }
+    }
+
+    header("Location: admin-review.php?msg=direct_err");
+    exit();
+}
+
+// Load clients list for Direct Send form
+$clientOptions = [];
+if (isset($conn) && $conn instanceof mysqli) {
+    $cRes = $conn->query("SELECT `client_id`, `company_name`, `owner_name` FROM `client_profiles` ORDER BY `company_name` ASC, `client_id` ASC");
+    if ($cRes) {
+        while ($cRow = $cRes->fetch_assoc()) {
+            $clientOptions[] = $cRow;
+        }
+    }
+}
+
+function renderGroupedSections(mysqli $conn, string $condition, string $section_key): void
+{
+    $sql = "SELECT cd.*,
+                   cp.company_name,
+                   cp.owner_name,
+                   cp.phone AS client_phone,
+                   cp.business_email AS client_email,
+                   ws.submission_type AS logged_type,
+                   ws.staff_message AS logged_message,
+                   ws.submitted_at AS logged_submitted_at,
+                   ws.reviewed_at AS logged_reviewed_at
+            FROM `client_documents` cd
+            LEFT JOIN `client_profiles` cp ON cd.client_id COLLATE utf8mb4_general_ci = cp.client_id
+            LEFT JOIN `work_submissions` ws ON ws.id = (
+                SELECT MAX(ws2.id)
+                FROM `work_submissions` ws2
+                WHERE ws2.source_table = 'client_documents' AND ws2.source_id = cd.id
+            )
+            WHERE $condition
+            ORDER BY cd.id DESC";
+
+    $result = $conn->query($sql);
+    $grouped = [];
+    while ($result && ($row = $result->fetch_assoc())) {
+        $cid = (string)($row['client_id'] ?? 'unassigned');
+        $grouped[$cid]['info'] = [
+            'name' => $row['owner_name'] ?: $cid,
+            'firm' => $row['company_name'] ?: 'Client Profile',
+            'phone' => (string)($row['client_phone'] ?? ''),
+            'email' => (string)($row['client_email'] ?? ''),
+        ];
+        $grouped[$cid]['docs'][] = $row;
+    }
+
+    if (empty($grouped)) {
+        echo "<p style='color:var(--text-muted); padding:24px; background:var(--card-bg); border-radius:16px; border:1px dashed var(--border); font-size:13.5px;'>No items found in this category.</p>";
+        return;
+    }
+
+    foreach ($grouped as $cid => $data) {
+        $folderId = $section_key . "_" . preg_replace('/[^A-Za-z0-9_-]/', '_', $cid);
+        ?>
+        <div class="folder-group">
+            <div class="folder-header" onclick="toggleFolder('<?php echo htmlspecialchars($folderId, ENT_QUOTES); ?>')">
+                <span>
+                    <i class="fas fa-folder" style="color:#fbbf24; margin-right:12px;"></i>
+                    <strong style="color:var(--navy);"><?php echo htmlspecialchars($data['info']['name']); ?></strong>
+                    <small style="color:var(--text-muted); margin-left:6px;">
+                        (<?php echo htmlspecialchars($data['info']['firm']); ?> &bull; <?php echo htmlspecialchars($cid); ?>)
+                    </small>
+                </span>
+                <span style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:11.5px; font-weight:700; background:#eff6ff; color:var(--navy); padding:3px 10px; border-radius:999px;">
+                        <?php echo count($data['docs']); ?> item(s)
+                    </span>
+                    <i class="fas fa-chevron-down" id="icon_<?php echo htmlspecialchars($folderId, ENT_QUOTES); ?>" style="color:var(--text-muted); transition:0.25s;"></i>
+                </span>
+            </div>
+            <div class="folder-content" id="<?php echo htmlspecialchars($folderId, ENT_QUOTES); ?>">
+                <?php foreach ($data['docs'] as $doc) {
+                    $hasResultFile = !empty($doc['result_file']);
+                    $rawStaffMsg = trim((string)($doc['logged_message'] ?? ''));
+                    if ($rawStaffMsg === '' && !empty($doc['admin_note']) && strpos((string)$doc['admin_note'], '[Staff Msg]:') === 0) {
+                        $rawStaffMsg = trim(substr((string)$doc['admin_note'], strlen('[Staff Msg]:')));
+                    }
+                    $isMessageOnly = !$hasResultFile;
+                    $typeBadgeLabel = $isMessageOnly ? 'MESSAGE SUBMISSION' : 'DOCUMENT SUBMISSION';
+                    $typeBadgeBg = $isMessageOnly ? '#fef3c7' : '#dcfce7';
+                    $typeBadgeColor = $isMessageOnly ? '#92400e' : '#166534';
+                    $isReleased = in_array(strtolower(trim((string)($doc['status'] ?? ''))), ['released', 'approved'], true);
+                ?>
+                    <div class="review-card">
+                        <div style="flex:1; min-width:260px;">
+                            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+                                <span style="background:<?php echo $typeBadgeBg; ?>; color:<?php echo $typeBadgeColor; ?>; font-size:10.5px; font-weight:800; padding:3px 10px; border-radius:999px;">
+                                    <i class="fas <?php echo $isMessageOnly ? 'fa-comment-dots' : 'fa-file-alt'; ?>"></i> <?php echo $typeBadgeLabel; ?>
+                                </span>
+                                <?php if ($isReleased): ?>
+                                    <span style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; font-size:10.5px; font-weight:800; padding:3px 10px; border-radius:999px;">
+                                        <i class="fas fa-user-check"></i> Visible on Client Dashboard
+                                    </span>
+                                <?php endif; ?>
+                                <?php if (!empty($doc['logged_submitted_at'])): ?>
+                                    <span style="font-size:11.5px; color:var(--text-muted); font-weight:600;">
+                                        <i class="far fa-clock"></i> Submitted: <?php echo htmlspecialchars((string)$doc['logged_submitted_at']); ?>
+                                    </span>
+                                <?php endif; ?>
+                                <?php if (!empty($doc['logged_reviewed_at'])): ?>
+                                    <span style="font-size:11.5px; color:#047857; font-weight:600;">
+                                        <i class="fas fa-check-double"></i> Reviewed: <?php echo htmlspecialchars((string)$doc['logged_reviewed_at']); ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+
+                            <?php if ($hasResultFile): ?>
+                                <h3 style="margin:0 0 6px 0; font-size:15px; font-weight:700; color:var(--navy);">
+                                    <i class="fas fa-file-pdf" style="color:#ef4444; margin-right:6px;"></i>
+                                    <?php echo htmlspecialchars((string)$doc['result_file']); ?>
+                                </h3>
+                            <?php else: ?>
+                                <h3 style="margin:0 0 6px 0; font-size:15px; font-weight:700; color:var(--navy);">
+                                    <i class="fas fa-envelope-open-text" style="color:var(--orange); margin-right:6px;"></i>
+                                    Message on: <?php echo htmlspecialchars((string)($doc['file_name'] ?? $doc['category'] ?? 'Assigned Work')); ?>
+                                </h3>
+                            <?php endif; ?>
+
+                            <p style="font-size:12.5px; color:var(--text-muted); margin:0 0 10px 0;">
+                                Staff: <strong><?php echo htmlspecialchars((string)($doc['assigned_to'] ?? '')); ?></strong>
+                                <?php if (!empty($doc['category'])): ?>
+                                    &bull; Service: <strong><?php echo htmlspecialchars((string)$doc['category']); ?></strong>
+                                <?php endif; ?>
+                                <?php if (!empty($data['info']['phone'])): ?>
+                                    &bull; Phone: <strong><?php echo htmlspecialchars($data['info']['phone']); ?></strong>
+                                <?php endif; ?>
+                            </p>
+
+                            <?php if (!empty($doc['instruction'])): ?>
+                                <div style="background:#f8fafc; border:1px solid var(--border); padding:9px 12px; border-radius:9px; margin-bottom:10px; font-size:12.5px; color:var(--text-muted);">
+                                    <strong style="color:var(--navy);">Original Instruction:</strong> <?php echo nl2br(htmlspecialchars((string)$doc['instruction'])); ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($rawStaffMsg !== ''): ?>
+                                <div style="background:#fffbeb; border:1px solid #fde68a; border-left:3px solid var(--orange); padding:11px 14px; border-radius:10px; margin-bottom:12px; font-size:13px; color:var(--text-main);">
+                                    <strong style="color:var(--navy); display:block; font-size:11px; text-transform:uppercase; margin-bottom:4px;">
+                                        Employee Message to Admin
+                                    </strong>
+                                    <?php echo nl2br(htmlspecialchars($rawStaffMsg)); ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if (!empty($doc['admin_note']) && strpos((string)$doc['admin_note'], '[Staff Msg]:') !== 0): ?>
+                                <div style="background:#fef2f2; border:1px solid #fecaca; border-left:3px solid var(--danger); padding:10px 14px; border-radius:10px; margin-bottom:12px; font-size:12.5px; color:#991b1b;">
+                                    <?php echo nl2br(htmlspecialchars((string)$doc['admin_note'])); ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($hasResultFile): ?>
+                                <a href="../uploads/vault/<?php echo rawurlencode(basename((string)$doc['result_file'])); ?>" target="_blank" class="btn btn-view">
+                                    <i class="fas fa-eye"></i> View Uploaded File
+                                </a>
+                            <?php endif; ?>
+                        </div>
+
+                        <?php if ($section_key === 'pending'): ?>
+                            <div style="width:270px; max-width:100%;">
+                                <form method="POST">
+                                    <input type="hidden" name="doc_id" value="<?php echo (int)$doc['id']; ?>">
+                                    <button type="submit" name="release_file" class="btn btn-approve">
+                                        <i class="fas fa-share-square"></i> <?php echo $hasResultFile ? 'Send to Client Dashboard' : 'Approve & Mark Reviewed'; ?>
+                                    </button>
+                                </form>
+                                <form method="POST" style="margin-top:10px;">
+                                    <input type="hidden" name="doc_id" value="<?php echo (int)$doc['id']; ?>">
+                                    <textarea name="reject_note" placeholder="Reply or rejection feedback for staff..." required rows="2"></textarea>
+                                    <button type="submit" name="reject_file" class="btn btn-reject">
+                                        <i class="fas fa-times"></i> Reject / Send Back
+                                    </button>
+                                </form>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php } ?>
+            </div>
+        </div>
+        <?php
     }
 }
 ?>
@@ -39,7 +487,7 @@ if (isset($_POST['reject_file'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Review &amp; Release | KKA Admin</title>
+    <title>Quality Control | KKA Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -61,6 +509,7 @@ if (isset($_POST['reject_file'])) {
             --border: #e2e8f0;
             --shadow-sm: 0 2px 8px rgba(11, 60, 116, 0.04);
             --shadow-md: 0 10px 25px -5px rgba(11, 60, 116, 0.08);
+            --shadow-lg: 0 20px 30px -10px rgba(11, 60, 116, 0.12);
         }
 
         * {
@@ -263,7 +712,6 @@ if (isset($_POST['reject_file'])) {
         /* ================= MAIN WORKSPACE ================= */
         .main {
             margin-left: 280px;
-            padding: 0;
             width: calc(100% - 280px);
             min-height: 100vh;
             display: flex;
@@ -378,189 +826,155 @@ if (isset($_POST['reject_file'])) {
         }
 
         .content-body {
-            padding: 32px 40px;
+            padding: 32px 40px 48px;
             flex: 1;
             width: 100%;
         }
 
-        /* Segmented Tab Styling */
-        .tab-wrapper {
-            display: flex;
-            background: #e2e8f0;
-            padding: 5px;
-            border-radius: 14px;
-            width: fit-content;
-            margin-bottom: 24px;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-            flex-wrap: wrap;
-        }
-
-        .tab-trigger {
-            padding: 10px 22px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            font-family: inherit;
-            font-weight: 700;
-            font-size: 13px;
-            color: var(--text-muted);
-            background: transparent;
-            transition: all 0.2s ease;
-        }
-
-        .tab-trigger.active-tab {
-            background: var(--navy);
-            color: white;
-            box-shadow: 0 4px 10px rgba(11, 60, 116, 0.2);
-        }
-
-        .section-content {
-            display: none;
-        }
-
-        .section-content.active-section {
-            display: block;
-        }
-
-        /* Folder & Card UI */
-        .folder-group {
+        .direct-send-card {
             background: var(--card-bg);
-            margin-bottom: 14px;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
             border-radius: 16px;
-            border: 1px solid var(--border);
+            padding: 20px 22px;
             box-shadow: var(--shadow-sm);
-            overflow: hidden;
+            margin-bottom: 24px;
         }
 
-        .folder-header {
-            background: #f8fafc;
-            padding: 16px 22px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            transition: background 0.2s;
+        .direct-send-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-top: 14px;
+            align-items: end;
         }
 
-        .folder-header:hover {
-            background: #f1f5f9;
+        .field-label {
+            display: block;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 5px;
         }
 
-        .folder-content {
-            display: none;
-            padding: 20px;
-            background: #ffffff;
-        }
-
-        .review-card {
-            background: #ffffff;
-            padding: 18px 20px;
-            border-radius: 14px;
-            border: 1px solid var(--border);
-            margin-bottom: 14px;
-            border-left: 4px solid var(--navy);
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .review-card:last-child {
-            margin-bottom: 0;
-        }
-
-        .btn {
-            padding: 9px 16px;
-            border-radius: 10px;
+        .field-input {
+            width: 100%;
+            padding: 9px 11px;
+            border-radius: 9px;
+            border: 1.5px solid var(--border);
             font-family: inherit;
+            font-size: 12.5px;
+            background: #ffffff;
+        }
+
+        .btn-direct {
+            background: var(--navy);
+            color: #ffffff;
+            padding: 10px 16px;
+            border-radius: 9px;
+            border: none;
+            font-family: inherit;
+            font-size: 12.5px;
             font-weight: 700;
             cursor: pointer;
-            border: none;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            font-size: 12.5px;
-            transition: all 0.2s;
-        }
-
-        .btn-approve {
-            background: #16a34a;
-            color: white;
+            gap: 7px;
             width: 100%;
         }
 
-        .btn-approve:hover {
-            background: #15803d;
+        .btn-direct:hover {
+            background: var(--navy-light);
+        }
+
+        .section-heading {
+            margin: 24px 0 12px 0;
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--navy);
+        }
+
+        .section-heading:first-of-type {
+            margin-top: 0;
+        }
+
+        .folder-group {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            margin-bottom: 14px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .folder-header {
+            padding: 14px 18px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .folder-content {
+            display: block;
+            padding: 16px 18px;
+        }
+
+        .review-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 20px;
+            flex-wrap: wrap;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            background: #ffffff;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 9px 14px;
+            border-radius: 9px;
+            font-weight: 700;
+            font-size: 12.5px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            width: 100%;
+        }
+
+        .btn-view {
+            background: #eff6ff;
+            color: var(--navy);
+            width: auto;
+        }
+
+        .btn-approve {
+            background: var(--success);
+            color: #ffffff;
         }
 
         .btn-reject {
             background: var(--danger);
-            color: white;
-            width: 100%;
-        }
-
-        .btn-reject:hover {
-            background: #dc2626;
-        }
-
-        .btn-view {
-            background: #f1f5f9;
-            color: var(--navy);
-            text-decoration: none;
-            border: 1px solid var(--border);
-        }
-
-        .btn-view:hover {
-            background: #e2e8f0;
-        }
-
-        #globalSearch {
-            width: 100%;
-            padding: 12px 18px;
-            border-radius: 12px;
-            border: 1.5px solid var(--border);
-            background: var(--card-bg);
-            box-shadow: var(--shadow-sm);
-            font-family: inherit;
-            font-size: 13.5px;
-            color: var(--text-main);
-            margin-bottom: 20px;
-            outline: none;
-            transition: all 0.2s;
-        }
-
-        #globalSearch:focus {
-            border-color: var(--navy);
-            box-shadow: 0 0 0 3px rgba(11, 60, 116, 0.1);
-        }
-
-        .status-msg {
-            background: #dcfce7;
-            border: 1px solid #86efac;
-            color: #166534;
-            padding: 14px 18px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-weight: 700;
-            font-size: 13.5px;
+            color: #ffffff;
+            margin-top: 8px;
         }
 
         textarea {
             width: 100%;
-            padding: 10px 12px;
-            border-radius: 10px;
+            padding: 9px 11px;
+            border-radius: 9px;
             border: 1.5px solid var(--border);
-            background: #f8fafc;
             font-family: inherit;
             font-size: 12.5px;
-            margin: 8px 0;
-            resize: none;
-            outline: none;
-        }
-
-        textarea:focus {
-            border-color: var(--navy);
-            background: #ffffff;
         }
 
         @media (max-width: 1024px) {
@@ -575,7 +989,6 @@ if (isset($_POST['reject_file'])) {
 </head>
 
 <body>
-    <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="brand-header">
             <div class="brand-logo"><i class="fas fa-shield-alt"></i></div>
@@ -584,17 +997,18 @@ if (isset($_POST['reject_file'])) {
 
         <div class="sidebar-profile">
             <div class="profile-avatar-wrapper">
-                <div class="sidebar-avatar"><i class="fas fa-user-shield"></i></div>
+                <div class="sidebar-avatar"><?php echo htmlspecialchars($initials); ?></div>
                 <div class="online-status"></div>
             </div>
             <div class="profile-info">
-                <strong>Admin Executive</strong>
+                <strong><?php echo htmlspecialchars($adminName); ?></strong>
                 <span>System Administrator</span>
             </div>
         </div>
 
         <div class="sidebar-nav-title">Main Menu</div>
         <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i> Dashboard</a>
+        <a href="admin-profile.php"><i class="fas fa-user-cog"></i> Admin Profile</a>
 
         <div class="dropdown-container">
             <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('billingMenu', 'billChev')">
@@ -656,12 +1070,11 @@ if (isset($_POST['reject_file'])) {
         <a href="../logout.php" style="margin-top:auto; color:#fca5a5;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </aside>
 
-    <!-- Main Workspace -->
     <div class="main">
         <header class="admin-top-bar">
             <div class="brand-section">
-                <h1>Quality Control</h1>
-                <div class="welcome-text">Manage documents grouped by Client Profile</div>
+                <h1>Quality Control &amp; Client Delivery</h1>
+                <div class="welcome-text">Approve employee work for the client dashboard or send a document directly to a client</div>
             </div>
 
             <div class="header-right-group">
@@ -674,7 +1087,7 @@ if (isset($_POST['reject_file'])) {
                 </div>
 
                 <div class="header-user-pill">
-                    <span class="header-user-name">Admin</span>
+                    <span class="header-user-name"><?php echo htmlspecialchars($adminName); ?></span>
                     <a href="../logout.php" class="header-logout-icon" title="Logout">
                         <i class="fas fa-power-off"></i>
                     </a>
@@ -683,91 +1096,71 @@ if (isset($_POST['reject_file'])) {
         </header>
 
         <div class="content-body">
-            <?php if ($status_msg) echo "<div class='status-msg'>" . htmlspecialchars($status_msg) . "</div>"; ?>
+            <?php if ($status_msg !== ''): ?>
+                <div style="background:<?php echo $status_is_error ? '#fef2f2' : '#dcfce7'; ?>; color:<?php echo $status_is_error ? '#991b1b' : '#166534'; ?>; padding:12px 16px; border-radius:12px; font-weight:700; font-size:13px; margin-bottom:18px;">
+                    <?php echo htmlspecialchars($status_msg); ?>
+                </div>
+            <?php endif; ?>
 
-            <input type="text" id="globalSearch" onkeyup="filterEverything()" placeholder="Search clients, companies or files...">
+            <div class="direct-send-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <h2 style="margin:0; font-size:15.5px; font-weight:800; color:var(--navy);">
+                        <i class="fas fa-paper-plane" style="color:var(--orange);"></i> Direct Send Document to Client Dashboard
+                    </h2>
+                    <span style="font-size:12px; color:var(--text-muted);">Send a file straight to a client when you already have it</span>
+                </div>
 
-            <div class="tab-wrapper">
-                <button type="button" class="tab-trigger active-tab" onclick="openSection(this, 'pending-review')">Pending Review</button>
-                <button type="button" class="tab-trigger" onclick="openSection(this, 'rejected-saved')">Saved (Rejected)</button>
-                <button type="button" class="tab-trigger" onclick="openSection(this, 'released-vault')">Released Vault</button>
+                <form method="POST" enctype="multipart/form-data" class="direct-send-grid">
+                    <div>
+                        <label class="field-label" for="direct_client_id">Select Client</label>
+                        <select name="direct_client_id" id="direct_client_id" class="field-input" required>
+                            <option value="">-- Choose Client --</option>
+                            <?php foreach ($clientOptions as $cOpt):
+                                $cidVal = (string)($cOpt['client_id'] ?? '');
+                                $cnameVal = (string)($cOpt['company_name'] ?: ($cOpt['owner_name'] ?: $cidVal));
+                            ?>
+                                <option value="<?php echo htmlspecialchars($cidVal, ENT_QUOTES); ?>">
+                                    <?php echo htmlspecialchars($cnameVal . " (" . $cidVal . ")"); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="field-label" for="direct_doc_title">Document Title (Optional)</label>
+                        <input type="text" name="direct_doc_title" id="direct_doc_title" class="field-input" placeholder="e.g., GST Return Copy">
+                    </div>
+
+                    <div>
+                        <label class="field-label" for="direct_doc_file">Attach Document</label>
+                        <input type="file" name="direct_doc_file" id="direct_doc_file" class="field-input" required>
+                    </div>
+
+                    <div>
+                        <label class="field-label" for="direct_note">Note for Client (Optional)</label>
+                        <input type="text" name="direct_note" id="direct_note" class="field-input" placeholder="Short note for client...">
+                    </div>
+
+                    <div>
+                        <button type="submit" name="direct_send_to_client" class="btn-direct">
+                            <i class="fas fa-upload"></i> Send to Client
+                        </button>
+                    </div>
+                </form>
             </div>
 
-            <div id="pending-review" class="section-content active-section">
-                <?php renderGroupedSections($conn, "cd.status = 'Pending Review'", "pending"); ?>
-            </div>
+            <h2 class="section-heading">Pending Review (Approve to Send to Client Dashboard)</h2>
+            <?php renderGroupedSections($conn, "LOWER(TRIM(COALESCE(cd.status, ''))) = 'pending review'", "pending"); ?>
 
-            <div id="rejected-saved" class="section-content">
-                <?php renderGroupedSections($conn, "cd.status = 'Assigned' AND cd.admin_note IS NOT NULL", "saved"); ?>
-            </div>
+            <h2 class="section-heading">Released / Shared With Client Dashboard</h2>
+            <?php renderGroupedSections($conn, "LOWER(TRIM(COALESCE(cd.status, ''))) IN ('released', 'approved')", "released"); ?>
 
-            <div id="released-vault" class="section-content">
-                <?php renderGroupedSections($conn, "cd.status = 'Released'", "released"); ?>
-            </div>
+            <h2 class="section-heading">Sent Back / In-Progress With Feedback</h2>
+            <?php renderGroupedSections($conn, "LOWER(TRIM(COALESCE(cd.status, ''))) IN ('assigned', 'in-progress') AND cd.admin_note IS NOT NULL AND cd.admin_note <> ''", "feedback"); ?>
         </div>
     </div>
 
-    <?php
-    function renderGroupedSections($conn, $condition, $section_key)
-    {
-        $sql = "SELECT cd.*, cp.company_name, cp.owner_name FROM client_documents cd 
-            LEFT JOIN client_profiles cp ON cd.client_id = cp.client_id 
-            WHERE $condition ORDER BY cd.id DESC";
-        $result = $conn->query($sql);
-        $grouped = [];
-        while ($row = $result->fetch_assoc()) {
-            $grouped[$row['client_id']]['info'] = ['name' => $row['owner_name'], 'firm' => $row['company_name']];
-            $grouped[$row['client_id']]['docs'][] = $row;
-        }
-
-        if (empty($grouped)) {
-            echo "<p style='color:var(--text-muted); padding:24px; background:var(--card-bg); border-radius:16px; border:1px dashed var(--border); font-size:13.5px;'>No items found in this category.</p>";
-            return;
-        }
-
-        foreach ($grouped as $cid => $data) {
-            $folderId = $section_key . "_" . $cid;
-    ?>
-            <div class="folder-group">
-                <div class="folder-header" onclick="toggleFolder('<?php echo htmlspecialchars($folderId, ENT_QUOTES); ?>')">
-                    <span>
-                        <i class="fas fa-folder" style="color:#fbbf24; margin-right:12px;"></i>
-                        <strong style="color:var(--navy);"><?php echo htmlspecialchars($data['info']['name']); ?></strong>
-                        <small style="color:var(--text-muted); margin-left:6px;">(<?php echo htmlspecialchars($data['info']['firm']); ?>)</small>
-                    </span>
-                    <i class="fas fa-chevron-down" id="icon_<?php echo htmlspecialchars($folderId, ENT_QUOTES); ?>" style="color:var(--text-muted); transition:0.25s;"></i>
-                </div>
-                <div class="folder-content" id="<?php echo htmlspecialchars($folderId, ENT_QUOTES); ?>">
-                    <?php foreach ($data['docs'] as $doc) { ?>
-                        <div class="review-card" style="display:flex; justify-content:space-between; align-items:start;">
-                            <div>
-                                <h3 style="margin:0 0 6px 0; font-size:15px; font-weight:700; color:var(--navy);"><i class="fas fa-file-pdf" style="color:#ef4444; margin-right:6px;"></i> <?php echo htmlspecialchars($doc['result_file']); ?></h3>
-                                <p style="font-size:12.5px; color:var(--text-muted); margin:0 0 14px 0;">Staff: <?php echo htmlspecialchars($doc['assigned_to']); ?></p>
-                                <a href="../uploads/vault/<?php echo htmlspecialchars($doc['result_file']); ?>" target="_blank" class="btn btn-view"><i class="fas fa-eye"></i> View</a>
-                            </div>
-                            <?php if ($section_key == 'pending') { ?>
-                                <div style="width:260px; max-width:100%;">
-                                    <form method="POST">
-                                        <input type="hidden" name="doc_id" value="<?php echo htmlspecialchars($doc['id']); ?>">
-                                        <button type="submit" name="release_file" class="btn btn-approve"><i class="fas fa-check"></i> Release</button>
-                                    </form>
-                                    <form method="POST" style="margin-top:10px;">
-                                        <input type="hidden" name="doc_id" value="<?php echo htmlspecialchars($doc['id']); ?>">
-                                        <textarea name="reject_note" placeholder="Feedback..." required rows="2"></textarea>
-                                        <button type="submit" name="reject_file" class="btn btn-reject"><i class="fas fa-times"></i> Reject</button>
-                                    </form>
-                                </div>
-                            <?php } ?>
-                        </div>
-                    <?php } ?>
-                </div>
-            </div>
-    <?php }
-    }
-    ?>
-
     <script>
-        // Live Clock
         function updateClock() {
             const now = new Date();
             const dateEl = document.getElementById('liveDate');
@@ -787,50 +1180,26 @@ if (isset($_POST['reject_file'])) {
         updateClock();
         setInterval(updateClock, 1000);
 
-        function openSection(btn, sectionId) {
-            document.querySelectorAll('.tab-trigger').forEach(t => t.classList.remove('active-tab'));
-            document.querySelectorAll('.section-content').forEach(s => s.classList.remove('active-section'));
-            btn.classList.add('active-tab');
-            document.getElementById(sectionId).classList.add('active-section');
-        }
-
-        function toggleFolder(id) {
-            const content = document.getElementById(id);
-            const icon = document.getElementById('icon_' + id);
-            content.style.display = (content.style.display === "block") ? "none" : "block";
-            if (icon) {
-                icon.style.transform = (content.style.display === "block") ? "rotate(180deg)" : "rotate(0deg)";
+        function toggleMenu(menuId, chevId) {
+            const menu = document.getElementById(menuId);
+            const chev = document.getElementById(chevId);
+            if (menu) {
+                menu.classList.toggle('show-menu');
+            }
+            if (chev) {
+                chev.classList.toggle('rotate-chevron');
             }
         }
 
-        function filterEverything() {
-            let input = document.getElementById('globalSearch').value.toLowerCase();
-            document.querySelectorAll('.folder-group').forEach(folder => {
-                folder.style.display = folder.innerText.toLowerCase().includes(input) ? "block" : "none";
-            });
-        }
-
-        function toggleMenu(menuId, chevronId) {
-            const menu = document.getElementById(menuId);
-            const chevron = document.getElementById(chevronId);
-
-            // Toggle the specific menu clicked
-            menu.classList.toggle('show-menu');
-
-            // Rotate the specific arrow clicked
-            if (chevron) chevron.classList.toggle('rotate-chevron');
-
-            // Optional: Close other menus when opening a new one
-            const allMenus = document.querySelectorAll('.dropdown-content');
-            const allChevrons = document.querySelectorAll('.fa-chevron-down');
-
-            allMenus.forEach((m) => {
-                if (m.id !== menuId) m.classList.remove('show-menu');
-            });
-
-            allChevrons.forEach((c) => {
-                if (c.id !== chevronId) c.classList.remove('rotate-chevron');
-            });
+        function toggleFolder(id) {
+            const el = document.getElementById(id);
+            const icon = document.getElementById('icon_' + id);
+            if (!el) return;
+            const hidden = (el.style.display === 'none');
+            el.style.display = hidden ? 'block' : 'none';
+            if (icon) {
+                icon.style.transform = hidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+            }
         }
     </script>
 </body>

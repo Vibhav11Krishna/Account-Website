@@ -1,57 +1,167 @@
 <?php
 session_start();
 include('../db.php');
+date_default_timezone_set('Asia/Kolkata');
 
 // Security Check
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'office') {
-    header("Location: ../Register.php"); 
+    header("Location: ../Register.php");
     exit();
 }
 
 // 1. Get the email from session
-$user_email = $_SESSION['user']['identifier'];
+$user_email = trim((string)($_SESSION['user']['identifier'] ?? ($_SESSION['user']['email'] ?? '')));
 
 // 2. JOIN using u.id and p.user_id instead of email
-$sql = "SELECT u.name, p.profile_pic, p.first_name 
-        FROM users u 
-        LEFT JOIN employee_profiles p ON u.id = p.user_id 
-        WHERE u.identifier = '$user_email'";
-
-$profileRes = $conn->query($sql);
-
-if ($profileRes) {
-    $user_data = $profileRes->fetch_assoc();
+$user_data = [];
+if (isset($conn) && $conn instanceof mysqli && $user_email !== '') {
+    $stmtProfile = $conn->prepare(
+        "SELECT u.name, p.profile_pic, p.first_name
+         FROM `users` u
+         LEFT JOIN `employee_profiles` p ON u.id = p.user_id
+         WHERE LOWER(TRIM(u.identifier)) = LOWER(TRIM(?))
+         LIMIT 1"
+    );
+    if ($stmtProfile) {
+        $stmtProfile->bind_param("s", $user_email);
+        $stmtProfile->execute();
+        $profileRes = $stmtProfile->get_result();
+        if ($profileRes) {
+            $user_data = $profileRes->fetch_assoc() ?: [];
+        }
+        $stmtProfile->close();
+    }
 }
 
 // 3. Fallback logic
 $display_name = !empty($user_data['name']) ? $user_data['name'] : "Employee";
 $first_name = !empty($user_data['first_name']) ? $user_data['first_name'] : $display_name;
 $profile_img = !empty($user_data['profile_pic']) ? $user_data['profile_pic'] : 'default-avatar.png';
-$email = $_SESSION['user']['identifier'];
+$email = $user_email;
 $updateSuccess = false;
 
 // Logic to complete a task
-if (isset($_POST['complete_task'])) {
-    $tid = $conn->real_escape_string($_POST['task_id']); 
-    $sql = "UPDATE service_requests 
-            SET status='Completed', 
-                completed_date=CURDATE() 
-            WHERE id='$tid' AND assigned_to='$email'";
-            
-    if ($conn->query($sql)) {
-        $updateSuccess = true;
+if (isset($_POST['complete_task']) && isset($conn) && $conn instanceof mysqli) {
+    $tid = (int)($_POST['task_id'] ?? 0);
+    if ($tid > 0 && $email !== '') {
+        $stmtUpd = $conn->prepare(
+            "UPDATE `service_requests`
+             SET `status` = 'Completed',
+                 `completed_date` = CURDATE()
+             WHERE `id` = ? AND LOWER(TRIM(`assigned_to`)) = LOWER(TRIM(?))"
+        );
+        if ($stmtUpd) {
+            $stmtUpd->bind_param("is", $tid, $email);
+            if ($stmtUpd->execute() && $stmtUpd->affected_rows > 0) {
+                $updateSuccess = true;
+            }
+            $stmtUpd->close();
+        }
     }
 }
 
-// Fetch Counts for the Buttons
-$pendingRes = $conn->query("SELECT COUNT(*) as total FROM service_requests WHERE assigned_to='$email' AND status='Assigned'");
-$pendingCount = (int)($pendingRes->fetch_assoc()['total'] ?? 0);
+// Fetch Counts for the Buttons & Incoming Work Notifications
+$pendingCount = 0;
+$completedCount = 0;
+$incomingWorkNotifications = [];
 
-$completedRes = $conn->query("SELECT COUNT(*) as total FROM service_requests WHERE assigned_to='$email' AND status='Completed'");
-$completedCount = (int)($completedRes->fetch_assoc()['total'] ?? 0);
+if (isset($conn) && $conn instanceof mysqli && $email !== '') {
+    $stmtPend = $conn->prepare(
+        "SELECT COUNT(*) AS total
+         FROM `service_requests`
+         WHERE LOWER(TRIM(`assigned_to`)) = LOWER(TRIM(?))
+           AND LOWER(TRIM(COALESCE(`status`, ''))) = 'assigned'"
+    );
+    if ($stmtPend) {
+        $stmtPend->bind_param("s", $email);
+        $stmtPend->execute();
+        $pRes = $stmtPend->get_result();
+        if ($pRes && ($pRow = $pRes->fetch_assoc())) {
+            $pendingCount = (int)($pRow['total'] ?? 0);
+        }
+        $stmtPend->close();
+    }
+
+    $stmtComp = $conn->prepare(
+        "SELECT COUNT(*) AS total
+         FROM `service_requests`
+         WHERE LOWER(TRIM(`assigned_to`)) = LOWER(TRIM(?))
+           AND LOWER(TRIM(COALESCE(`status`, ''))) = 'completed'"
+    );
+    if ($stmtComp) {
+        $stmtComp->bind_param("s", $email);
+        $stmtComp->execute();
+        $cRes = $stmtComp->get_result();
+        if ($cRes && ($cRow = $cRes->fetch_assoc())) {
+            $completedCount = (int)($cRow['total'] ?? 0);
+        }
+        $stmtComp->close();
+    }
+
+    $incomingSrKeys = [];
+    $stmtNotifSr = $conn->prepare(
+        "SELECT sr.id, sr.client_id, sr.service_type, sr.assigned_date, sr.created_at, cp.company_name
+         FROM `service_requests` sr
+         LEFT JOIN `client_profiles` cp ON sr.client_id COLLATE utf8mb4_general_ci = cp.client_id
+         WHERE LOWER(TRIM(sr.assigned_to)) = LOWER(TRIM(?))
+           AND LOWER(TRIM(COALESCE(sr.status, ''))) = 'assigned'
+         ORDER BY sr.id DESC
+         LIMIT 10"
+    );
+    if ($stmtNotifSr) {
+        $stmtNotifSr->bind_param("s", $email);
+        $stmtNotifSr->execute();
+        $nSrRes = $stmtNotifSr->get_result();
+        if ($nSrRes) {
+            while ($srRow = $nSrRes->fetch_assoc()) {
+                $kClient = strtolower(trim((string)($srRow['client_id'] ?? '')));
+                $kService = strtolower(trim((string)($srRow['service_type'] ?? '')));
+                $incomingSrKeys[$kClient . '|' . $kService] = true;
+
+                $incomingWorkNotifications[] = [
+                    'title' => (string)($srRow['service_type'] ?? 'New Assigned Task'),
+                    'client' => !empty($srRow['company_name']) ? (string)$srRow['company_name'] : (string)($srRow['client_id'] ?? 'Client'),
+                    'time' => (string)($srRow['created_at'] ?: ($srRow['assigned_date'] ?? '')),
+                ];
+            }
+        }
+        $stmtNotifSr->close();
+    }
+
+    $stmtNotifDoc = $conn->prepare(
+        "SELECT cd.id, cd.client_id, cd.file_name, cd.category, cd.created_at, cp.company_name
+         FROM `client_documents` cd
+         LEFT JOIN `client_profiles` cp ON cd.client_id COLLATE utf8mb4_general_ci = cp.client_id
+         WHERE LOWER(TRIM(cd.assigned_to)) = LOWER(TRIM(?))
+           AND LOWER(TRIM(COALESCE(cd.status, ''))) = 'assigned'
+         ORDER BY cd.id DESC
+         LIMIT 10"
+    );
+    if ($stmtNotifDoc) {
+        $stmtNotifDoc->bind_param("s", $email);
+        $stmtNotifDoc->execute();
+        $nDocRes = $stmtNotifDoc->get_result();
+        if ($nDocRes) {
+            while ($docRow = $nDocRes->fetch_assoc()) {
+                $kClient = strtolower(trim((string)($docRow['client_id'] ?? '')));
+                $kCat = strtolower(trim((string)($docRow['category'] ?? ($docRow['file_name'] ?? ''))));
+                if (isset($incomingSrKeys[$kClient . '|' . $kCat])) {
+                    continue;
+                }
+                $incomingWorkNotifications[] = [
+                    'title' => (string)($docRow['file_name'] ?: ($docRow['category'] ?? 'New Assigned Document')),
+                    'client' => !empty($docRow['company_name']) ? (string)$docRow['company_name'] : (string)($docRow['client_id'] ?? 'Client'),
+                    'time' => (string)($docRow['created_at'] ?? ''),
+                ];
+            }
+        }
+        $stmtNotifDoc->close();
+    }
+}
 
 $totalTasks = $pendingCount + $completedCount;
 $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) : 0;
+$incomingNotifCount = count($incomingWorkNotifications);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -73,6 +183,7 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
             --yellow-accent: #eab308;
             --yellow-warm: #ca8a04;
             --yellow-soft: #fef9c3;
+            --yellow-border: #facc15;
             --bg: #f3f7f4;
             --card-bg: #ffffff;
             --text-main: #0f172a;
@@ -82,7 +193,7 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
             --border: #d1fae5;
             --border-neutral: #e2e8f0;
             --shadow-sm: 0 2px 8px rgba(21, 128, 61, 0.05);
-            --shadow-md: 0 10px 25px -5px rgba(21, 128, 61, 0.1);
+            --shadow-md: 0 10px 25px -5px rgba(21, 128, 61, 0.12);
         }
 
         * {
@@ -131,7 +242,7 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
             align-items: center;
             gap: 12px;
             padding: 0 6px 18px 6px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            border-bottom: 1px solid rgba(250, 204, 21, 0.25);
             margin-bottom: 18px;
         }
 
@@ -141,7 +252,7 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
             border-radius: 10px;
             background: var(--green-vivid);
             border: 1.5px solid var(--yellow-accent);
-            color: #ffffff;
+            color: #fef08a;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -161,7 +272,7 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
         .profile-box {
             text-align: center;
             background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(250, 204, 21, 0.22);
             border-radius: 16px;
             padding: 16px 12px;
             margin-bottom: 20px;
@@ -197,7 +308,8 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
             margin-top: 6px;
             padding: 3px 10px;
             border-radius: 999px;
-            background: rgba(234, 179, 8, 0.16);
+            background: rgba(234, 179, 8, 0.18);
+            border: 1px solid rgba(250, 204, 21, 0.45);
             color: #fef08a;
             font-size: 10.5px;
             font-weight: 700;
@@ -208,7 +320,8 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
         .nav-section-title {
             font-size: 10px;
             font-weight: 700;
-            color: rgba(255, 255, 255, 0.45);
+            color: #fde047;
+            opacity: 0.75;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin: 0 0 8px 10px;
@@ -235,7 +348,7 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
 
         .sidebar nav a:hover,
         .sidebar nav a.active {
-            background: rgba(22, 163, 74, 0.24);
+            background: linear-gradient(90deg, rgba(22, 163, 74, 0.34), rgba(234, 179, 8, 0.14));
             color: #ffffff;
             border-left: 3px solid var(--yellow-accent);
             padding-left: 17px;
@@ -276,10 +389,10 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255, 255, 255, 0.9);
+            background: linear-gradient(90deg, #ffffff 0%, var(--green-tint) 100%);
             backdrop-filter: blur(12px);
             padding: 14px 40px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 2px solid var(--green-soft);
             position: sticky;
             top: 0;
             z-index: 90;
@@ -292,6 +405,18 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
             font-size: 20px;
             color: var(--green-deep);
             font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-section h1 .title-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--yellow-accent);
+            box-shadow: 0 0 0 3px var(--yellow-soft);
+            display: inline-block;
         }
 
         .welcome-text {
@@ -308,8 +433,118 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
         .header-right-group {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             flex-shrink: 0;
+            position: relative;
+        }
+
+        /* ================= GREEN & YELLOW NEW WORK NOTIFICATION ================= */
+        .notif-btn {
+            position: relative;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1.5px solid var(--yellow-border);
+            background: linear-gradient(135deg, var(--green-tint), var(--yellow-soft));
+            color: var(--green-deep);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .notif-btn:hover {
+            background: var(--green-primary);
+            color: #fef08a;
+            border-color: var(--green-primary);
+            transform: translateY(-1px);
+        }
+
+        .notif-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 5px;
+            border-radius: 999px;
+            background: var(--yellow-accent);
+            color: var(--green-deep);
+            font-size: 10.5px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--green-primary);
+        }
+
+        .notif-dropdown {
+            display: none;
+            position: absolute;
+            top: 52px;
+            right: 0;
+            width: 350px;
+            max-width: 92vw;
+            background: #ffffff;
+            border: 1.5px solid var(--border);
+            border-top: 4px solid var(--yellow-accent);
+            border-radius: 18px;
+            box-shadow: var(--shadow-md);
+            padding: 14px;
+            z-index: 200;
+        }
+
+        .notif-dropdown.open {
+            display: block;
+        }
+
+        .notif-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #bbf7d0;
+            font-size: 12.5px;
+            font-weight: 800;
+            color: var(--green-deep);
+        }
+
+        .notif-pill-yellow {
+            background: var(--yellow-soft);
+            color: #854d0e;
+            border: 1px solid var(--yellow-border);
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 10.5px;
+            font-weight: 800;
+        }
+
+        .notif-item {
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: var(--green-tint);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--green-vivid);
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .notif-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .notif-item-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+            font-size: 11px;
+            color: var(--text-muted);
         }
 
         .header-clock {
@@ -490,7 +725,7 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--green-primary), var(--green-vivid));
+            background: linear-gradient(90deg, var(--green-primary), var(--green-vivid), var(--yellow-accent));
             border-radius: 999px;
             transition: width 0.3s ease;
         }
@@ -575,6 +810,7 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
             margin-bottom: 18px;
             border: 1px solid var(--border);
             border-left: 5px solid var(--green-primary);
+            border-top: 3px solid var(--yellow-accent);
             transition: box-shadow 0.2s ease;
         }
 
@@ -589,7 +825,7 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
             font-weight: 700;
             background: var(--yellow-soft);
             color: #854d0e;
-            border: 1px solid #fde047;
+            border: 1px solid var(--yellow-border);
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -633,7 +869,7 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
         }
 
         .btn-done {
-            background: var(--green-primary);
+            background: linear-gradient(135deg, var(--green-primary), var(--green-vivid));
             color: #ffffff;
             border: none;
             padding: 11px 18px;
@@ -651,6 +887,7 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
 
         .btn-done:hover {
             background: var(--green-deep);
+            color: #fef08a;
             transform: translateY(-1px);
         }
 
@@ -676,13 +913,13 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
         }
 
         .alert-success {
-            background: var(--green-soft);
+            background: linear-gradient(90deg, var(--green-soft), var(--yellow-soft));
             color: #166534;
             padding: 14px 18px;
             border-radius: 12px;
             margin-bottom: 22px;
             border: 1px solid #86efac;
-            border-left: 4px solid var(--green-vivid);
+            border-left: 4px solid var(--yellow-accent);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -737,7 +974,7 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
     <div class="main">
         <header class="admin-top-bar">
             <div class="brand-section">
-                <h1>Employee Workspace</h1>
+                <h1><span class="title-dot"></span> Employee Workspace</h1>
                 <div class="welcome-text">
                     <span>Welcome, <strong><?php echo htmlspecialchars($first_name); ?></strong></span>
                     <span>&bull;</span>
@@ -746,6 +983,37 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
             </div>
 
             <div class="header-right-group">
+                <button type="button" class="notif-btn" id="notifToggleBtn" onclick="toggleNotifDropdown()" title="Incoming Work Notifications">
+                    <i class="fas fa-bell"></i>
+                    <?php if ($incomingNotifCount > 0): ?>
+                        <span class="notif-badge"><?php echo $incomingNotifCount; ?></span>
+                    <?php endif; ?>
+                </button>
+
+                <div class="notif-dropdown" id="notifDropdown">
+                    <div class="notif-header">
+                        <span><i class="fas fa-inbox" style="color:var(--yellow-warm);"></i> Incoming Work</span>
+                        <span class="notif-pill-yellow"><?php echo $incomingNotifCount; ?> New</span>
+                    </div>
+                    <?php if (empty($incomingWorkNotifications)): ?>
+                        <div class="notif-item" style="color:var(--text-muted);">
+                            No new incoming work assigned right now.
+                        </div>
+                    <?php else: ?>
+                        <?php foreach (array_slice($incomingWorkNotifications, 0, 6) as $nw): ?>
+                            <div class="notif-item">
+                                <strong style="color:var(--green-deep);"><?php echo htmlspecialchars($nw['title']); ?></strong>
+                                <div class="notif-item-meta">
+                                    <span><i class="fas fa-building" style="color:var(--green-primary);"></i> <?php echo htmlspecialchars($nw['client']); ?></span>
+                                    <?php if ($nw['time'] !== ''): ?>
+                                        <span class="notif-pill-yellow"><?php echo htmlspecialchars($nw['time']); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+
                 <div class="header-clock">
                     <div class="clock-icon"><i class="fas fa-clock"></i></div>
                     <div class="clock-display">
@@ -803,11 +1071,20 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
             <?php endif; ?>
 
             <?php
-            $tasks = $conn->query("SELECT t.*, cp.company_name 
-                                   FROM service_requests t 
-                                   LEFT JOIN client_profiles cp ON t.client_id = cp.client_id 
-                                   WHERE t.assigned_to='$email' AND t.status='Assigned' 
-                                   ORDER BY t.created_at DESC");
+            $stmtTasks = $conn->prepare(
+                "SELECT t.*, cp.company_name
+                 FROM `service_requests` t
+                 LEFT JOIN `client_profiles` cp ON t.client_id COLLATE utf8mb4_general_ci = cp.client_id
+                 WHERE LOWER(TRIM(t.assigned_to)) = LOWER(TRIM(?))
+                   AND LOWER(TRIM(COALESCE(t.status, ''))) = 'assigned'
+                 ORDER BY t.created_at DESC"
+            );
+            $tasks = false;
+            if ($stmtTasks) {
+                $stmtTasks->bind_param("s", $email);
+                $stmtTasks->execute();
+                $tasks = $stmtTasks->get_result();
+            }
 
             if ($tasks && $tasks->num_rows > 0) {
             ?>
@@ -850,7 +1127,7 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
                                     </span>
                                     <span class="meta-chip">
                                         <i class="fas fa-clock" style="color:var(--yellow-warm);"></i>
-                                        Assigned: <strong><?php echo date('d-m-Y', strtotime($t['assigned_date'])); ?></strong>
+                                        Assigned: <strong><?php echo !empty($t['assigned_date']) ? date('d-m-Y', strtotime($t['assigned_date'])) : '—'; ?></strong>
                                     </span>
                                 </div>
 
@@ -887,55 +1164,15 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
                     </div>
                 </div>";
             }
+            if ($stmtTasks) {
+                $stmtTasks->close();
+            }
             ?>
         </div>
     </div>
 
     <script>
         let activeAgeFilter = 'all';
-
-        function setFilter(filterVal, btnEl) {
-            activeAgeFilter = filterVal;
-            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-            if (btnEl) btnEl.classList.add('active');
-            filterTasks();
-        }
-
-        function filterTasks() {
-            const input = document.getElementById('taskSearch');
-            const query = input ? input.value.trim().toLowerCase() : '';
-            const cards = document.querySelectorAll('.task-card');
-            let visibleCount = 0;
-
-            cards.forEach(card => {
-                const age = card.getAttribute('data-age');
-                const haystack = card.getAttribute('data-search') || '';
-                const matchesAge = (activeAgeFilter === 'all') || (age === activeAgeFilter);
-                const matchesText = !query || haystack.includes(query);
-
-                if (matchesAge && matchesText) {
-                    card.style.display = '';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-
-            const emptyMatch = document.getElementById('noFilterMatch');
-            if (emptyMatch) {
-                emptyMatch.style.display = (cards.length > 0 && visibleCount === 0) ? 'block' : 'none';
-            }
-        }
-
-        function handleCompleteSubmit(form) {
-            if (!confirm('Mark this task as finished?')) return false;
-            const btn = form.querySelector('button[type="submit"]');
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing...';
-            }
-            return true;
-        }
 
         function updateClock() {
             const now = new Date();
@@ -955,8 +1192,63 @@ $completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100) 
         }
         updateClock();
         setInterval(updateClock, 1000);
+
+        function toggleNotifDropdown() {
+            const dd = document.getElementById('notifDropdown');
+            if (dd) dd.classList.toggle('open');
+        }
+
+        document.addEventListener('click', function (e) {
+            const btn = document.getElementById('notifToggleBtn');
+            const dd = document.getElementById('notifDropdown');
+            if (dd && btn && !dd.contains(e.target) && !btn.contains(e.target)) {
+                dd.classList.remove('open');
+            }
+        });
+
+        function setFilter(filterVal, btnEl) {
+            activeAgeFilter = filterVal;
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+            filterTasks();
+        }
+
+        function filterTasks() {
+            const input = document.getElementById('taskSearch');
+            const query = input ? input.value.trim().toLowerCase() : '';
+            const cards = document.querySelectorAll('.task-card');
+            const noMatch = document.getElementById('noFilterMatch');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const age = card.getAttribute('data-age');
+                const haystack = card.getAttribute('data-search') || '';
+                const matchesAge = (activeAgeFilter === 'all') || (age === activeAgeFilter);
+                const matchesText = !query || haystack.includes(query);
+
+                if (matchesAge && matchesText) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (noMatch) {
+                noMatch.style.display = (visibleCount === 0 && cards.length > 0) ? 'block' : 'none';
+            }
+        }
+
+        function handleCompleteSubmit(formEl) {
+            const btn = formEl.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing...';
+            }
+            return true;
+        }
     </script>
- <?php
+     <?php
 // Trigger once right after login (set $_SESSION['just_logged_in'] = true; in Register.php on successful login)
 $show_login_anim = !empty($_SESSION['just_logged_in']);
 if ($show_login_anim) {

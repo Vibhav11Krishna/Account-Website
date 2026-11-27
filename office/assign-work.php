@@ -1,30 +1,87 @@
 <?php
 session_start();
 include('../db.php');
+date_default_timezone_set('Asia/Kolkata');
 
-// Security Check
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
+if (!isset($_SESSION['user']) || ($_SESSION['user']['role'] ?? '') !== 'admin') {
     header("Location: ../Register.php");
     exit();
 }
 
-// --- COMBINED MASTER DISPATCH LOGIC ---
-if (isset($_POST['master_dispatch'])) {
-    $client_id = mysqli_real_escape_string($conn, $_POST['client_id']);
-    $staff_email = mysqli_real_escape_string($conn, $_POST['staff_email']);
-    $service_name = mysqli_real_escape_string($conn, $_POST['service_name']);
-    $instruction = mysqli_real_escape_string($conn, $_POST['instruction']);
-    $doc_type = mysqli_real_escape_string($conn, $_POST['doc_type']);
+$adminName = $_SESSION['user']['name'] ?? 'Admin Executive';
+$lookupId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : 0;
+$lookupIdent = trim((string)($_SESSION['user']['identifier'] ?? ($_SESSION['user']['email'] ?? '')));
 
-    // 1. Create the Task with Assigned Date (CURDATE())
-    $sql_task = "INSERT INTO service_requests (client_id, service_type, description, assigned_to, status, assigned_date, created_at) 
-                 VALUES ('$client_id', '$service_name', '$instruction', '$staff_email', 'Assigned', CURDATE(), NOW())";
-    $conn->query($sql_task);
+if (isset($conn) && $conn instanceof mysqli) {
+    if ($lookupId > 0) {
+        $stmtAdmin = $conn->prepare("SELECT `name` FROM `users` WHERE `id` = ? LIMIT 1");
+        if ($stmtAdmin) {
+            $stmtAdmin->bind_param("i", $lookupId);
+            $stmtAdmin->execute();
+            $resAdmin = $stmtAdmin->get_result();
+            if ($resAdmin && ($rowAdmin = $resAdmin->fetch_assoc()) && !empty($rowAdmin['name'])) {
+                $adminName = $rowAdmin['name'];
+            }
+            $stmtAdmin->close();
+        }
+    } elseif ($lookupIdent !== '') {
+        $stmtAdmin = $conn->prepare("SELECT `name` FROM `users` WHERE `identifier` = ? LIMIT 1");
+        if ($stmtAdmin) {
+            $stmtAdmin->bind_param("s", $lookupIdent);
+            $stmtAdmin->execute();
+            $resAdmin = $stmtAdmin->get_result();
+            if ($resAdmin && ($rowAdmin = $resAdmin->fetch_assoc()) && !empty($rowAdmin['name'])) {
+                $adminName = $rowAdmin['name'];
+            }
+            $stmtAdmin->close();
+        }
+    }
+}
+$initials = strtoupper(substr(trim((string)$adminName), 0, 1) ?: 'A');
 
-    // 2. IF FILES ARE UPLOADED
-    if (!empty($_FILES["doc_file"]["name"][0])) {
+$flash_msg = "";
+$flash_type = "success";
+if (!empty($_SESSION['assign_flash_msg'])) {
+    $flash_msg = (string)$_SESSION['assign_flash_msg'];
+    $flash_type = (string)($_SESSION['assign_flash_type'] ?? 'success');
+    unset($_SESSION['assign_flash_msg'], $_SESSION['assign_flash_type']);
+}
+
+// --- 1. COMBINED MASTER DISPATCH (DOCUMENT OR MESSAGE/TASK) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['master_dispatch'])) {
+    $client_id = trim((string)($_POST['client_id'] ?? ''));
+    $staff_email = trim((string)($_POST['staff_email'] ?? ''));
+    $service_select = trim((string)($_POST['service_select'] ?? ''));
+    $service_category = trim((string)($_POST['service_category'] ?? ''));
+    $service_name = $service_category !== '' ? $service_category : ($service_select !== '' ? $service_select : 'General Work');
+    $instruction = trim((string)($_POST['instruction'] ?? ''));
+    $doc_type_raw = $_POST['doc_type'] ?? 'center';
+    $doc_type = in_array($doc_type_raw, ['center', 'vault', 'message_task'], true) ? $doc_type_raw : 'center';
+
+    $has_files = !empty($_FILES["doc_file"]["name"][0]);
+
+    if ($client_id === '' || $staff_email === '') {
+        $_SESSION['assign_flash_msg'] = "Please select both a Target Client and an Employee.";
+        $_SESSION['assign_flash_type'] = "error";
+        header("Location: assign-work.php");
+        exit();
+    }
+
+    // Create task record in service_requests
+    $stmtTask = $conn->prepare(
+        "INSERT INTO `service_requests`
+         (`client_id`, `service_type`, `description`, `assigned_to`, `status`, `assigned_date`, `created_at`)
+         VALUES (?, ?, ?, ?, 'Assigned', CURDATE(), NOW())"
+    );
+    if ($stmtTask) {
+        $stmtTask->bind_param("ssss", $client_id, $service_name, $instruction, $staff_email);
+        $stmtTask->execute();
+        $stmtTask->close();
+    }
+
+    if ($has_files) {
         $target_dir = "../uploads/center/";
-        if (!file_exists($target_dir)) {
+        if (!is_dir($target_dir)) {
             mkdir($target_dir, 0777, true);
         }
 
@@ -32,70 +89,125 @@ if (isset($_POST['master_dispatch'])) {
         $success_count = 0;
 
         for ($i = 0; $i < $total_files; $i++) {
-            $original_name = $_FILES["doc_file"]["name"][$i];
-            $file_tmp = $_FILES["doc_file"]["tmp_name"][$i];
+            $original_name = (string)($_FILES["doc_file"]["name"][$i] ?? '');
+            $file_tmp = (string)($_FILES["doc_file"]["tmp_name"][$i] ?? '');
+            $file_err = (int)($_FILES["doc_file"]["error"][$i] ?? UPLOAD_ERR_NO_FILE);
 
-            // Unique filename: time + index + name
-            $file_name = time() . "_" . $i . "_" . basename($original_name);
+            if ($file_err === UPLOAD_ERR_OK && $original_name !== '' && is_uploaded_file($file_tmp)) {
+                $safe_base = preg_replace('/[^A-Za-z0-9._-]/', '_', basename($original_name));
+                $file_name = time() . "_" . $i . "_" . $safe_base;
 
-            if (move_uploaded_file($file_tmp, $target_dir . $file_name)) {
-                $sql_doc = "INSERT INTO client_documents 
-                            (client_id, file_name, assigned_to, status, doc_category, category, instruction, created_at) 
-                            VALUES 
-                            ('$client_id', '$file_name', '$staff_email', 'In-Progress', '$doc_type', '$service_name', '$instruction', NOW())";
-                $conn->query($sql_doc);
-                $success_count++;
+                if (move_uploaded_file($file_tmp, $target_dir . $file_name)) {
+                    $stmtDoc = $conn->prepare(
+                        "INSERT INTO `client_documents`
+                         (`client_id`, `file_name`, `assigned_to`, `status`, `doc_category`, `category`, `instruction`, `created_at`)
+                         VALUES (?, ?, ?, 'In-Progress', ?, ?, ?, NOW())"
+                    );
+                    if ($stmtDoc) {
+                        $stmtDoc->bind_param("ssssss", $client_id, $file_name, $staff_email, $doc_type, $service_name, $instruction);
+                        if ($stmtDoc->execute()) {
+                            $success_count++;
+                        }
+                        $stmtDoc->close();
+                    }
+                }
             }
         }
-        echo "<script>alert('$success_count Documents & Task dispatched successfully!'); window.location='assign-work.php';</script>";
+
+        $_SESSION['assign_flash_msg'] = "{$success_count} document(s) & task dispatched to {$staff_email}.";
+        $_SESSION['assign_flash_type'] = $success_count > 0 ? "success" : "error";
     } else {
-        echo "<script>alert('Manual Task assigned (No documents attached)'); window.location='assign-work.php';</script>";
+        // Message / task dispatched without file attachment
+        $msgLabel = ($service_name !== 'General Work' ? $service_name : 'Message') . " — Task Update";
+        $msgCategoryType = 'message_task';
+        $stmtMsgDoc = $conn->prepare(
+            "INSERT INTO `client_documents`
+             (`client_id`, `file_name`, `assigned_to`, `status`, `doc_category`, `category`, `instruction`, `created_at`)
+             VALUES (?, ?, ?, 'In-Progress', ?, ?, ?, NOW())"
+        );
+        if ($stmtMsgDoc) {
+            $stmtMsgDoc->bind_param("ssssss", $client_id, $msgLabel, $staff_email, $msgCategoryType, $service_name, $instruction);
+            $stmtMsgDoc->execute();
+            $stmtMsgDoc->close();
+        }
+
+        $_SESSION['assign_flash_msg'] = "Task & message dispatched to {$staff_email} (no file attached).";
+        $_SESSION['assign_flash_type'] = "success";
     }
+
+    header("Location: assign-work.php");
+    exit();
 }
 
-// --- LOGIC 2: Assign an EXISTING Client Request ---
-if (isset($_POST['assign_existing'])) {
-    $rid = mysqli_real_escape_string($conn, $_POST['rid']);
-    $staff = mysqli_real_escape_string($conn, $_POST['staff_email']);
-    // Update includes setting the assigned_date
-    $conn->query("UPDATE service_requests SET assigned_to='$staff', status='Assigned', assigned_date=CURDATE() WHERE id='$rid'");
-    echo "<script>alert('Client Request Assigned!'); window.location='assign-work.php';</script>";
+// --- 2. ASSIGN AN EXISTING CLIENT REQUEST ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_existing'])) {
+    $rid = (int)($_POST['rid'] ?? 0);
+    $staff = trim((string)($_POST['staff_email'] ?? ''));
+    if ($rid > 0 && $staff !== '') {
+        $stmtAssign = $conn->prepare(
+            "UPDATE `service_requests`
+             SET `assigned_to` = ?, `status` = 'Assigned', `assigned_date` = CURDATE()
+             WHERE `id` = ?"
+        );
+        if ($stmtAssign) {
+            $stmtAssign->bind_param("si", $staff, $rid);
+            $stmtAssign->execute();
+            $stmtAssign->close();
+        }
+        $_SESSION['assign_flash_msg'] = "Client request assigned to {$staff}.";
+        $_SESSION['assign_flash_type'] = "success";
+    }
+    header("Location: assign-work.php");
+    exit();
 }
 
-// --- LOGIC 4: Delete Records ---
+// --- 3. DELETE TASK RECORD ---
 if (isset($_GET['delete_task'])) {
-    $id = mysqli_real_escape_string($conn, $_GET['delete_task']);
-    $conn->query("DELETE FROM service_requests WHERE id='$id'");
-    echo "<script>window.location='assign-work.php';</script>";
+    $id = (int)$_GET['delete_task'];
+    if ($id > 0) {
+        $stmtDel = $conn->prepare("DELETE FROM `service_requests` WHERE `id` = ?");
+        if ($stmtDel) {
+            $stmtDel->bind_param("i", $id);
+            $stmtDel->execute();
+            $stmtDel->close();
+        }
+    }
+    header("Location: assign-work.php");
+    exit();
 }
 
-if (isset($_GET['delete_doc'])) {
-    $id = mysqli_real_escape_string($conn, $_GET['delete_doc']);
-    $conn->query("DELETE FROM client_documents WHERE id='$id'");
-    echo "<script>window.location='assign-work.php';</script>";
-}
-?>
-<?php
 // Fetch clients grouped by service
-$map_query = $conn->query("SELECT u.identifier, cp.company_name, cp.task_asked 
-                           FROM users u 
-                           JOIN client_profiles cp ON u.identifier = cp.client_id 
-                           WHERE u.role='client'");
+$map_query = $conn->query(
+    "SELECT u.identifier, cp.company_name, cp.task_asked
+     FROM `users` u
+     JOIN `client_profiles` cp ON u.identifier = cp.client_id
+     WHERE u.role = 'client'"
+);
 $serviceMap = [];
-while ($row = $map_query->fetch_assoc()) {
-    $displayName = !empty($row['company_name']) ? $row['company_name'] : $row['identifier'];
-    $services = explode(', ', $row['task_asked']);
-    foreach ($services as $s) {
-        $s = trim($s);
-        if ($s != "") {
-            $serviceMap[$s][] = ['id' => $row['identifier'], 'name' => $displayName];
+if ($map_query) {
+    while ($row = $map_query->fetch_assoc()) {
+        $displayName = !empty($row['company_name']) ? $row['company_name'] : $row['identifier'];
+        $services = explode(',', (string)($row['task_asked'] ?? ''));
+        foreach ($services as $s) {
+            $s = trim($s);
+            if ($s !== '') {
+                $serviceMap[$s][] = ['id' => $row['identifier'], 'name' => $displayName];
+            }
         }
     }
 }
+
+$staffList = [];
+$staff_query = $conn->query("SELECT `name`, `identifier` FROM `users` WHERE `role` = 'office' ORDER BY `name` ASC");
+if ($staff_query) {
+    while ($s = $staff_query->fetch_assoc()) {
+        $staffList[] = $s;
+    }
+}
 ?>
-<script>const serviceMap = <?php echo json_encode($serviceMap); ?>;</script>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -108,7 +220,6 @@ while ($row = $map_query->fetch_assoc()) {
             --navy: #0b3c74;
             --navy-light: #155297;
             --orange: #ff8c00;
-            --orange-glow: rgba(255, 140, 0, 0.15);
             --sidebar-bg: #062241;
             --sidebar-hover: rgba(255, 255, 255, 0.06);
             --bg: #f3f6fc;
@@ -120,7 +231,6 @@ while ($row = $map_query->fetch_assoc()) {
             --success: #10b981;
             --border: #e2e8f0;
             --shadow-sm: 0 2px 8px rgba(11, 60, 116, 0.04);
-            --shadow-md: 0 10px 25px -5px rgba(11, 60, 116, 0.08);
         }
 
         * {
@@ -136,11 +246,10 @@ while ($row = $map_query->fetch_assoc()) {
             min-height: 100vh;
         }
 
-        /* ================= SIDEBAR ================= */
         .sidebar {
             width: 280px;
             background: var(--sidebar-bg);
-            color: white;
+            color: #ffffff;
             height: 100vh;
             position: fixed;
             top: 0;
@@ -181,10 +290,9 @@ while ($row = $map_query->fetch_assoc()) {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: #ffffff;
             font-size: 18px;
             flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
         }
 
         .brand-header h2 {
@@ -220,7 +328,7 @@ while ($row = $map_query->fetch_assoc()) {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: #ffffff;
             font-size: 18px;
             font-weight: 700;
         }
@@ -277,7 +385,7 @@ while ($row = $map_query->fetch_assoc()) {
         .sidebar a:hover,
         .sidebar a.active {
             background: var(--sidebar-hover);
-            color: white;
+            color: #ffffff;
             border-left: 3px solid var(--orange);
             padding-left: 17px;
         }
@@ -320,10 +428,8 @@ while ($row = $map_query->fetch_assoc()) {
             transform: rotate(180deg);
         }
 
-        /* ================= MAIN WORKSPACE ================= */
         .main {
             margin-left: 280px;
-            padding: 0;
             width: calc(100% - 280px);
             min-height: 100vh;
             display: flex;
@@ -355,8 +461,7 @@ while ($row = $map_query->fetch_assoc()) {
         .welcome-text {
             font-size: 12.5px;
             color: var(--text-muted);
-            margin-top: 1px;
-            font-weight: 500;
+            margin-top: 2px;
         }
 
         .header-right-group {
@@ -374,7 +479,6 @@ while ($row = $map_query->fetch_assoc()) {
             padding: 7px 14px;
             border-radius: 12px;
             border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
         }
 
         .clock-icon i {
@@ -408,7 +512,6 @@ while ($row = $map_query->fetch_assoc()) {
             padding: 5px 6px 5px 12px;
             border-radius: 30px;
             border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
         }
 
         .header-user-name {
@@ -428,13 +531,6 @@ while ($row = $map_query->fetch_assoc()) {
             justify-content: center;
             text-decoration: none;
             font-size: 12.5px;
-            transition: all 0.2s;
-        }
-
-        .header-logout-icon:hover {
-            background: var(--danger);
-            color: white;
-            transform: scale(1.05);
         }
 
         .content-body {
@@ -443,75 +539,71 @@ while ($row = $map_query->fetch_assoc()) {
             width: 100%;
         }
 
-        .section-heading {
-            margin: 32px 0 16px 0;
-            color: var(--navy);
-            font-size: 18px;
-            font-weight: 800;
-        }
-
         .card {
             background: var(--card-bg);
-            padding: 24px;
-            border-radius: 20px;
-            box-shadow: var(--shadow-sm);
             border: 1px solid var(--border);
-            margin-bottom: 24px;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
         }
 
-        input, select, textarea {
+        .section-heading {
+            margin: 24px 0 12px 0;
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--navy);
+        }
+
+        select,
+        input[type="text"],
+        input[type="file"],
+        textarea {
             width: 100%;
-            padding: 11px 14px;
-            margin: 6px 0;
-            border: 1.5px solid var(--border);
+            padding: 10px 12px;
             border-radius: 10px;
-            box-sizing: border-box;
+            border: 1.5px solid var(--border);
+            background: #ffffff;
             font-family: inherit;
-            font-size: 13.5px;
-            color: var(--text-main);
-            background: #f8fafc;
-            transition: all 0.2s;
+            font-size: 13px;
+            margin-top: 6px;
+            outline: none;
         }
 
-        input:focus, select:focus, textarea:focus {
+        select:focus,
+        input[type="text"]:focus,
+        textarea:focus {
             border-color: var(--navy);
-            background: #ffffff;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(11, 60, 116, 0.1);
         }
 
         .btn-dispatch {
             background: var(--navy);
-            color: white;
+            color: #ffffff;
             border: none;
-            padding: 14px;
+            padding: 11px 22px;
             border-radius: 10px;
             font-family: inherit;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 13.5px;
             cursor: pointer;
-            width: 100%;
-            transition: all 0.2s;
         }
 
         .btn-dispatch:hover {
-            background: var(--orange);
-            transform: translateY(-1px);
+            background: var(--navy-light);
         }
 
         .task-item {
-            background: var(--card-bg);
-            padding: 16px 20px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--orange);
             border-radius: 14px;
-            margin-bottom: 14px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 16px;
             flex-wrap: wrap;
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--orange);
-            box-shadow: var(--shadow-sm);
         }
 
         table {
@@ -520,44 +612,47 @@ while ($row = $map_query->fetch_assoc()) {
         }
 
         th {
-            text-align: left;
-            padding: 13px 14px;
             background: #f8fafc;
             color: var(--navy);
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            text-align: left;
+            padding: 11px 14px;
             border-bottom: 1px solid var(--border);
         }
 
         td {
-            padding: 14px;
-            border-bottom: 1px solid var(--border);
+            padding: 12px 14px;
+            border-bottom: 1px solid #eef2f6;
             font-size: 13px;
-            vertical-align: middle;
         }
 
-        tbody tr:last-child td {
-            border-bottom: none;
+        .flash-banner {
+            padding: 13px 18px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            font-weight: 700;
+            font-size: 13px;
         }
 
-        tbody tr:hover {
-            background: #f8fafc;
+        .flash-banner.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
         }
 
-        @media (max-width: 1024px) {
-            .admin-top-bar {
-                padding: 14px 20px;
-            }
-            .content-body {
-                padding: 24px 20px;
-            }
+        .flash-banner.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
         }
     </style>
 </head>
 
 <body>
+    <script>const serviceMap = <?php echo json_encode($serviceMap, JSON_UNESCAPED_UNICODE); ?>;</script>
+
     <datalist id="service_list">
         <option value="GST Monthly Return">
         <option value="ITR Filing">
@@ -566,7 +661,6 @@ while ($row = $map_query->fetch_assoc()) {
         <option value="Company Incorporation">
     </datalist>
 
-    <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="brand-header">
             <div class="brand-logo"><i class="fas fa-shield-alt"></i></div>
@@ -575,17 +669,18 @@ while ($row = $map_query->fetch_assoc()) {
 
         <div class="sidebar-profile">
             <div class="profile-avatar-wrapper">
-                <div class="sidebar-avatar"><i class="fas fa-user-shield"></i></div>
+                <div class="sidebar-avatar"><?php echo htmlspecialchars($initials); ?></div>
                 <div class="online-status"></div>
             </div>
             <div class="profile-info">
-                <strong>Admin Executive</strong>
+                <strong><?php echo htmlspecialchars($adminName); ?></strong>
                 <span>System Administrator</span>
             </div>
         </div>
 
         <div class="sidebar-nav-title">Main Menu</div>
         <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i> Dashboard</a>
+        <a href="admin-profile.php"><i class="fas fa-user-cog"></i> Admin Profile</a>
 
         <div class="dropdown-container">
             <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('billingMenu', 'billChev')">
@@ -647,12 +742,11 @@ while ($row = $map_query->fetch_assoc()) {
         <a href="../logout.php" style="margin-top:auto; color:#fca5a5;"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </aside>
 
-    <!-- Main Workspace -->
     <div class="main">
         <header class="admin-top-bar">
             <div class="brand-section">
                 <h1>Work Assignment Center</h1>
-                <div class="welcome-text">Dispatch tasks &amp; files to staff, assign pending client requests, and monitor live assignments</div>
+                <div class="welcome-text">Dispatch tasks, messages &amp; files to staff, assign pending client requests, and monitor live assignments</div>
             </div>
 
             <div class="header-right-group">
@@ -665,7 +759,7 @@ while ($row = $map_query->fetch_assoc()) {
                 </div>
 
                 <div class="header-user-pill">
-                    <span class="header-user-name">Admin</span>
+                    <span class="header-user-name"><?php echo htmlspecialchars($adminName); ?></span>
                     <a href="../logout.php" class="header-logout-icon" title="Logout">
                         <i class="fas fa-power-off"></i>
                     </a>
@@ -674,14 +768,22 @@ while ($row = $map_query->fetch_assoc()) {
         </header>
 
         <div class="content-body">
+            <?php if ($flash_msg !== ''): ?>
+                <div class="flash-banner <?php echo $flash_type === 'error' ? 'error' : 'success'; ?>">
+                    <?php echo htmlspecialchars($flash_msg); ?>
+                </div>
+            <?php endif; ?>
+
             <div class="card">
-                <h3 style="margin:0 0 20px 0; color:var(--navy); font-weight:800;"><i class="fas fa-paper-plane" style="color:var(--orange); margin-right:6px;"></i> Master Work Dispatch</h3>
+                <h3 style="margin:0 0 20px 0; color:var(--navy); font-weight:800;">
+                    <i class="fas fa-paper-plane" style="color:var(--orange); margin-right:6px;"></i> Master Work Dispatch
+                </h3>
                 <form method="POST" enctype="multipart/form-data">
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
                             <div>
                                 <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Services</label>
-                                <select name="service_name" id="service_selector" onchange="filterClients()" required>
+                                <select name="service_select" id="service_selector" onchange="filterClients()">
                                     <option value="">-- Select Service --</option>
                                     <?php foreach (array_keys($serviceMap) as $sName): ?>
                                         <option value="<?php echo htmlspecialchars($sName); ?>"><?php echo htmlspecialchars($sName); ?></option>
@@ -699,22 +801,23 @@ while ($row = $map_query->fetch_assoc()) {
                             <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Assign To Staff</label>
                             <select name="staff_email" required>
                                 <option value="">-- Select Employee --</option>
-                                <?php
-                                $staff_query = $conn->query("SELECT name, identifier FROM users WHERE role='office'");
-                                while ($s = $staff_query->fetch_assoc()) echo "<option value='" . htmlspecialchars($s['identifier']) . "'>" . htmlspecialchars($s['name']) . "</option>";
-                                ?>
+                                <?php foreach ($staffList as $s): ?>
+                                    <option value="<?php echo htmlspecialchars((string)$s['identifier']); ?>">
+                                        <?php echo htmlspecialchars((string)$s['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
 
                     <div style="margin-top:12px;">
                         <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Service Category</label>
-                        <input type="text" name="service_name" list="service_list" placeholder="e.g. GST Filing..." required>
+                        <input type="text" name="service_category" list="service_list" placeholder="e.g. GST Filing..." required>
                     </div>
 
                     <div style="margin-top:12px;">
-                        <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Instructions</label>
-                        <textarea name="instruction" placeholder="Special Work Instructions..." rows="2" required></textarea>
+                        <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Instructions / Message</label>
+                        <textarea name="instruction" placeholder="Special Work Instructions or Message..." rows="2" required></textarea>
                     </div>
 
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; background: #f8fafc; padding: 16px; border-radius: 12px; border:1px solid var(--border); margin-top:12px;">
@@ -723,41 +826,54 @@ while ($row = $map_query->fetch_assoc()) {
                             <input type="file" name="doc_file[]" multiple style="background:#ffffff;">
                         </div>
                         <div>
-                            <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Type</label>
+                            <label style="font-size:11.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Destination Type</label>
                             <select name="doc_type" style="background:#ffffff;">
                                 <option value="center">Center (Active)</option>
                                 <option value="vault">Vault (Permanent)</option>
                             </select>
                         </div>
                     </div>
-                    <button name="master_dispatch" class="btn-dispatch" style="margin-top:18px;">Dispatch Work</button>
+                    <button type="submit" name="master_dispatch" class="btn-dispatch" style="margin-top:18px;">Dispatch Work</button>
                 </form>
             </div>
 
             <h2 class="section-heading">Incoming Client Requests</h2>
             <?php
-            $res = $conn->query("SELECT t.*, cp.company_name 
-                         FROM service_requests t 
-                         LEFT JOIN client_profiles cp ON t.client_id = cp.client_id 
-                         WHERE t.status='Pending'");
-            if ($res->num_rows == 0) echo "<div class='card' style='color:var(--text-muted); font-size:13.5px;'>No pending client requests.</div>";
-            while ($row = $res->fetch_assoc()): ?>
-                <div class="task-item">
-                    <div>
-                        <b style="color:var(--navy); font-size:14.5px;"><?php echo htmlspecialchars($row['service_type']); ?></b>
-                        <p style="margin:5px 0; color:var(--text-muted); font-size:13px;"><?php echo htmlspecialchars($row['description']); ?></p>
-                        <small style="color:var(--text-muted); font-weight:600;">Client: <?php echo htmlspecialchars(!empty($row['company_name']) ? $row['company_name'] : $row['client_id']); ?></small>
+            $res = $conn->query(
+                "SELECT t.*, cp.company_name
+                 FROM `service_requests` t
+                 LEFT JOIN `client_profiles` cp ON t.client_id = cp.client_id
+                 WHERE t.status = 'Pending'
+                 ORDER BY t.id DESC"
+            );
+            if (!$res || $res->num_rows === 0) {
+                echo "<div class='card' style='color:var(--text-muted); font-size:13.5px;'>No pending client requests.</div>";
+            } else {
+                while ($row = $res->fetch_assoc()): ?>
+                    <div class="task-item">
+                        <div>
+                            <b style="color:var(--navy); font-size:14.5px;"><?php echo htmlspecialchars((string)$row['service_type']); ?></b>
+                            <p style="margin:5px 0; color:var(--text-muted); font-size:13px;"><?php echo htmlspecialchars((string)$row['description']); ?></p>
+                            <small style="color:var(--text-muted); font-weight:600;">
+                                Client: <?php echo htmlspecialchars(!empty($row['company_name']) ? $row['company_name'] : $row['client_id']); ?>
+                            </small>
+                        </div>
+                        <form method="POST" style="display:flex; gap:10px; align-items:center;">
+                            <input type="hidden" name="rid" value="<?php echo (int)$row['id']; ?>">
+                            <select name="staff_email" required style="margin:0; width:190px; background:#ffffff;">
+                                <?php foreach ($staffList as $s): ?>
+                                    <option value="<?php echo htmlspecialchars((string)$s['identifier']); ?>">
+                                        <?php echo htmlspecialchars((string)$s['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <button type="submit" name="assign_existing" style="background:var(--orange); color:#ffffff; border:none; padding:10px 18px; border-radius:10px; cursor:pointer; font-family:inherit; font-weight:700; font-size:13px;">
+                                Assign
+                            </button>
+                        </form>
                     </div>
-                    <form method="POST" style="display:flex; gap:10px; align-items:center;">
-                        <input type="hidden" name="rid" value="<?php echo htmlspecialchars($row['id']); ?>">
-                        <select name="staff_email" required style="margin:0; width:170px; background:#ffffff;">
-                            <?php $staff_query->data_seek(0);
-                            while ($s = $staff_query->fetch_assoc()) echo "<option value='" . htmlspecialchars($s['identifier']) . "'>" . htmlspecialchars($s['name']) . "</option>"; ?>
-                        </select>
-                        <button name="assign_existing" style="background:var(--orange); color:white; border:none; padding:10px 18px; border-radius:10px; cursor:pointer; font-family:inherit; font-weight:700; font-size:13px;">Assign</button>
-                    </form>
-                </div>
-            <?php endwhile; ?>
+                <?php endwhile;
+            } ?>
 
             <h2 class="section-heading">Live Assignment Monitor</h2>
 
@@ -769,7 +885,7 @@ while ($row = $map_query->fetch_assoc()) {
                             placeholder="Search by Client ID, Employee Name, or Service..."
                             style="padding-left: 36px; margin: 0;">
                     </div>
-                    <button onclick="resetSearch()" style="background: #f1f5f9; border: 1px solid var(--border); padding: 10px 16px; border-radius: 10px; cursor: pointer; color: var(--navy); font-family:inherit; font-weight:600; font-size:13px;">
+                    <button type="button" onclick="resetSearch()" style="background: #f1f5f9; border: 1px solid var(--border); padding: 10px 16px; border-radius: 10px; cursor: pointer; color: var(--navy); font-family:inherit; font-weight:600; font-size:13px;">
                         <i class="fas fa-undo"></i> Reset
                     </button>
                 </div>
@@ -791,25 +907,33 @@ while ($row = $map_query->fetch_assoc()) {
                     </thead>
                     <tbody>
                         <?php
-                        $tasks = $conn->query("SELECT t.*, cp.company_name 
-                             FROM service_requests t
-                             LEFT JOIN client_profiles cp ON t.client_id = cp.client_id 
-                             ORDER BY t.id DESC LIMIT 20");
-                        while ($t = $tasks->fetch_assoc()): ?>
-                            <tr class="table-row">
-                                <td><span style="background:#e0f2fe; color:#0369a1; padding:4px 9px; border-radius:6px; font-size:11px; font-weight:700;">TASK</span></td>
-                                <td class="client-cell">
-                                    <b><?php echo htmlspecialchars(!empty($t['company_name']) ? $t['company_name'] : $t['client_id']); ?></b>
-                                    <br><small style="color:var(--text-muted);"><?php echo htmlspecialchars($t['client_id']); ?></small>
-                                </td>
-                                <td class="staff-cell"><b><?php echo htmlspecialchars($t['assigned_to']); ?></b></td>
-                                <td><?php echo htmlspecialchars($t['assigned_date']); ?></td>
-                                <td><?php echo htmlspecialchars($t['completed_date']); ?></td>
-                                <td><span style="color:var(--orange); font-weight:700;"><?php echo htmlspecialchars($t['status']); ?></span></td>
-                                <td class="service-cell"><?php echo htmlspecialchars($t['service_type']); ?></td>
-                                <td><a href="?delete_task=<?php echo urlencode($t['id']); ?>" onclick="return confirm('Delete this assignment?')" style="color:var(--danger);"><i class="fas fa-trash"></i></a></td>
-                            </tr>
-                        <?php endwhile; ?>
+                        $tasks = $conn->query(
+                            "SELECT t.*, cp.company_name
+                             FROM `service_requests` t
+                             LEFT JOIN `client_profiles` cp ON t.client_id = cp.client_id
+                             ORDER BY t.id DESC LIMIT 20"
+                        );
+                        if ($tasks):
+                            while ($t = $tasks->fetch_assoc()): ?>
+                                <tr class="table-row">
+                                    <td><span style="background:#e0f2fe; color:#0369a1; padding:4px 9px; border-radius:6px; font-size:11px; font-weight:700;">TASK</span></td>
+                                    <td class="client-cell">
+                                        <b><?php echo htmlspecialchars(!empty($t['company_name']) ? $t['company_name'] : $t['client_id']); ?></b>
+                                        <br><small style="color:var(--text-muted);"><?php echo htmlspecialchars((string)$t['client_id']); ?></small>
+                                    </td>
+                                    <td class="staff-cell"><b><?php echo htmlspecialchars((string)($t['assigned_to'] ?? '—')); ?></b></td>
+                                    <td><?php echo htmlspecialchars((string)($t['assigned_date'] ?? '—')); ?></td>
+                                    <td><?php echo htmlspecialchars((string)($t['completed_date'] ?? '—')); ?></td>
+                                    <td><span style="color:var(--orange); font-weight:700;"><?php echo htmlspecialchars((string)($t['status'] ?? '')); ?></span></td>
+                                    <td class="service-cell"><?php echo htmlspecialchars((string)($t['service_type'] ?? '')); ?></td>
+                                    <td>
+                                        <a href="?delete_task=<?php echo (int)$t['id']; ?>" onclick="return confirm('Delete this assignment?')" style="color:var(--danger);">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endwhile;
+                        endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -817,7 +941,6 @@ while ($row = $map_query->fetch_assoc()) {
     </div>
 
     <script>
-        // Live Clock
         function updateClock() {
             const now = new Date();
             const dateEl = document.getElementById('liveDate');
@@ -840,38 +963,24 @@ while ($row = $map_query->fetch_assoc()) {
         function toggleMenu(menuId, chevronId) {
             const menu = document.getElementById(menuId);
             const chevron = document.getElementById(chevronId);
+            if (menu) menu.classList.toggle('show-menu');
+            if (chevron) chevron.classList.toggle('rotate-chevron');
 
-            // Toggle the specific menu clicked
-            menu.classList.toggle('show-menu');
-
-            // Rotate the specific arrow clicked
-            chevron.classList.toggle('rotate-chevron');
-
-            // Optional: Close other menus when opening a new one
-            const allMenus = document.querySelectorAll('.dropdown-content');
-            const allChevrons = document.querySelectorAll('.fa-chevron-down');
-
-            allMenus.forEach((m) => {
+            document.querySelectorAll('.dropdown-content').forEach((m) => {
                 if (m.id !== menuId) m.classList.remove('show-menu');
             });
-
-            allChevrons.forEach((c) => {
+            document.querySelectorAll('.fa-chevron-down').forEach((c) => {
                 if (c.id !== chevronId) c.classList.remove('rotate-chevron');
             });
         }
 
         function filterAssignments() {
             const input = document.getElementById('assignmentSearch').value.toLowerCase();
-            const rows = document.querySelectorAll('.table-row');
-            rows.forEach(row => {
+            document.querySelectorAll('.table-row').forEach(row => {
                 const clientId = row.querySelector('.client-cell').textContent.toLowerCase();
                 const staffName = row.querySelector('.staff-cell').textContent.toLowerCase();
                 const service = row.querySelector('.service-cell').textContent.toLowerCase();
-                if (clientId.includes(input) || staffName.includes(input) || service.includes(input)) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
+                row.style.display = (clientId.includes(input) || staffName.includes(input) || service.includes(input)) ? "" : "none";
             });
         }
 
@@ -883,8 +992,6 @@ while ($row = $map_query->fetch_assoc()) {
         function filterClients() {
             const service = document.getElementById('service_selector').value;
             const clientDropdown = document.getElementById('client_selector');
-
-            // Clear existing options
             clientDropdown.innerHTML = '<option value="">-- Select Client --</option>';
 
             if (service && serviceMap[service]) {
@@ -903,4 +1010,5 @@ while ($row = $map_query->fetch_assoc()) {
         }
     </script>
 </body>
+
 </html>

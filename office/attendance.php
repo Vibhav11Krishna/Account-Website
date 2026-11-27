@@ -7,6 +7,80 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     exit();
 }
 
+$adminName = $_SESSION['user']['name'] ?? 'Admin Executive';
+$lookupId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : 0;
+$lookupIdent = trim((string)($_SESSION['user']['identifier'] ?? ($_SESSION['user']['email'] ?? '')));
+
+if (isset($conn) && $conn instanceof mysqli) {
+    if ($lookupId > 0) {
+        $stmtAdmin = $conn->prepare("SELECT `name` FROM `users` WHERE `id` = ? LIMIT 1");
+        if ($stmtAdmin) {
+            $stmtAdmin->bind_param("i", $lookupId);
+            $stmtAdmin->execute();
+            $resAdmin = $stmtAdmin->get_result();
+            $rowAdmin = $resAdmin->fetch_assoc();
+            if ($rowAdmin && !empty($rowAdmin['name'])) {
+                $adminName = $rowAdmin['name'];
+            }
+            $stmtAdmin->close();
+        }
+    } elseif ($lookupIdent !== '') {
+        $stmtAdmin = $conn->prepare("SELECT `name` FROM `users` WHERE `identifier` = ? LIMIT 1");
+        if ($stmtAdmin) {
+            $stmtAdmin->bind_param("s", $lookupIdent);
+            $stmtAdmin->execute();
+            $resAdmin = $stmtAdmin->get_result();
+            $rowAdmin = $resAdmin->fetch_assoc();
+            if ($rowAdmin && !empty($rowAdmin['name'])) {
+                $adminName = $rowAdmin['name'];
+            }
+            $stmtAdmin->close();
+        }
+    }
+}
+$initials = strtoupper(substr(trim((string)$adminName), 0, 1) ?: 'A');
+
+function formatWorkingHours(?string $loginTime, ?string $logoutTime, ?string $logDate = null): string {
+    if (empty($loginTime)) {
+        return '—';
+    }
+
+    $baseDate = !empty($logDate) ? $logDate : date('Y-m-d');
+    $startTs = strtotime($loginTime);
+    if ($startTs === false && preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $loginTime)) {
+        $startTs = strtotime($baseDate . ' ' . $loginTime);
+    }
+
+    if (!empty($logoutTime)) {
+        $endTs = strtotime($logoutTime);
+        if ($endTs === false && preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $logoutTime)) {
+            $endTs = strtotime($baseDate . ' ' . $logoutTime);
+        }
+        $isLive = false;
+    } else {
+        // Still working today: calculate up to current time; if an older open row, cap at end of that day
+        if (!empty($logDate) && $logDate < date('Y-m-d')) {
+            $endTs = strtotime($logDate . ' 23:59:59');
+            $isLive = false;
+        } else {
+            $endTs = time();
+            $isLive = true;
+        }
+    }
+
+    if ($startTs === false || $endTs === false || $endTs < $startTs) {
+        return '—';
+    }
+
+    $diffSec = $endTs - $startTs;
+    $hours = floor($diffSec / 3600);
+    $minutes = floor(($diffSec % 3600) / 60);
+
+    $formatted = sprintf('%dh %02dm', $hours, $minutes);
+    return $isLive ? ($formatted . ' (Live)') : $formatted;
+}
+
+date_default_timezone_set('Asia/Kolkata');
 $today = date('Y-m-d');
 ?>
 <!DOCTYPE html>
@@ -41,8 +115,8 @@ $today = date('Y-m-d');
         }
 
         * {
-            box-sizing: border-box;
-        }
+    box-sizing: border-box;
+}
 
         body {
             display: flex;
@@ -533,18 +607,19 @@ $today = date('Y-m-d');
         </div>
 
         <div class="sidebar-profile">
-            <div class="profile-avatar-wrapper">
-                <div class="sidebar-avatar"><i class="fas fa-user-shield"></i></div>
-                <div class="online-status"></div>
-            </div>
-            <div class="profile-info">
-                <strong>Admin Executive</strong>
-                <span>System Administrator</span>
-            </div>
+           <div class="profile-avatar-wrapper">
+    <div class="sidebar-avatar"><?php echo htmlspecialchars($initials); ?></div>
+    <div class="online-status"></div>
+</div>
+<div class="profile-info">
+    <strong><?php echo htmlspecialchars($adminName); ?></strong>
+    <span>System Administrator</span>
+</div>
         </div>
 
         <div class="sidebar-nav-title">Main Menu</div>
         <a href="admin-dashboard.php"><i class="fas fa-chart-pie"></i> Dashboard</a>
+        <a href="admin-profile.php"><i class="fas fa-user-cog"></i> Admin Profile</a>
 
         <div class="dropdown-container">
             <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('billingMenu', 'billChev')">
@@ -624,11 +699,11 @@ $today = date('Y-m-d');
                 </div>
 
                 <div class="header-user-pill">
-                    <span class="header-user-name">Admin</span>
-                    <a href="../logout.php" class="header-logout-icon" title="Logout">
-                        <i class="fas fa-power-off"></i>
-                    </a>
-                </div>
+    <span class="header-user-name"><?php echo htmlspecialchars($adminName); ?></span>
+    <a href="../logout.php" class="header-logout-icon" title="Logout">
+        <i class="fas fa-power-off"></i>
+    </a>
+</div>
             </div>
         </header>
 
@@ -638,17 +713,16 @@ $today = date('Y-m-d');
                     Click any employee card to inspect attendance history
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap:wrap;">
-                    <button type="button" class="btn-action" onclick="exportFullHistory()" style="background: #6366f1; color: white;">
-                        <i class="fas fa-database"></i> Export Excel
-                    </button>
+                  <button type="button" class="btn-action" onclick="exportFullHistory(this)" style="background: #6366f1; color: white;">
+    <i class="fas fa-database"></i> Export Excel
+</button>
 
                     <button type="button" class="btn-action" onclick="window.location.reload();" style="background: var(--navy); color: white;">
                         <i class="fas fa-sync-alt"></i> Refresh
                     </button>
                 </div>
             </div>
-
-            <div class="attendance-grid">
+<div class="attendance-grid">
                 <?php
                 $res = $conn->query("SELECT * FROM users WHERE role='office' ORDER BY name ASC");
                 while ($staff = $res->fetch_assoc()) {
@@ -668,10 +742,19 @@ $today = date('Y-m-d');
                         <h3 class="staff-name"><?php echo htmlspecialchars($staff['name']); ?></h3>
                         <p class="staff-email"><?php echo htmlspecialchars($email); ?></p>
 
+                        <!-- REPLACE OLD .log-box WITH THIS -->
                         <div class="log-box">
                             <?php if ($is_online): ?>
-                                <i class="far fa-clock" style="color: #16a34a;"></i>
-                                In: <strong><?php echo date('h:i A', strtotime($att_data['login_time'])); ?></strong>
+                                <div>
+                                    <i class="far fa-clock" style="color: #16a34a;"></i>
+                                    In: <strong><?php echo date('h:i A', strtotime($att_data['login_time'])); ?></strong>
+                                    <?php if (!empty($att_data['logout_time'])): ?>
+                                        &middot; Out: <strong><?php echo date('h:i A', strtotime($att_data['logout_time'])); ?></strong>
+                                    <?php endif; ?>
+                                </div>
+                                <div style="margin-top:4px; color:var(--navy); font-weight:700;">
+                                    Hours: <?php echo htmlspecialchars(formatWorkingHours($att_data['login_time'] ?? null, $att_data['logout_time'] ?? null, $today)); ?>
+                                </div>
                             <?php else: ?>
                                 <i class="fas fa-exclamation-circle" style="color: #94a3b8;"></i> Not checked in.
                             <?php endif; ?>
@@ -711,74 +794,80 @@ $today = date('Y-m-d');
                     <h2 style="margin:0; font-size: 16px; font-weight:800; color: var(--navy);">Today's Attendance Ledger</h2>
                 </div>
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>EMPLOYEE NAME</th>
-                            <th>CHECK-IN</th>
-                            <th>CHECK-OUT</th>
-                            <th>STATUS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        // Fetching employees who checked in today, including logout_time
-                        $ledger_sql = "SELECT a.*, u.name 
-                                       FROM attendance a 
-                                       JOIN users u ON a.email = u.identifier 
-                                       WHERE a.log_date = '$today' 
-                                       ORDER BY a.login_time DESC";
-                        $ledger_res = $conn->query($ledger_sql);
+              <table>
+    <thead>
+        <tr>
+            <th>EMPLOYEE NAME</th>
+            <th>CHECK-IN</th>
+            <th>CHECK-OUT</th>
+            <th>WORKING HOURS</th>
+            <th>STATUS</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        $ledger_sql = "SELECT a.*, u.name
+                       FROM attendance a
+                       JOIN users u ON a.email = u.identifier
+                       WHERE a.log_date = '$today'
+                       ORDER BY a.login_time DESC";
+        $ledger_res = $conn->query($ledger_sql);
 
-                        if ($ledger_res->num_rows > 0):
-                            while ($row = $ledger_res->fetch_assoc()): ?>
-                                <tr>
-                                    <td>
-                                        <div style="font-weight: 700; color: var(--text-main);"><?= htmlspecialchars($row['name']) ?></div>
-                                        <div style="font-size: 11.5px; color: var(--text-muted);"><?= htmlspecialchars($row['email']) ?></div>
-                                    </td>
-                                    <td>
-                                        <span style="background: #ecfdf5; color: #059669; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px;">
-                                            <i class="far fa-clock"></i> <?= date('h:i A', strtotime($row['login_time'])) ?>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <?php if ($row['logout_time']): ?>
-                                            <span style="background: #fef2f2; color: #dc2626; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px;">
-                                                <i class="fas fa-sign-out-alt"></i> <?= date('h:i A', strtotime($row['logout_time'])) ?>
-                                            </span>
-                                        <?php else: ?>
-                                            <span style="color: var(--text-muted); font-size: 12px; font-style: italic;">Active Session</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <?php if (!$row['logout_time']): ?>
-                                            <span style="color: #16a34a; font-weight: 700; font-size: 12px;">
-                                                <i class="fas fa-circle" style="font-size: 8px;"></i> WORKING
-                                            </span>
-                                        <?php else: ?>
-                                            <span style="color: var(--text-muted); font-weight: 700; font-size: 12px;">
-                                                <i class="fas fa-check-double"></i> COMPLETED
-                                            </span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            <?php endwhile;
-                        else: ?>
-                            <tr>
-                                <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                                    <i class="fas fa-user-clock" style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
-                                    No check-ins recorded for today.
-                                </td>
-                            </tr>
+        if ($ledger_res && $ledger_res->num_rows > 0):
+            while ($row = $ledger_res->fetch_assoc()):
+                $workDuration = formatWorkingHours($row['login_time'] ?? null, $row['logout_time'] ?? null, $row['log_date'] ?? $today);
+        ?>
+                <tr>
+                    <td>
+                        <div style="font-weight: 700; color: var(--text-main);"><?= htmlspecialchars($row['name']) ?></div>
+                        <div style="font-size: 11.5px; color: var(--text-muted);"><?= htmlspecialchars($row['email']) ?></div>
+                    </td>
+                    <td>
+                        <span style="background: #ecfdf5; color: #059669; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px;">
+                            <i class="far fa-clock"></i> <?= date('h:i A', strtotime($row['login_time'])) ?>
+                        </span>
+                    </td>
+                    <td>
+                        <?php if (!empty($row['logout_time'])): ?>
+                            <span style="background: #fef2f2; color: #dc2626; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px;">
+                                <i class="fas fa-sign-out-alt"></i> <?= date('h:i A', strtotime($row['logout_time'])) ?>
+                            </span>
+                        <?php else: ?>
+                            <span style="color: var(--text-muted); font-size: 12px; font-style: italic;">Active Session</span>
                         <?php endif; ?>
-                    </tbody>
-                </table>
+                    </td>
+                    <td>
+                        <span style="background: #eef2ff; color: var(--navy); padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 12px;">
+                            <i class="fas fa-hourglass-half"></i> <?= htmlspecialchars($workDuration) ?>
+                        </span>
+                    </td>
+                    <td>
+                        <?php if (empty($row['logout_time'])): ?>
+                            <span style="color: #16a34a; font-weight: 700; font-size: 12px;">
+                                <i class="fas fa-circle" style="font-size: 8px;"></i> WORKING
+                            </span>
+                        <?php else: ?>
+                            <span style="color: var(--text-muted); font-weight: 700; font-size: 12px;">
+                                <i class="fas fa-check-double"></i> COMPLETED
+                            </span>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endwhile;
+        else: ?>
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <i class="fas fa-user-clock" style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
+                    No check-ins recorded for today.
+                </td>
+            </tr>
+        <?php endif; ?>
+    </tbody>
+</table>
             </div>
         </div>
     </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Live Clock
@@ -836,7 +925,7 @@ $today = date('Y-m-d');
 
                 console.log("Response received:", data);
 
-                if (data.length > 0) {
+                if (Array.isArray(data) && data.length > 0) {
                     const ws = XLSX.utils.json_to_sheet(data);
                     const wb = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(wb, ws, "Attendance");
@@ -859,17 +948,18 @@ $today = date('Y-m-d');
         }
 
         // 5. MASTER EXPORT LOGIC
-        async function exportFullHistory() {
-            const btn = event.currentTarget;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
-            btn.disabled = true;
+        async function exportFullHistory(btn) {
+            const originalText = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                btn.disabled = true;
+            }
 
             try {
                 const response = await fetch('fetch_all_attendance.php');
                 const data = await response.json();
 
-                if (data.length === 0) {
+                if (!Array.isArray(data) || data.length === 0) {
                     alert("No records found to export.");
                     return;
                 }
@@ -881,8 +971,10 @@ $today = date('Y-m-d');
                 console.error("Export failed:", error);
                 alert("Failed to generate Excel file.");
             } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
             }
         }
 
@@ -895,9 +987,9 @@ $today = date('Y-m-d');
                 datasets: [{
                     data: [
                         <?php
-                        $presentCount = $conn->query("SELECT count(*) as total FROM attendance WHERE log_date='$today'")->fetch_assoc()['total'];
-                        $totalStaff = $conn->query("SELECT count(*) as total FROM users WHERE role='office'")->fetch_assoc()['total'];
-                        $absentCount = ($totalStaff - $presentCount) > 0 ? ($totalStaff - $presentCount) : 0;
+                        $presentCount = (int)$conn->query("SELECT COUNT(DISTINCT email) AS total FROM attendance WHERE log_date='$today'")->fetch_assoc()['total'];
+                        $totalStaff = (int)$conn->query("SELECT COUNT(*) AS total FROM users WHERE role='office'")->fetch_assoc()['total'];
+                        $absentCount = max(0, $totalStaff - $presentCount);
                         echo "$presentCount, $absentCount";
                         ?>
                     ],

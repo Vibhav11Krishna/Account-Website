@@ -1,16 +1,176 @@
 <?php
 session_start();
 include('../db.php');
+date_default_timezone_set('Asia/Kolkata');
 
 // Security Check
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'client') {
+if (!isset($_SESSION['user']) || ($_SESSION['user']['role'] ?? '') !== 'client') {
     header("Location: ../Login.php");
     exit();
 }
 
-// FIX: Get the 'identifier' (KK/2026/001) from the session instead of numeric 'id'
-$client_identifier =$_SESSION['user']['identifier'];
-$clientName =$_SESSION['user']['name'] ?? 'Client';
+// Get the 'identifier' (e.g., KK/2026/001) from the session
+$client_identifier = trim((string)($_SESSION['user']['identifier'] ?? ($_SESSION['user']['email'] ?? '')));
+$clientName = (string)($_SESSION['user']['name'] ?? 'Client');
+
+$grouped_files = [];
+$released_messages = [];
+
+if (isset($conn) && $conn instanceof mysqli && $client_identifier !== '') {
+    $hasClientFiles = false;
+    $tblRes = $conn->query("SHOW TABLES LIKE 'client_files'");
+    if ($tblRes && $tblRes->num_rows > 0) {
+        $hasClientFiles = true;
+    }
+
+    if ($hasClientFiles) {
+        $sqlVault = "
+            SELECT file_name,
+                   result_file AS path,
+                   created_at AS date,
+                   'vault' AS source,
+                   COALESCE(NULLIF(doc_category, ''), 'vault') AS category
+            FROM `client_documents`
+            WHERE `client_id` COLLATE utf8mb4_general_ci = ?
+              AND LOWER(TRIM(COALESCE(`status`, ''))) = 'released'
+              AND `result_file` IS NOT NULL
+              AND TRIM(`result_file`) <> ''
+            UNION ALL
+            SELECT file_name,
+                   file_path AS path,
+                   upload_date AS date,
+                   'shared' AS source,
+                   COALESCE(NULLIF(file_type, ''), 'shared') AS category
+            FROM `client_files`
+            WHERE `client_id` COLLATE utf8mb4_general_ci = ?
+              AND LOWER(TRIM(COALESCE(`status`, ''))) = 'released'
+              AND `file_path` IS NOT NULL
+              AND TRIM(`file_path`) <> ''
+            ORDER BY date DESC
+        ";
+        $stmt = $conn->prepare($sqlVault);
+        if ($stmt) {
+            $stmt->bind_param("ss", $client_identifier, $client_identifier);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($result && ($doc = $result->fetch_assoc())) {
+                $dateKey = !empty($doc['date']) ? date('Y-m-d', strtotime((string)$doc['date'])) : date('Y-m-d');
+                $grouped_files[$dateKey][] = $doc;
+            }
+            $stmt->close();
+        }
+    } else {
+        $sqlVault = "
+            SELECT file_name,
+                   result_file AS path,
+                   created_at AS date,
+                   'vault' AS source,
+                   COALESCE(NULLIF(doc_category, ''), 'vault') AS category
+            FROM `client_documents`
+            WHERE `client_id` COLLATE utf8mb4_general_ci = ?
+              AND LOWER(TRIM(COALESCE(`status`, ''))) = 'released'
+              AND `result_file` IS NOT NULL
+              AND TRIM(`result_file`) <> ''
+            ORDER BY `id` DESC
+        ";
+        $stmt = $conn->prepare($sqlVault);
+        if ($stmt) {
+            $stmt->bind_param("s", $client_identifier);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($result && ($doc = $result->fetch_assoc())) {
+                $dateKey = !empty($doc['date']) ? date('Y-m-d', strtotime((string)$doc['date'])) : date('Y-m-d');
+                $grouped_files[$dateKey][] = $doc;
+            }
+            $stmt->close();
+        }
+    }
+
+    // 1. Fetch admin short notes attached to direct-sent documents
+    $stmtAdminNote = $conn->prepare(
+        "SELECT `file_name`, `category`, `admin_note`, `created_at`
+         FROM `client_documents`
+         WHERE `client_id` COLLATE utf8mb4_general_ci = ?
+           AND LOWER(TRIM(COALESCE(`status`, ''))) = 'released'
+           AND `admin_note` LIKE '[Admin Direct Send]:%'
+         ORDER BY `id` DESC"
+    );
+    if ($stmtAdminNote) {
+        $stmtAdminNote->bind_param("s", $client_identifier);
+        $stmtAdminNote->execute();
+        $anRes = $stmtAdminNote->get_result();
+        while ($anRes && ($anRow = $anRes->fetch_assoc())) {
+            $rawNote = trim((string)($anRow['admin_note'] ?? ''));
+            $cleanNote = trim(substr($rawNote, strlen('[Admin Direct Send]:')));
+            if ($cleanNote !== '' && $cleanNote !== 'Shared to client dashboard') {
+                $released_messages[] = [
+                    'sender'  => 'Admin',
+                    'subject' => (string)($anRow['file_name'] ?: ($anRow['category'] ?: 'Document Note')),
+                    'message' => $cleanNote,
+                    'date'    => (string)($anRow['created_at'] ?? ''),
+                ];
+            }
+        }
+        $stmtAdminNote->close();
+    }
+
+    // 2. Fetch released/approved employee messages from work_submissions if table exists
+    $wsCheck = $conn->query("SHOW TABLES LIKE 'work_submissions'");
+    if ($wsCheck && $wsCheck->num_rows > 0) {
+        $stmtMsg = $conn->prepare(
+            "SELECT `service_or_doc`, `staff_message`, `submitted_at`, `reviewed_at`
+             FROM `work_submissions`
+             WHERE `client_id` COLLATE utf8mb4_general_ci = ?
+               AND LOWER(TRIM(COALESCE(`review_status`, ''))) = 'released'
+               AND (`staff_message` IS NOT NULL AND TRIM(`staff_message`) <> '')
+             ORDER BY `id` DESC"
+        );
+        if ($stmtMsg) {
+            $stmtMsg->bind_param("s", $client_identifier);
+            $stmtMsg->execute();
+            $msgRes = $stmtMsg->get_result();
+            while ($msgRes && ($mRow = $msgRes->fetch_assoc())) {
+                $released_messages[] = [
+                    'sender'  => 'Employee (Approved by Admin)',
+                    'subject' => (string)($mRow['service_or_doc'] ?: 'Update'),
+                    'message' => (string)($mRow['staff_message'] ?? ''),
+                    'date'    => (string)($mRow['reviewed_at'] ?: ($mRow['submitted_at'] ?? '')),
+                ];
+            }
+            $stmtMsg->close();
+        }
+    }
+
+    // 3. Fetch released message-only rows from client_documents
+    $stmtDocMsg = $conn->prepare(
+        "SELECT `file_name`, `category`, `admin_note`, `created_at`
+         FROM `client_documents`
+         WHERE `client_id` COLLATE utf8mb4_general_ci = ?
+           AND LOWER(TRIM(COALESCE(`status`, ''))) = 'released'
+           AND (`result_file` IS NULL OR TRIM(`result_file`) = '')
+         ORDER BY `id` DESC"
+    );
+    if ($stmtDocMsg) {
+        $stmtDocMsg->bind_param("s", $client_identifier);
+        $stmtDocMsg->execute();
+        $dmRes = $stmtDocMsg->get_result();
+        while ($dmRes && ($dmRow = $dmRes->fetch_assoc())) {
+            $rawNote = trim((string)($dmRow['admin_note'] ?? ''));
+            if (strpos($rawNote, '[Staff Msg]:') === 0) {
+                $rawNote = trim(substr($rawNote, strlen('[Staff Msg]:')));
+            }
+            $subj = (string)($dmRow['file_name'] ?: ($dmRow['category'] ?: 'Update'));
+            $text = $rawNote !== '' ? $rawNote : $subj;
+            $released_messages[] = [
+                'sender'  => 'Employee (Approved by Admin)',
+                'subject' => $subj,
+                'message' => $text,
+                'date'    => (string)($dmRow['created_at'] ?? ''),
+            ];
+        }
+        $stmtDocMsg->close();
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -100,7 +260,6 @@ $clientName =$_SESSION['user']['name'] ?? 'Client';
             line-height: 1.3;
         }
 
-        /* Sidebar Profile Card */
         .sidebar-profile {
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.12);
@@ -260,6 +419,20 @@ $clientName =$_SESSION['user']['name'] ?? 'Client';
             box-shadow: var(--shadow-sm);
         }
 
+        .section-title {
+            margin: 24px 0 12px;
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--coffee-espresso);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
         .folder-header {
             background: var(--card-bg);
             padding: 16px 22px;
@@ -382,20 +555,75 @@ $clientName =$_SESSION['user']['name'] ?? 'Client';
             box-shadow: 0 6px 14px rgba(59, 35, 25, 0.2);
         }
 
+        .message-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--coffee-caramel);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .message-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .message-subject {
+            font-weight: 800;
+            font-size: 14.5px;
+            color: var(--coffee-espresso);
+        }
+
+        .sender-badge {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 9px;
+            border-radius: 999px;
+            background: var(--coffee-sand);
+            color: var(--coffee-roast);
+            border: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .message-date {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .message-body {
+            margin: 0;
+            font-size: 13.5px;
+            color: var(--text-main);
+            line-height: 1.55;
+            background: var(--coffee-foam);
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border-neutral);
+        }
+
         .empty-state {
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 20px;
             text-align: center;
-            padding: 54px 24px;
+            padding: 40px 24px;
             color: var(--text-muted);
             box-shadow: var(--shadow-sm);
+            margin-bottom: 16px;
         }
 
         .empty-state i {
-            font-size: 32px;
+            font-size: 28px;
             color: var(--coffee-latte);
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             display: block;
         }
 
@@ -453,8 +681,8 @@ $clientName =$_SESSION['user']['name'] ?? 'Client';
     <main class="main">
         <div class="vault-header">
             <div>
-                <h1><i class="fas fa-lock" style="color:var(--coffee-roast);"></i> Document Vault</h1>
-                <p class="vault-subtitle">Permanent records, KYC documents, and issued certificates.</p>
+                <h1><i class="fas fa-lock" style="color:var(--coffee-roast);"></i> Document Vault &amp; Updates</h1>
+                <p class="vault-subtitle">Released documents, certificates, and short notes from admin or staff.</p>
             </div>
             <div class="vault-pill">
                 <i class="fas fa-id-badge" style="color:var(--coffee-latte);"></i>
@@ -463,45 +691,26 @@ $clientName =$_SESSION['user']['name'] ?? 'Client';
         </div>
 
         <div class="vault-container">
-            <?php
-            // 1. Fetch data using prepared statements for security
-            $stmt =$conn->prepare("
-                SELECT file_name, result_file AS path, created_at AS date, 'vault' AS source, doc_category AS category 
-                FROM client_documents WHERE client_id = ? AND status = 'Released'
-                UNION ALL
-                SELECT file_name, file_path AS path, upload_date AS date, 'shared' AS source, file_type AS category 
-                FROM client_files WHERE client_id = ? AND status = 'Released'
-                ORDER BY date DESC
-            ");
-            $stmt->bind_param("ss", $client_identifier, $client_identifier);$stmt->execute();
-            $result =$stmt->get_result();
-
-            $grouped_files = [];
-            while ($doc =$result->fetch_assoc()) {
-                // Use Y-m-d for internal grouping, display formatted date in HTML
-                $dateKey = date('Y-m-d', strtotime($doc['date']));$grouped_files[$dateKey][] =$doc;
-            }
-            ?>
-
+            <h2 class="section-title"><i class="fas fa-folder-open" style="color:var(--coffee-caramel);"></i> Released Documents</h2>
             <?php if (!empty($grouped_files)): ?>
-                <?php foreach ($grouped_files as $dateKey =>$files):
+                <?php foreach ($grouped_files as $dateKey => $files):
                     $displayDate = date('d M Y', strtotime($dateKey));
-                    $folderId = 'folder_' .$dateKey; // Unique ID based on Y-m-d
-                    $chevronId = 'chevron_' .$dateKey;
+                    $folderId = 'folder_' . $dateKey;
+                    $chevronId = 'chevron_' . $dateKey;
                     $fileCount = count($files);
                 ?>
-                    <div class="folder-header" onclick="toggleFolder('<?php echo htmlspecialchars($folderId); ?>', '<?php echo htmlspecialchars($chevronId); ?>')">
+                    <div class="folder-header" onclick="toggleFolder('<?php echo htmlspecialchars($folderId, ENT_QUOTES); ?>', '<?php echo htmlspecialchars($chevronId, ENT_QUOTES); ?>')">
                         <span>
                             <i class="fas fa-folder" style="color:var(--coffee-caramel); margin-right:10px;"></i>
                             Date: <?php echo htmlspecialchars($displayDate); ?>
                         </span>
                         <div class="folder-meta">
                             <span class="folder-count-badge"><?php echo $fileCount; ?> <?php echo ($fileCount === 1) ? 'file' : 'files'; ?></span>
-                            <i class="fas fa-chevron-down" id="<?php echo htmlspecialchars($chevronId); ?>" style="transition: transform 0.22s ease;"></i>
+                            <i class="fas fa-chevron-down" id="<?php echo htmlspecialchars($chevronId, ENT_QUOTES); ?>" style="transition: transform 0.22s ease;"></i>
                         </div>
                     </div>
 
-                    <div id="<?php echo htmlspecialchars($folderId); ?>" class="folder-content">
+                    <div id="<?php echo htmlspecialchars($folderId, ENT_QUOTES); ?>" class="folder-content">
                         <div class="folder-table-card">
                             <table>
                                 <thead>
@@ -512,17 +721,20 @@ $clientName =$_SESSION['user']['name'] ?? 'Client';
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($files as$doc):
-                                        $file_url = ($doc['source'] == 'vault') ? '../uploads/vault/' . $doc['path'] :$doc['path'];
+                                    <?php foreach ($files as $doc):
+                                        $cleanFile = basename((string)($doc['path'] ?? ''));
+                                        $file_url = (($doc['source'] ?? 'vault') === 'vault')
+                                            ? ('../uploads/vault/' . rawurlencode($cleanFile))
+                                            : (string)($doc['path'] ?? '');
                                     ?>
                                     <tr>
                                         <td>
                                             <i class="fas fa-file-lines" style="color:var(--coffee-latte); margin-right:8px;"></i>
-                                            <strong style="color:var(--coffee-espresso);"><?php echo htmlspecialchars($doc['file_name']); ?></strong>
+                                            <strong style="color:var(--coffee-espresso);"><?php echo htmlspecialchars((string)($doc['file_name'] ?? 'Document')); ?></strong>
                                         </td>
-                                        <td><span class="category-tag"><?php echo htmlspecialchars($doc['category']); ?></span></td>
+                                        <td><span class="category-tag"><?php echo htmlspecialchars((string)($doc['category'] ?? 'vault')); ?></span></td>
                                         <td>
-                                            <a href="<?php echo htmlspecialchars($file_url); ?>" class="btn-download" download>
+                                            <a href="<?php echo htmlspecialchars($file_url, ENT_QUOTES); ?>" class="btn-download" download>
                                                 <i class="fas fa-download"></i> Download
                                             </a>
                                         </td>
@@ -539,6 +751,30 @@ $clientName =$_SESSION['user']['name'] ?? 'Client';
                     No released documents available in your vault yet.
                 </div>
             <?php endif; ?>
+
+            <h2 class="section-title"><i class="fas fa-comment-dots" style="color:var(--coffee-caramel);"></i> Released Messages &amp; Notes</h2>
+            <?php if (!empty($released_messages)): ?>
+                <?php foreach ($released_messages as $msgItem): ?>
+                    <div class="message-card">
+                        <div class="message-card-top">
+                            <span class="message-subject">
+                                <i class="fas fa-envelope-open-text" style="color:var(--coffee-latte); margin-right:6px;"></i>
+                                <?php echo htmlspecialchars($msgItem['subject']); ?>
+                                <span class="sender-badge"><?php echo htmlspecialchars($msgItem['sender']); ?></span>
+                            </span>
+                            <?php if ($msgItem['date'] !== ''): ?>
+                                <span class="message-date"><i class="far fa-clock"></i> <?php echo htmlspecialchars($msgItem['date']); ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <p class="message-body"><?php echo nl2br(htmlspecialchars($msgItem['message'])); ?></p>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="empty-state">
+                    <i class="fas fa-comments"></i>
+                    No released messages for your account yet.
+                </div>
+            <?php endif; ?>
         </div>
     </main>
 
@@ -546,18 +782,20 @@ $clientName =$_SESSION['user']['name'] ?? 'Client';
         function toggleFinances() {
             var menu = document.getElementById("financeMenu");
             var chevron = document.getElementById("financeChevron");
+            if (!menu) return;
             if (menu.style.display === "none" || menu.style.display === "") {
                 menu.style.display = "block";
-                chevron.classList.add("rotate-chevron");
+                if (chevron) chevron.classList.add("rotate-chevron");
             } else {
                 menu.style.display = "none";
-                chevron.classList.remove("rotate-chevron");
+                if (chevron) chevron.classList.remove("rotate-chevron");
             }
         }
 
         function toggleFolder(id, chevronId) {
             var content = document.getElementById(id);
             var chevron = document.getElementById(chevronId);
+            if (!content) return;
             if (content.style.display === "block") {
                 content.style.display = "none";
                 if (chevron) chevron.classList.remove("rotate-chevron");

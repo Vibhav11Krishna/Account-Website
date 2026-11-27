@@ -6,7 +6,8 @@ include('../db.php');
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     header("Location: ../Register.php");
     exit();
-}$adminName = $_SESSION['user']['name'] ?? 'Admin Executive';
+}
+$adminName = $_SESSION['user']['name'] ?? 'Admin Executive';
 $lookupId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : 0;
 $lookupIdent = trim((string)($_SESSION['user']['identifier'] ?? ($_SESSION['user']['email'] ?? '')));
 
@@ -791,6 +792,7 @@ if (isset($_GET['del_schedule'])) {
             </a>
             <div class="dropdown-content" id="reportsMenu">
                 <a href="dsc-register.php">DSC Register</a>
+                <a href="daily-work-report.php">Daily Work Report</a>
                 <a href="service-report.php">Service Report</a>
                 <a href="revenue-analytics.php">Revenue Analytics</a>
                 <a href="Client-Revenue.php">Client Revenue</a>
