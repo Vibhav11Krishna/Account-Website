@@ -10,36 +10,63 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
 
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
 
-// Query focusing strictly on Firm, Owner, Contact, and Unpaid breakdown
+// Increase group_concat_max_len in case a client has many invoices
+$conn->query("SET SESSION group_concat_max_len = 1000000");
+
+// Query matched to invoices table structure (primary key: i.id)
 $query = "SELECT 
             cp.client_id,
             cp.company_name, 
             cp.owner_name, 
             cp.business_email, 
             cp.phone,
+            COUNT(i.id) as total_invoices,
             COALESCE(SUM(i.paid_amount), 0) as total_paid,
             SUM(CASE WHEN i.invoice_date < DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND i.status != 'Paid' 
-                THEN (i.amount + i.cgst_amount + i.sgst_amount + i.igst_amount) - i.paid_amount ELSE 0 END) as previous_dues,
+                THEN (COALESCE(i.amount, 0) + COALESCE(i.cgst_amount, 0) + COALESCE(i.sgst_amount, 0) + COALESCE(i.igst_amount, 0)) - COALESCE(i.paid_amount, 0) ELSE 0 END) as previous_dues,
             SUM(CASE WHEN i.invoice_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND i.status != 'Paid' 
-                THEN (i.amount + i.cgst_amount + i.sgst_amount + i.igst_amount) - i.paid_amount ELSE 0 END) as current_dues,
-            /* Date-wise formatted string for the popup */
+                THEN (COALESCE(i.amount, 0) + COALESCE(i.cgst_amount, 0) + COALESCE(i.sgst_amount, 0) + COALESCE(i.igst_amount, 0)) - COALESCE(i.paid_amount, 0) ELSE 0 END) as current_dues,
+            
+            /* ALL INVOICES BREAKDOWN (Billed, Given/Paid, Balance, Status) */
             GROUP_CONCAT(
-                CASE WHEN i.status != 'Paid' 
+                CASE WHEN i.id IS NOT NULL 
                 THEN CONCAT(
                     '<tr>',
-                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; color:#64748b;\">', DATE_FORMAT(i.invoice_date, '%d-%b-%y'), '</td>',
-                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; font-weight:bold; color:var(--navy);\">', i.invoice_no, '</td>',
-                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; color:#ef4444; text-align:right; font-weight:700;\">&#8377;', FORMAT((i.amount + i.cgst_amount + i.sgst_amount + i.igst_amount) - i.paid_amount, 2), '</td>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:12.5px;\">', DATE_FORMAT(i.invoice_date, '%d-%b-%y'), '</td>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; font-weight:700; color:var(--navy);\">', i.invoice_no, '<div style=\"font-size:11px; font-weight:500; color:#64748b;\">', COALESCE(i.service_name, ''), '</div></td>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; text-align:right; font-weight:600;\">&#8377;', FORMAT((COALESCE(i.amount, 0) + COALESCE(i.cgst_amount, 0) + COALESCE(i.sgst_amount, 0) + COALESCE(i.igst_amount, 0)), 2), '</td>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; color:#16a34a; text-align:right; font-weight:600;\">&#8377;', FORMAT(COALESCE(i.paid_amount, 0), 2), '</td>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; color:', IF(((COALESCE(i.amount, 0) + COALESCE(i.cgst_amount, 0) + COALESCE(i.sgst_amount, 0) + COALESCE(i.igst_amount, 0)) - COALESCE(i.paid_amount, 0)) > 0, '#ef4444', '#16a34a'), '; text-align:right; font-weight:700;\">&#8377;', FORMAT((COALESCE(i.amount, 0) + COALESCE(i.cgst_amount, 0) + COALESCE(i.sgst_amount, 0) + COALESCE(i.igst_amount, 0)) - COALESCE(i.paid_amount, 0), 2), '</td>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; text-align:center;\"><span style=\"padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700; background:', IF(i.status = 'Paid', '#f0fdf4; color:#16a34a', '#fef2f2; color:#ef4444'), ';\">', i.status, '</span></td>',
                     '</tr>'
                 ) 
                 ELSE NULL END 
-                ORDER BY i.invoice_date DESC
+                ORDER BY i.invoice_date DESC, i.id DESC
+                SEPARATOR ''
+            ) as all_invoices_breakdown,
+
+            /* UNPAID / PARTIALLY PAID INVOICES BREAKDOWN */
+            GROUP_CONCAT(
+                CASE WHEN i.status != 'Paid' AND i.id IS NOT NULL
+                THEN CONCAT(
+                    '<tr>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; color:#64748b; font-size:12.5px;\">', DATE_FORMAT(i.invoice_date, '%d-%b-%y'), '</td>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; font-weight:bold; color:var(--navy);\">', i.invoice_no, '<div style=\"font-size:11px; font-weight:500; color:#64748b;\">', i.status, '</div></td>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; text-align:right; font-weight:600;\">&#8377;', FORMAT((COALESCE(i.amount, 0) + COALESCE(i.cgst_amount, 0) + COALESCE(i.sgst_amount, 0) + COALESCE(i.igst_amount, 0)), 2), '</td>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; color:#16a34a; text-align:right; font-weight:600;\">&#8377;', FORMAT(COALESCE(i.paid_amount, 0), 2), '</td>',
+                    '<td style=\"padding:12px 8px; border-bottom:1px solid #f1f5f9; color:#ef4444; text-align:right; font-weight:700;\">&#8377;', FORMAT((COALESCE(i.amount, 0) + COALESCE(i.cgst_amount, 0) + COALESCE(i.sgst_amount, 0) + COALESCE(i.igst_amount, 0)) - COALESCE(i.paid_amount, 0), 2), '</td>',
+                    '</tr>'
+                ) 
+                ELSE NULL END 
+                ORDER BY i.invoice_date DESC, i.id DESC
                 SEPARATOR ''
             ) as unpaid_breakdown,
-            SUM(i.amount + i.cgst_amount + i.sgst_amount + i.igst_amount) as grand_total_with_tax
+
+            COALESCE(SUM(COALESCE(i.amount, 0) + COALESCE(i.cgst_amount, 0) + COALESCE(i.sgst_amount, 0) + COALESCE(i.igst_amount, 0)), 0) as grand_total_with_tax
           FROM client_profiles cp
           LEFT JOIN invoices i ON cp.client_id = i.client_id
           WHERE 1=1 ";
+
 if ($search) {
     $query .= " AND (cp.company_name LIKE '%$search%' OR cp.owner_name LIKE '%$search%')";
 }
@@ -498,6 +525,40 @@ $result = $conn->query($query);
             font-weight: 700;
         }
 
+        .inv-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #eff6ff;
+            color: var(--navy);
+            border: 1px solid #bfdbfe;
+            padding: 5px 11px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12.5px;
+        }
+
+        .btn-details {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            color: #9a3412;
+            padding: 9px 14px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-details:hover {
+            background: #ffedd5;
+            transform: translateY(-1px);
+        }
+
         /* Full Screen Overlay */
         #popupOverlay {
             display: none;
@@ -512,13 +573,16 @@ $result = $conn->query($query);
             z-index: 99999;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
 
         /* Modal Box */
         #popupContent {
             background: white;
-            width: 90%;
-            max-width: 550px;
+            width: 95%;
+            max-width: 720px;
+            max-height: 88vh;
+            overflow-y: auto;
             border-radius: 24px;
             box-shadow: var(--shadow-lg);
             border: 1px solid var(--border);
@@ -557,12 +621,82 @@ $result = $conn->query($query);
             color: var(--danger);
         }
 
+        /* Modal Summary Cards & Tabs */
+        .modal-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 18px 0;
+        }
+
+        .summary-mini-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .summary-mini-card span {
+            display: block;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .summary-mini-card strong {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--navy);
+        }
+
+        .modal-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 2px solid #f1f5f9;
+            margin-bottom: 14px;
+        }
+
+        .modal-tab-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 16px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: 0.2s;
+        }
+
+        .modal-tab-btn.active {
+            color: var(--navy);
+            border-bottom-color: var(--orange);
+        }
+
+        .modal-tab-panel {
+            display: none;
+        }
+
+        .modal-tab-panel.active {
+            display: block;
+        }
+
         @media (max-width: 1024px) {
             .admin-top-bar {
                 padding: 14px 20px;
             }
             .content-body {
                 padding: 24px 20px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .modal-summary-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -656,7 +790,7 @@ $result = $conn->query($query);
         <header class="admin-top-bar">
             <div class="brand-section">
                 <h1>Client Revenue Report</h1>
-                <div class="welcome-text">Track billed amounts, collected payments, and pending invoice dues per firm</div>
+                <div class="welcome-text">Track generated invoices, billed amounts, collected payments, and pending dues per firm</div>
             </div>
 
             <div class="header-right-group">
@@ -689,16 +823,18 @@ $result = $conn->query($query);
                     <thead>
                         <tr>
                             <th>Firm &amp; Contact</th>
+                            <th>Invoices Generated</th>
                             <th>Total Billed (Inc. GST)</th>
-                            <th>Total Paid</th>
+                            <th>Total Paid (Given)</th>
                             <th>Balance Due</th>
-                            <th>Unpaid Invoice Breakdown</th>
+                            <th>Invoice Breakdown</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if ($result->num_rows > 0): ?>
                             <?php while ($row = $result->fetch_assoc()):
                                 $total_balance = $row['previous_dues'] + $row['current_dues'];
+                                $cid = htmlspecialchars($row['client_id'], ENT_QUOTES);
                             ?>
                                 <tr>
                                     <td>
@@ -707,6 +843,12 @@ $result = $conn->query($query);
                                             <i class="fas fa-user"></i> <?php echo htmlspecialchars($row['owner_name']); ?> |
                                             <i class="fas fa-phone"></i> <?php echo htmlspecialchars($row['phone']); ?>
                                         </div>
+                                    </td>
+
+                                    <td>
+                                        <span class="inv-count-badge">
+                                            <i class="fas fa-file-invoice"></i> <?php echo (int)$row['total_invoices']; ?>
+                                        </span>
                                     </td>
 
                                     <td style="font-weight:600;">&#8377;<?php echo number_format($row['grand_total_with_tax'], 2); ?></td>
@@ -718,46 +860,100 @@ $result = $conn->query($query);
                                     </td>
 
                                     <td>
-                                        <?php if ($total_balance > 0): ?>
-                                            <div style="display:none;" id="data-<?php echo htmlspecialchars($row['client_id']); ?>">
-                                                <div style="margin-bottom: 15px;">
+                                        <?php if ($row['total_invoices'] > 0): ?>
+                                            <div style="display:none;" id="data-<?php echo $cid; ?>">
+                                                <div>
                                                     <h2 style="margin:0; color:var(--navy); font-size:21px; font-weight:800;"><?php echo htmlspecialchars($row['company_name']); ?></h2>
-                                                    <p style="color:var(--text-muted); margin:5px 0 0 0; font-size:13px;"><i class="fas fa-file-invoice"></i> Pending Invoice Details</p>
+                                                    <p style="color:var(--text-muted); margin:4px 0 0 0; font-size:13px;">
+                                                        <i class="fas fa-user"></i> <?php echo htmlspecialchars($row['owner_name']); ?> &bull; Complete Billing &amp; Payment Ledger
+                                                    </p>
                                                 </div>
 
-                                                <table style="width: 100%; border-collapse: collapse;">
-                                                    <thead>
-                                                        <tr style="text-align:left; color:var(--text-muted); font-size:11px; text-transform:uppercase; border-bottom:2px solid #f1f5f9;">
-                                                            <th style="padding:10px; background:transparent;">Date</th>
-                                                            <th style="padding:10px; background:transparent;">Invoice No</th>
-                                                            <th style="padding:10px; background:transparent; text-align:right;">Balance Due</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <?php echo $row['unpaid_breakdown']; ?>
-                                                    </tbody>
-                                                </table>
+                                                <div class="modal-summary-grid">
+                                                    <div class="summary-mini-card">
+                                                        <span>Invoices</span>
+                                                        <strong><?php echo (int)$row['total_invoices']; ?></strong>
+                                                    </div>
+                                                    <div class="summary-mini-card">
+                                                        <span>Total Billed</span>
+                                                        <strong>&#8377;<?php echo number_format($row['grand_total_with_tax'], 2); ?></strong>
+                                                    </div>
+                                                    <div class="summary-mini-card">
+                                                        <span>Given / Paid</span>
+                                                        <strong style="color:#16a34a;">&#8377;<?php echo number_format($row['total_paid'], 2); ?></strong>
+                                                    </div>
+                                                    <div class="summary-mini-card">
+                                                        <span>Balance Due</span>
+                                                        <strong style="color:<?php echo ($total_balance > 0) ? '#ef4444' : '#16a34a'; ?>;">&#8377;<?php echo number_format($total_balance, 2); ?></strong>
+                                                    </div>
+                                                </div>
 
-                                                <div style="margin-top:20px; padding-top:15px; border-top:2px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
-                                                    <span style="font-weight:700; color:var(--text-muted);">Grand Total Outstanding:</span>
-                                                    <span style="font-size:22px; font-weight:800; color:#ef4444;">&#8377;<?php echo number_format($total_balance, 2); ?></span>
+                                                <div class="modal-tabs">
+                                                    <button type="button" class="modal-tab-btn active" onclick="switchModalTab(this, 'tab-all')">
+                                                        <i class="fas fa-list"></i> All Invoices (<?php echo (int)$row['total_invoices']; ?>)
+                                                    </button>
+                                                    <button type="button" class="modal-tab-btn" onclick="switchModalTab(this, 'tab-unpaid')">
+                                                        <i class="fas fa-exclamation-circle"></i> Unpaid Dues
+                                                    </button>
+                                                </div>
+
+                                                <div class="modal-tab-panel active" data-tab="tab-all">
+                                                    <div style="overflow-x:auto;">
+                                                        <table style="width: 100%; border-collapse: collapse;">
+                                                            <thead>
+                                                                <tr style="text-align:left; color:var(--text-muted); font-size:11px; text-transform:uppercase; border-bottom:2px solid #f1f5f9;">
+                                                                    <th style="padding:10px 8px; background:transparent;">Date</th>
+                                                                    <th style="padding:10px 8px; background:transparent;">Invoice / Service</th>
+                                                                    <th style="padding:10px 8px; background:transparent; text-align:right;">Billed</th>
+                                                                    <th style="padding:10px 8px; background:transparent; text-align:right;">Given</th>
+                                                                    <th style="padding:10px 8px; background:transparent; text-align:right;">Due</th>
+                                                                    <th style="padding:10px 8px; background:transparent; text-align:center;">Status</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <?php echo $row['all_invoices_breakdown']; ?>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                <div class="modal-tab-panel" data-tab="tab-unpaid">
+                                                    <?php if ($total_balance > 0): ?>
+                                                        <div style="overflow-x:auto;">
+                                                            <table style="width: 100%; border-collapse: collapse;">
+                                                                <thead>
+                                                                    <tr style="text-align:left; color:var(--text-muted); font-size:11px; text-transform:uppercase; border-bottom:2px solid #f1f5f9;">
+                                                                        <th style="padding:10px 8px; background:transparent;">Date</th>
+                                                                        <th style="padding:10px 8px; background:transparent;">Invoice / Status</th>
+                                                                        <th style="padding:10px 8px; background:transparent; text-align:right;">Billed</th>
+                                                                        <th style="padding:10px 8px; background:transparent; text-align:right;">Given</th>
+                                                                        <th style="padding:10px 8px; background:transparent; text-align:right;">Balance Due</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <?php echo $row['unpaid_breakdown']; ?>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <div style="padding:24px; text-align:center; color:#16a34a; font-weight:700; background:#f0fdf4; border-radius:12px;">
+                                                            <i class="fas fa-check-circle"></i> All invoices for this client are fully paid!
+                                                        </div>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
 
-                                            <button type="button" onclick="showBreakdown('<?php echo htmlspecialchars($row['client_id'], ENT_QUOTES); ?>')"
-                                                style="background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; padding: 9px 14px; border-radius: 10px; font-family:inherit; font-weight: 700; cursor: pointer; transition: 0.2s; font-size:12px;">
-                                                <i class="fas fa-calendar-alt"></i> View Date-wise Details
+                                            <button type="button" class="btn-details" onclick="showBreakdown('<?php echo $cid; ?>')">
+                                                <i class="fas fa-folder-open"></i> View Ledger (<?php echo (int)$row['total_invoices']; ?>)
                                             </button>
                                         <?php else: ?>
-                                            <div style="color:#16a34a; font-weight:700; background:#f0fdf4; border:1px solid #bbf7d0; padding:7px 12px; border-radius:8px; display:inline-block; font-size:12px;">
-                                                <i class="fas fa-check-circle"></i> Fully Paid
-                                            </div>
+                                            <span style="color:var(--text-muted); font-size:12px; font-weight:600;">No Invoices</span>
                                         <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
-                            <tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:28px;">No records found.</td></tr>
+                            <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:28px;">No records found.</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -773,7 +969,6 @@ $result = $conn->query($query);
     </div>
 
     <script>
-        // Live Clock
         function updateClock() {
             const now = new Date();
             const dateEl = document.getElementById('liveDate');
@@ -797,13 +992,9 @@ $result = $conn->query($query);
             const menu = document.getElementById(menuId);
             const chevron = document.getElementById(chevronId);
 
-            // Toggle the specific menu clicked
             menu.classList.toggle('show-menu');
-
-            // Rotate the specific arrow clicked
             if (chevron) chevron.classList.toggle('rotate-chevron');
 
-            // Optional: Close other menus when opening a new one
             const allMenus = document.querySelectorAll('.dropdown-content');
             const allChevrons = document.querySelectorAll('.fa-chevron-down');
 
@@ -822,22 +1013,28 @@ $result = $conn->query($query);
 
             document.getElementById('popupOverlay').style.display = 'flex';
 
-            // Blur everything EXCEPT the popup
             document.querySelector('.main').style.filter = 'blur(10px)';
             document.querySelector('.sidebar').style.filter = 'blur(10px)';
             document.body.style.overflow = 'hidden';
         }
 
+        function switchModalTab(btn, targetTab) {
+            const container = document.getElementById('popupData');
+            container.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
+            container.querySelectorAll('.modal-tab-panel').forEach(p => p.classList.remove('active'));
+
+            btn.classList.add('active');
+            container.querySelector(`.modal-tab-panel[data-tab="${targetTab}"]`).classList.add('active');
+        }
+
         function closeBreakdown() {
             document.getElementById('popupOverlay').style.display = 'none';
 
-            // Remove blur
             document.querySelector('.main').style.filter = 'none';
             document.querySelector('.sidebar').style.filter = 'none';
             document.body.style.overflow = 'auto';
         }
 
-        // Close on Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeBreakdown();
         });

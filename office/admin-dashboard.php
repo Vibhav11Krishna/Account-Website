@@ -6,7 +6,36 @@ include('../db.php');
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
     header("Location: ../Register.php");
     exit();
+}$adminName = $_SESSION['user']['name'] ?? 'Admin Executive';
+$lookupId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : 0;
+$lookupIdent = trim((string)($_SESSION['user']['identifier'] ?? ($_SESSION['user']['email'] ?? '')));
+
+if (isset($conn) && $conn instanceof mysqli) {
+    if ($lookupId > 0) {
+        $stmtAdmin = $conn->prepare("SELECT `name` FROM `users` WHERE `id` = ? LIMIT 1");
+        if ($stmtAdmin) {
+            $stmtAdmin->bind_param("i", $lookupId);
+            $stmtAdmin->execute();
+            $resAdmin = $stmtAdmin->get_result();
+            if (($rowAdmin = $resAdmin->fetch_assoc()) && !empty($rowAdmin['name'])) {
+                $adminName = $rowAdmin['name'];
+            }
+            $stmtAdmin->close();
+        }
+    } elseif ($lookupIdent !== '') {
+        $stmtAdmin = $conn->prepare("SELECT `name` FROM `users` WHERE `identifier` = ? LIMIT 1");
+        if ($stmtAdmin) {
+            $stmtAdmin->bind_param("s", $lookupIdent);
+            $stmtAdmin->execute();
+            $resAdmin = $stmtAdmin->get_result();
+            if (($rowAdmin = $resAdmin->fetch_assoc()) && !empty($rowAdmin['name'])) {
+                $adminName = $rowAdmin['name'];
+            }
+            $stmtAdmin->close();
+        }
+    }
 }
+$initials = strtoupper(substr(trim((string)$adminName), 0, 1) ?: 'A');
 
 // Ensure Schedule Table Exists
 $conn->query("CREATE TABLE IF NOT EXISTS admin_schedules (
@@ -716,18 +745,19 @@ if (isset($_GET['del_schedule'])) {
         </div>
 
         <div class="sidebar-profile">
-            <div class="profile-avatar-wrapper">
-                <div class="sidebar-avatar"><i class="fas fa-user-shield"></i></div>
-                <div class="online-status"></div>
-            </div>
-            <div class="profile-info">
-                <strong>Admin Executive</strong>
-                <span>System Administrator</span>
-            </div>
+           <div class="profile-avatar-wrapper">
+    <div class="sidebar-avatar"><?php echo htmlspecialchars($initials); ?></div>
+    <div class="online-status"></div>
+</div>
+<div class="profile-info">
+    <strong><?php echo htmlspecialchars($adminName); ?></strong>
+    <span>System Administrator</span>
+</div>
         </div>
 
         <div class="sidebar-nav-title">Main Menu</div>
         <a href="admin-dashboard.php" class="active"><i class="fas fa-chart-pie"></i> Dashboard</a>
+        <a href="admin-profile.php"><i class="fas fa-user-cog"></i> Admin Profile</a>
 
         <div class="dropdown-container">
             <a href="javascript:void(0)" class="dropdown-btn" onclick="toggleMenu('billingMenu', 'billChev')">
@@ -807,11 +837,11 @@ if (isset($_GET['del_schedule'])) {
                 </div>
 
                 <div class="header-user-pill">
-                    <span class="header-user-name">Admin</span>
-                    <a href="../logout.php" class="header-logout-icon" title="Logout">
-                        <i class="fas fa-power-off"></i>
-                    </a>
-                </div>
+    <span class="header-user-name"><?php echo htmlspecialchars($adminName); ?></span>
+    <a href="../logout.php" class="header-logout-icon" title="Logout">
+        <i class="fas fa-power-off"></i>
+    </a>
+</div>
             </div>
         </header>
 

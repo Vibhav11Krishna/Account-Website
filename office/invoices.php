@@ -1,6 +1,7 @@
 <?php
 session_start();
-include('../db.php');
+require_once __DIR__ . '/../db.php';
+global $conn;
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -9,7 +10,7 @@ $from_date = isset($_GET['from_date']) ? mysqli_real_escape_string($conn, $_GET[
 $to_date = isset($_GET['to_date']) ? mysqli_real_escape_string($conn, $_GET['to_date']) : '';
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'admin') {
-    header("Location: ../Login.php");
+    header("Location: ../Register.php");
     exit();
 }
 // HANDLE UPDATE INVOICE
